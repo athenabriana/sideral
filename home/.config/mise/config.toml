@@ -1,29 +1,65 @@
-# User-level mise toolchain — shipped via /etc/skel to every new user,
-# pulled onto an existing user with `just apply-home`.
+# User-level mise toolchain — shipped via /etc/skel to every new user.
 # Per-project .mise.toml files override this.
 #
-# After rebase / first login:   mise install    (or: just mise-setup)
+# This file declares PREFERRED versions. Tools are installed lazily:
+#   • First use of `node` / `python` / etc. auto-installs that tool
+#   • Tools you never touch never download
+#   • Run plain `mise install` to eagerly install everything declared here
 
 [tools]
-# Fixed version — no symbolic alias for android-sdk
-android-sdk = "13.0"
 
-# Symbolic versions resolved at install time
-bun    = "latest"
-go     = "latest"
-gradle = "latest"
+# ── JavaScript / TypeScript ───────────────────────────────────
+node = "lts"
+bun  = "latest"
+pnpm = "latest"
+
+# ── Python ────────────────────────────────────────────────────
+python = "latest"
+uv     = "latest"
+
+# ── JVM ecosystem ─────────────────────────────────────────────
 java   = "temurin-lts"
 kotlin = "latest"
-node   = "lts"
-python = "latest"
-rust   = "stable"
-uv     = "latest"
-zig    = "latest"
+gradle = "latest"
+
+# ── Systems languages ─────────────────────────────────────────
+go   = "latest"
+rust = "stable"
+zig  = "latest"
+
+# ── Mobile ────────────────────────────────────────────────────
+android-sdk = "13.0"
+
+# ── Shell / dev UX (pre-installed by athens-mise-install.service) ──
+atuin  = "latest"   # shell history with Ctrl+R fuzzy search, syncs via shared HOME
+direnv = "latest"   # per-project env-var autoloader on cd
+
+# ── CI / automation ───────────────────────────────────────────
+act = "latest"      # run GitHub Actions workflows locally
 
 [settings]
-# Allow experimental features (some plugin types need it)
+
+# Allow experimental plugins
 experimental = true
 
-# Trust configs anywhere on the system — skip the interactive
-# "do you trust this .mise.toml?" prompt when cd'ing into projects.
+# No "do you trust this .mise.toml?" prompt when cd'ing into projects
 trusted_config_paths = ["/"]
+
+# Auto-install tools on first use (not eagerly on shell activation)
+not_found_auto_install = true
+
+# Respect legacy version files in cloned repos
+# (.nvmrc / .python-version / .ruby-version / .java-version / .go-version)
+idiomatic_version_file_enable_tools = ["node", "python", "java", "ruby", "go", "rust"]
+
+# Faster parallel installs on modern CPUs
+jobs = 8
+
+# Safety margin for slow networks (default 30s trips on big archives)
+http_timeout = "60s"
+
+# Quieter cd-into-project warnings: only if a DIFFERENT version is already installed
+[settings.status]
+missing_tools = "if_other_versions_installed"
+show_env      = false
+show_tools    = false
