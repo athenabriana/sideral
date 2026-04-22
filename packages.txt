@@ -1,0 +1,62 @@
+# One package per line. Lines starting with # are ignored.
+# `rpm-ostree install` is used, so only RPMs from Fedora/ublue/third-party repos work here.
+
+# ── Hyprland compositor stack ─────────────────────
+hyprland
+hyprpaper
+hyprlock
+hypridle
+hyprpolkitagent
+hyprcursor
+hyprshot
+hyprpicker
+swww
+xdg-desktop-portal-hyprland
+
+# ── Shell & bar stack ─────────────────────────────
+waybar
+rofi-wayland
+wlogout
+fuzzel
+SwayNotificationCenter
+astal
+astal-libs
+astal-gjs
+aylurs-gtk-shell2
+
+# ── Terminals & utilities ─────────────────────────
+kitty
+nautilus
+gnome-control-center
+polkit-gnome
+brightnessctl
+playerctl
+cliphist
+wl-clipboard
+grim
+slurp
+swappy
+jq
+
+# ── CLI quality-of-life ───────────────────────────
+fish
+starship
+fzf
+zoxide
+eza
+bat
+ripgrep
+fd-find
+git-delta
+btop
+neovim
+
+# ── Dev toolchain ─────────────────────────────────
+gh
+just
+mise
+
+# ── Fonts ─────────────────────────────────────────
+adobe-source-serif-pro-fonts
+google-noto-color-emoji-fonts
+papirus-icon-theme

@@ -1,0 +1,11 @@
+# One flatpak ref per line. Installed on first boot by flatpak-install.service.
+# Format: remote/app-id  (if remote omitted, flathub is assumed)
+
+flathub/app.zen_browser.zen
+flathub/com.discordapp.Discord
+flathub/com.spotify.Client
+flathub/md.obsidian.Obsidian
+flathub/org.signal.Signal
+flathub/org.gnome.Evolution
+flathub/com.github.tchx84.Flatseal
+flathub/org.telegram.desktop

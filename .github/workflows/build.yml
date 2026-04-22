@@ -1,0 +1,65 @@
+name: build-athena-os
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 5 * * 0"   # Sundays at 05:00 UTC — weekly rebuild for base image updates
+  workflow_dispatch: {}
+
+env:
+  IMAGE_NAME: athena-os
+  IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  IMAGE_TAGS: |
+    latest
+    ${{ github.sha }}
+
+jobs:
+  build:
+    name: Build and push image
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Maximise disk
+        uses: ublue-os/remove-unwanted-software@v9
+
+      - name: Build image
+        id: build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          containerfiles: ./Containerfile
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAGS }}
+          oci: true
+
+      - name: Log in to ghcr.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        id: push
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build.outputs.image }}
+          tags: ${{ steps.build.outputs.tags }}
+          registry: ${{ env.IMAGE_REGISTRY }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image
+        env:
+          TAGS: ${{ steps.push.outputs.digest }}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          cosign sign --yes ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}
