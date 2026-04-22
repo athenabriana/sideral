@@ -41,6 +41,11 @@ clean:
 diff:
     sudo rpm-ostree db diff
 
+# Install mise tools defined in /etc/mise/config.toml
+mise-setup:
+    @echo "Installing tools from /etc/mise/config.toml into your user mise dir..."
+    mise install
+
 # Rollback to previous deployment
 rollback:
     sudo rpm-ostree rollback

@@ -1,0 +1,18 @@
+# System-wide mise defaults baked into the image.
+# Per-user configs at ~/.config/mise/config.toml override this.
+# Per-project .mise.toml files take priority over both.
+#
+# After rebase / first login, run:   mise install
+# to actually download + compile these tool versions.
+
+[tools]
+android-sdk = "13.0"
+gradle      = "8.7"
+java        = "temurin-17"
+python      = "3.12"
+rust        = "stable"
+uv          = "latest"
+
+[settings]
+# Auto-install tools declared in .mise.toml without prompting
+experimental = true

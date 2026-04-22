@@ -9,7 +9,7 @@ Personal Bluefin-DX derivative with Hyprland, custom AGS bar, and a curated CLI 
 | **Base** | `ghcr.io/ublue-os/bluefin-dx:stable` |
 | **Hyprland stack** | hyprland, hyprpaper, hyprlock, hypridle, hyprpolkitagent, swww, swaync, waybar, rofi, wlogout, fuzzel |
 | **AGS/Astal** | `astal`, `astal-libs`, plus **astal-gtk4 built from source** (not packaged) |
-| **CLI stack** | gh, mise (rest — fish, starship, btop, just, fzf, jq — come from the bluefin-dx base) |
+| **CLI stack** | gh, mise (rest — starship, btop, just, fzf, jq — come from the bluefin-dx base) |
 | **Fonts** | Adobe Source Serif 4, Noto Color Emoji, Papirus icons |
 | **Flatpaks** | None baked in. Install manually or re-add a manifest later. |
 
@@ -67,3 +67,14 @@ If something breaks: reboot, select the previous deployment at GRUB, or:
 rpm-ostree rollback
 systemctl reboot
 ```
+
+## mise toolchain
+
+`/etc/mise/config.toml` ships with baseline tool versions (Java, Python, Rust, uv, gradle, android-sdk). After rebasing to the new image, run:
+
+```bash
+just mise-setup
+# or directly: mise install
+```
+
+…to actually download & compile those tools into `~/.local/share/mise/`. Any tools listed in a project's `.mise.toml` or in your own `~/.config/mise/config.toml` will override the system defaults.
