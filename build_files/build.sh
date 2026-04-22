@@ -14,7 +14,7 @@ FEATURES=(hyprland desktop devtools fonts)
 # ── COPR repos (enabled for build, disabled afterward) ─────────────────
 # Note: bluefin-dx already ships ublue-os/{packages,staging} + che/nerd-fonts enabled.
 COPR_REPOS=(
-    solopasha/hyprland                   # hyprland + most hypr* packages
+    sdegler/hyprland                     # hyprland 0.54+ + all hypr* + astal-gtk4 as RPM
     erikreider/SwayNotificationCenter    # swaync (upstream-maintained)
 )
 
