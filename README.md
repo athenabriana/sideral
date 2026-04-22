@@ -15,20 +15,29 @@ Personal Bluefin-DX derivative with Hyprland, custom AGS bar, and a curated CLI 
 
 Edit `packages.txt` to change what's baked in. `build_files/build.sh` handles the source build + package installs in one layer.
 
-## Editing what gets installed
-
-Everything is organised **per feature** under `build_files/features/<name>/`:
+## Repo layout
 
 ```
-build_files/
-├── build.sh                          # orchestrator (COPR → features → cleanup)
-└── features/
-    ├── hyprland/
-    │   ├── packages.txt              # compositor + bar/launcher/notif stack (waybar, rofi, wlogout, swaync, astal…)
-    │   └── post-install.sh           # builds astal-gtk4 from source
-    ├── desktop/packages.txt          # kitty / nautilus / gnome-control-center / utilities
-    ├── devtools/packages.txt         # gh / mise
-    └── fonts/packages.txt            # Source Serif 4 / Noto Emoji / Papirus
+athena-os/
+├── Containerfile                     # image recipe (FROM bluefin-dx)
+├── Justfile                          # build / rebase / apply-home / capture-home
+├── build_files/
+│   ├── build.sh                      # orchestrator (COPR → features → cleanup)
+│   └── features/
+│       ├── hyprland/packages.txt     # compositor + bar/launcher/notif + utilities
+│       ├── desktop/packages.txt      # kitty + kitty-terminfo
+│       ├── devtools/
+│       │   ├── packages.txt          # gh
+│       │   └── post-install.sh       # installs mise via mise.run
+│       └── fonts/
+│           ├── packages.txt          # papirus-icon-theme
+│           └── post-install.sh       # downloads Source Serif 4 + Source Sans 3
+├── system_files/etc/                 # overlay copied into /etc/
+│   ├── mise/config.toml              # default toolchain
+│   └── profile.d/mise.sh             # bash auto-activation
+├── home/.config/                     # user defaults — shipped to /etc/skel/
+│   ├── hypr/, ags/, kitty/, rofi/, wlogout/
+└── .github/workflows/build.yml       # CI: build, tag, push, sign
 ```
 
 - Add/remove a package → edit the relevant `packages.txt`
@@ -82,6 +91,26 @@ If something breaks: reboot, select the previous deployment at GRUB, or:
 rpm-ostree rollback
 systemctl reboot
 ```
+
+## Dotfiles (monorepo)
+
+All user config lives under `home/` and is shipped to `/etc/skel/` in the image.
+
+- On a **fresh account** (new user on a rebased machine), skel is copied into `~/` automatically at account creation — nothing to do.
+- On an **existing account**, run `just apply-home` after rebase to overwrite tracked files.
+- After editing `~/.config/hypr/…` (or ags, kitty, rofi, wlogout) live, run `just capture-home` to pull the edits back into the repo, then commit.
+
+```
+home/
+└── .config/
+    ├── ags/            # custom bar (app.ts, Bar.tsx, style.css)
+    ├── hypr/           # hyprland.conf + conf.d/ + scripts/ + hyprlock/hyprpaper/hypridle
+    ├── kitty/
+    ├── rofi/
+    └── wlogout/
+```
+
+Not tracked: `hypr/wallpapers/` (binaries), `hypr/fonts/` (redundant — fonts now ship in `/usr/share/fonts/` via the image).
 
 ## mise toolchain
 

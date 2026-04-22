@@ -46,6 +46,24 @@ mise-setup:
     @echo "Installing tools from /etc/mise/config.toml into your user mise dir..."
     mise install
 
+# Push repo's home/ → live $HOME (overwrites tracked files, leaves untracked alone)
+apply-home:
+    rsync -a --info=NAME home/ $HOME/
+
+# Pull live dotfiles back into repo's home/ (so git sees your edits)
+capture-home:
+    rsync -a --info=NAME --delete \
+        --exclude 'wallpapers/' --exclude 'fonts/' \
+        $HOME/.config/hypr/ home/.config/hypr/
+    rsync -a --info=NAME --delete $HOME/.config/ags/   home/.config/ags/
+    rsync -a --info=NAME --delete $HOME/.config/rofi/  home/.config/rofi/
+    rsync -a --info=NAME --delete $HOME/.config/wlogout/ home/.config/wlogout/
+    rsync -a --info=NAME --delete $HOME/.config/kitty/ home/.config/kitty/
+
+# Show diff: repo vs live $HOME
+diff-home:
+    -diff -ruN $HOME/.config home/.config 2>&1 | head -200
+
 # Rollback to previous deployment
 rollback:
     sudo rpm-ostree rollback

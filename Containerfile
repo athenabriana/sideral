@@ -23,6 +23,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 
 # System-wide config snippets (mise activation, default toolchain, etc.)
 COPY system_files/etc /etc
+
+# User defaults — /etc/skel is copied into new users' home on account creation.
+# `just apply-home` updates an existing user's live ~/.config from the repo.
+COPY home /etc/skel
+
 RUN ostree container commit
 
 # Final bootc sanity check — catches image structure bugs early.
