@@ -1,0 +1,10 @@
+# Bar, launcher, notifications + Astal/AGS framework.
+# astal-gtk4 is built from source in post-install.sh.
+waybar
+rofi-wayland
+wlogout
+SwayNotificationCenter
+astal
+astal-libs
+astal-gjs
+aylurs-gtk-shell2

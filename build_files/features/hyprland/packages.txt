@@ -1,0 +1,10 @@
+# Hyprland compositor + session integration.
+hyprland
+hyprpaper
+hyprlock
+hypridle
+hyprpolkitagent
+hyprcursor
+hyprshot
+hyprpicker
+xdg-desktop-portal-hyprland

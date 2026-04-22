@@ -1,0 +1,4 @@
+# CLI tools not already in bluefin-dx base.
+# (fish, starship, fzf, btop, just, jq come pre-installed — don't re-list.)
+gh
+mise

@@ -9,21 +9,20 @@ ARG BASE_IMAGE="ghcr.io/ublue-os/bluefin-dx:stable"
 
 # Stage 1: scratch carrier for build scripts — bind-mounted, never in final image.
 FROM scratch AS ctx
-COPY build_files /build_files
-COPY packages.txt /build_files/packages.txt
+COPY build_files /
 
 # Stage 2: the real image. One RUN does the heavy lifting in a single layer.
 FROM ${BASE_IMAGE}
 
-RUN --mount=type=bind,from=ctx,source=/build_files,target=/ctx \
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/build.sh && \
     ostree container commit
 
-# Drop system-wide config snippets (mise activation, etc.) into /etc.
-COPY files/etc /etc
+# System-wide config snippets (mise activation, default toolchain, etc.)
+COPY system_files/etc /etc
 RUN ostree container commit
 
 # Final bootc sanity check — catches image structure bugs early.

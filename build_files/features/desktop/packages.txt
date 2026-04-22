@@ -1,0 +1,11 @@
+# Terminal, file manager, settings UI, Hyprland workflow utilities.
+kitty
+nautilus
+gnome-control-center
+brightnessctl
+playerctl
+cliphist
+wl-clipboard
+grim
+slurp
+swappy

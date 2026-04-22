@@ -1,0 +1,4 @@
+# System fonts + icon theme.
+adobe-source-serif-pro-fonts
+google-noto-color-emoji-fonts
+papirus-icon-theme

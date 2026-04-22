@@ -17,8 +17,24 @@ Edit `packages.txt` to change what's baked in. `build_files/build.sh` handles th
 
 ## Editing what gets installed
 
-- **RPMs** → `packages.txt` (one package per line)
-- **Anything custom** → drop a new script into `build_files/` and reference it in `Containerfile`
+Everything is organised **per feature** under `build_files/features/<name>/`:
+
+```
+build_files/
+├── build.sh                          # orchestrator (COPR → features → cleanup)
+└── features/
+    ├── hyprland/packages.txt         # compositor stack
+    ├── shell/
+    │   ├── packages.txt              # waybar / rofi / wlogout / swaync / astal
+    │   └── post-install.sh           # builds astal-gtk4 from source
+    ├── desktop/packages.txt          # kitty / nautilus / utilities
+    ├── devtools/packages.txt         # gh / mise
+    └── fonts/packages.txt            # Source Serif 4 / Noto Emoji / Papirus
+```
+
+- Add/remove a package → edit the relevant `packages.txt`
+- Add a whole new feature → create `features/<name>/packages.txt` + optional `post-install.sh`, then append the name to the `FEATURES=(…)` array in `build.sh`
+- System-wide config files (anything you'd drop into `/etc/…`) → put them under `system_files/etc/…`; the Containerfile copies the tree verbatim into the image
 
 ## First-time setup
 
