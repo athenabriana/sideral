@@ -22,11 +22,5 @@ RUN --mount=type=bind,from=ctx,source=/build_files,target=/ctx \
     /ctx/build.sh && \
     ostree container commit
 
-# First-boot flatpak installer (reads /etc/flatpak-manifest, runs once).
-COPY files/etc/flatpak-manifest           /etc/flatpak-manifest
-COPY build_files/flatpak-install.service  /etc/systemd/system/flatpak-install.service
-RUN systemctl enable flatpak-install.service && \
-    ostree container commit
-
 # Final bootc sanity check — catches image structure bugs early.
 RUN bootc container lint

@@ -9,16 +9,15 @@ Personal Bluefin-DX derivative with Hyprland, custom AGS bar, and a curated CLI 
 | **Base** | `ghcr.io/ublue-os/bluefin-dx:stable` |
 | **Hyprland stack** | hyprland, hyprpaper, hyprlock, hypridle, hyprpolkitagent, swww, swaync, waybar, rofi, wlogout, fuzzel |
 | **AGS/Astal** | `astal`, `astal-libs`, plus **astal-gtk4 built from source** (not packaged) |
-| **CLI stack** | fish, starship, fzf, zoxide, eza, bat, ripgrep, fd, delta, btop, neovim, gh, just, mise |
+| **CLI stack** | gh, mise (rest — fish, starship, btop, just, fzf, jq — come from the bluefin-dx base) |
 | **Fonts** | Adobe Source Serif 4, Noto Color Emoji, Papirus icons |
-| **Flatpaks** | Zen, Discord, Spotify, Obsidian, Signal, Telegram, Evolution, Flatseal (auto-installed on first boot) |
+| **Flatpaks** | None baked in. Install manually or re-add a manifest later. |
 
-Edit `packages.txt` and `files/etc/flatpak-manifest` to change what's baked in. `build_files/build-astal-gtk4.sh` handles the source build.
+Edit `packages.txt` to change what's baked in. `build_files/build.sh` handles the source build + package installs in one layer.
 
 ## Editing what gets installed
 
 - **RPMs** → `packages.txt` (one package per line)
-- **Flatpaks** → `files/etc/flatpak-manifest` (one ref per line)
 - **Anything custom** → drop a new script into `build_files/` and reference it in `Containerfile`
 
 ## First-time setup
