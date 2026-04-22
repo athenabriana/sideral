@@ -23,11 +23,10 @@ Everything is organised **per feature** under `build_files/features/<name>/`:
 build_files/
 ├── build.sh                          # orchestrator (COPR → features → cleanup)
 └── features/
-    ├── hyprland/packages.txt         # compositor stack
-    ├── shell/
-    │   ├── packages.txt              # waybar / rofi / wlogout / swaync / astal
+    ├── hyprland/
+    │   ├── packages.txt              # compositor + bar/launcher/notif stack (waybar, rofi, wlogout, swaync, astal…)
     │   └── post-install.sh           # builds astal-gtk4 from source
-    ├── desktop/packages.txt          # kitty / nautilus / utilities
+    ├── desktop/packages.txt          # kitty / nautilus / gnome-control-center / utilities
     ├── devtools/packages.txt         # gh / mise
     └── fonts/packages.txt            # Source Serif 4 / Noto Emoji / Papirus
 ```

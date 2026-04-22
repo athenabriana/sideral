@@ -1,4 +1,7 @@
-# Hyprland compositor + session integration.
+# Hyprland compositor, session glue, and the bar/shell stack that runs on top.
+# astal-gtk4 is built from source in post-install.sh.
+
+# ── Compositor + session ──
 hyprland
 hyprpaper
 hyprlock
@@ -8,3 +11,13 @@ hyprcursor
 hyprshot
 hyprpicker
 xdg-desktop-portal-hyprland
+
+# ── Bar, launcher, notifications, AGS framework ──
+waybar
+rofi-wayland
+wlogout
+SwayNotificationCenter
+astal
+astal-libs
+astal-gjs
+aylurs-gtk-shell2

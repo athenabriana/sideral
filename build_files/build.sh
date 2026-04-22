@@ -9,7 +9,7 @@ set -euo pipefail
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 FEATURES_DIR="/ctx/features"
-FEATURES=(hyprland shell desktop devtools fonts)
+FEATURES=(hyprland desktop devtools fonts)
 
 # ── COPR repos (enabled for build, disabled afterward) ─────────────────
 COPR_REPOS=(
