@@ -59,6 +59,7 @@ capture-home:
     rsync -a --info=NAME --delete $HOME/.config/rofi/  home/.config/rofi/
     rsync -a --info=NAME --delete $HOME/.config/wlogout/ home/.config/wlogout/
     rsync -a --info=NAME --delete $HOME/.config/kitty/ home/.config/kitty/
+    rsync -a --info=NAME --delete $HOME/.config/mise/  home/.config/mise/
 
 # Show diff: repo vs live $HOME
 diff-home:

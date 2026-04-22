@@ -33,8 +33,7 @@ athena-os/
 │           ├── packages.txt          # papirus-icon-theme
 │           └── post-install.sh       # downloads Source Serif 4 + Source Sans 3
 ├── system_files/etc/                 # overlay copied into /etc/
-│   ├── mise/config.toml              # default toolchain
-│   └── profile.d/mise.sh             # bash auto-activation
+│   └── profile.d/mise.sh             # bash auto-activation (system-wide hook)
 ├── home/.config/                     # user defaults — shipped to /etc/skel/
 │   ├── hypr/, ags/, kitty/, rofi/, wlogout/
 └── .github/workflows/build.yml       # CI: build, tag, push, sign
@@ -106,6 +105,7 @@ home/
     ├── ags/            # custom bar (app.ts, Bar.tsx, style.css)
     ├── hypr/           # hyprland.conf + conf.d/ + scripts/ + hyprlock/hyprpaper/hypridle
     ├── kitty/
+    ├── mise/           # toolchain versions (java, node, python, rust, go, kotlin, zig, ...)
     ├── rofi/
     └── wlogout/
 ```

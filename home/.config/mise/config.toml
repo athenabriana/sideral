@@ -1,8 +1,8 @@
-# System-wide mise defaults baked into the image.
-# Per-user ~/.config/mise/config.toml and per-project .mise.toml override this.
+# User-level mise toolchain — shipped via /etc/skel to every new user,
+# pulled onto an existing user with `just apply-home`.
+# Per-project .mise.toml files override this.
 #
-# After rebase / first login, run:   mise install
-# to actually download + compile these tool versions.
+# After rebase / first login:   mise install    (or: just mise-setup)
 
 [tools]
 # Fixed version — no symbolic alias for android-sdk
