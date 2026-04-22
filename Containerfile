@@ -22,5 +22,9 @@ RUN --mount=type=bind,from=ctx,source=/build_files,target=/ctx \
     /ctx/build.sh && \
     ostree container commit
 
+# Drop system-wide config snippets (mise activation, etc.) into /etc.
+COPY files/etc /etc
+RUN ostree container commit
+
 # Final bootc sanity check — catches image structure bugs early.
 RUN bootc container lint
