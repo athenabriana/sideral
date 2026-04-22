@@ -1,11 +1,10 @@
-# Terminal, file manager, settings UI, Hyprland workflow utilities.
+# Terminal + Hyprland-workflow utilities that bluefin-dx does NOT ship.
+# Already in base (verified against bluefin-dx:stable): nautilus, gnome-control-center, wl-clipboard.
 kitty
-nautilus
-gnome-control-center
+kitty-terminfo
 brightnessctl
 playerctl
 cliphist
-wl-clipboard
 grim
 slurp
 swappy
