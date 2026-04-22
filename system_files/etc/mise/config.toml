@@ -9,8 +9,10 @@
 android-sdk = "13.0"
 
 # Symbolic versions resolved at install time
+bun    = "latest"
 gradle = "latest"
 java   = "temurin-lts"
+node   = "lts"
 python = "latest"
 rust   = "stable"
 uv     = "latest"
