@@ -1,4 +1,0 @@
-# Generic desktop apps (not Hyprland-specific).
-# Already in bluefin-dx base: nautilus, gnome-control-center, wl-clipboard.
-kitty
-kitty-terminfo
