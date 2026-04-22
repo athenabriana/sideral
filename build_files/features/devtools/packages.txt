@@ -1,3 +1,34 @@
-# CLI tools not in bluefin-dx base (or its pre-enabled COPRs).
-# mise is not packaged as an RPM — installed via curl in post-install.sh.
+# CLI / dev tooling not covered by silverblue-main base or mise.
+# mise itself is NOT layered — installed per-user to ~/.local/bin via
+# athens-mise-install.service on first login.
+
+# ── GitHub + prompt ──
 gh
+starship
+
+# ── Build dependencies for native bindings (npm native modules, pyenv, etc.) ──
+gcc
+make
+cmake
+
+# ── Git ergonomics ──
+git-credential-libsecret
+git-subtree
+git-lfs
+
+# ── Mobile ──
+android-tools
+
+# ── Editor (Microsoft repo, shipped via system_files/etc/yum.repos.d/vscode.repo) ──
+code
+
+# ── Kernel debug / profiling (bluefin-dx parity) ──
+bcc
+bpftop
+bpftrace
+sysprof
+trace-cmd
+tiptop
+nicstat
+iotop
+udica

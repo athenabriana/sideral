@@ -1,0 +1,10 @@
+# Docker (docker-ce) — from docker-ce-stable repo. Fedora's `containerd` is
+# swapped out automatically by dnf because `containerd.io` obsoletes it.
+# The docker-ce repo is added at build time via `dnf5 config-manager` in
+# build.sh and also shipped as /etc/yum.repos.d/docker-ce.repo so
+# `rpm-ostree upgrade` keeps pulling updates.
+containerd.io
+docker-ce
+docker-ce-cli
+docker-buildx-plugin
+docker-compose-plugin

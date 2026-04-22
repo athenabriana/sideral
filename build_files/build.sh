@@ -1,31 +1,41 @@
 #!/usr/bin/env bash
-# build.sh — orchestrates per-feature install scripts inside the Containerfile.
+# build.sh — orchestrates per-feature RPM installs inside the Containerfile.
+#
 # Each feature lives in features/<name>/ with:
-#   packages.txt       — one RPM per line (required)
-#   post-install.sh    — optional script run after packages install
+#   packages.txt       — one RPM per line (optional; # comments allowed)
+#   post-install.sh    — optional script, run after packages install
+#
+# Repo strategy:
+#   • imput/helium COPR is enabled here and LEFT ENABLED in the shipped image
+#     so `rpm-ostree upgrade` can pull new Helium releases.
+#   • The docker-ce-stable repo is registered here AND shipped as
+#     /etc/yum.repos.d/docker-ce.repo for the same reason.
+#   • Any other build-time repos would be disabled before image commit.
 
 set -euo pipefail
 
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 FEATURES_DIR="/ctx/features"
-FEATURES=(hyprland desktop devtools fonts)
+FEATURES=(gnome devtools browser container fonts gnome-extensions)
 
-# ── COPR repos (enabled for build, disabled afterward) ─────────────────
-# Note: bluefin-dx already ships ublue-os/{packages,staging} + che/nerd-fonts enabled.
-COPR_REPOS=(
-    sdegler/hyprland                     # hyprland 0.54+ + all hypr* + astal-gtk4 as RPM
-    erikreider/SwayNotificationCenter    # swaync (upstream-maintained)
+# ── COPRs that stay enabled in the shipped image (for `rpm-ostree upgrade`) ──
+PERSISTENT_COPRS=(
+    imput/helium
 )
 
-log "Enabling COPR repos"
-for repo in "${COPR_REPOS[@]}"; do
-    if ! dnf5 -y copr enable "$repo" 2>&1; then
-        echo "  ⚠ Failed to enable $repo — continuing"
-    fi
+# ── Enable persistent COPRs ─────────────────────────────────────────────
+log "Enabling persistent COPRs"
+for repo in "${PERSISTENT_COPRS[@]}"; do
+    dnf5 -y copr enable "$repo"
 done
 
-# ── Per-feature install loop ───────────────────────────────────────────
+# ── Register docker-ce-stable repo for build-time install ───────────────
+# (The same repo file is also shipped under system_files/ for post-boot upgrades.)
+log "Registering docker-ce-stable repo"
+dnf5 -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+
+# ── Per-feature install loop ────────────────────────────────────────────
 for feature in "${FEATURES[@]}"; do
     feature_dir="$FEATURES_DIR/$feature"
     pkg_file="$feature_dir/packages.txt"
@@ -35,7 +45,8 @@ for feature in "${FEATURES[@]}"; do
         if [ -n "$packages" ]; then
             log "[$feature] Installing packages"
             echo "  $packages"
-            dnf5 install -y --setopt=install_weak_deps=False $packages
+            # --allowerasing lets containerd.io replace Fedora's containerd.
+            dnf5 install -y --allowerasing --setopt=install_weak_deps=False $packages
         fi
     fi
 
@@ -45,12 +56,30 @@ for feature in "${FEATURES[@]}"; do
     fi
 done
 
-# ── Cleanup ────────────────────────────────────────────────────────────
-log "Disabling COPR repos"
-for repo in "${COPR_REPOS[@]}"; do
-    dnf5 -y copr disable "$repo" 2>/dev/null || true
-done
+# ── Rewrite /etc/os-release as Athens OS identity ───────────────────────
+log "Rewriting /etc/os-release"
+cat > /etc/os-release <<'EOF'
+NAME="Athens OS"
+ID=athens-os
+ID_LIKE="fedora"
+PRETTY_NAME="Athens OS 43 (Silverblue)"
+VARIANT="Silverblue"
+VARIANT_ID=silverblue
+VERSION="43"
+VERSION_ID=43
+VERSION_CODENAME=""
+PLATFORM_ID="platform:f43"
+ANSI_COLOR="0;38;2;60;110;180"
+LOGO=fedora-logo-icon
+HOME_URL="https://github.com/"
+DOCUMENTATION_URL="https://github.com/"
+SUPPORT_URL="https://github.com/"
+BUG_REPORT_URL="https://github.com/"
+OSTREE_VERSION="43"
+DEFAULT_HOSTNAME="athens"
+EOF
 
+# ── Cleanup ─────────────────────────────────────────────────────────────
 log "Cleaning dnf caches"
 dnf5 clean all
 rm -rf /var/cache/dnf/* /var/cache/libdnf5/* /var/lib/dnf/*

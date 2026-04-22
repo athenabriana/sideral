@@ -1,4 +1,7 @@
-# Icon theme only. Source Serif 4 is fetched in post-install.sh because the
-# Fedora RPM ships v3 (Source Serif Pro), not v4. Noto Color Emoji already
-# ships in the bluefin-dx base.
-papirus-icon-theme
+# Fonts layered from Fedora main.
+# Source Serif 4 + Source Sans 3 are fetched from Adobe GitHub releases
+# in post-install.sh (the Fedora RPMs ship older v3 "Pro" variants).
+cascadia-code-fonts
+jetbrains-mono-fonts-all
+adwaita-fonts-all
+opendyslexic-fonts

@@ -1,0 +1,15 @@
+# GNOME Shell extensions (RPM-layered) + theme / quality-of-life.
+# Runtime extensions installed via extensions.gnome.org live in features/gnome-extensions/.
+
+# ── Shell extensions (Fedora main) ──
+gnome-shell-extension-appindicator
+gnome-shell-extension-dash-to-panel
+
+# ── Bazaar app store (ublue-os/packages COPR, already enabled in silverblue-main base) ──
+# Bundles the Bazaar GUI + bazaar-integration@kolunmi.github.io shell extension + GNOME search provider.
+bazaar
+
+# ── Quality-of-life ──
+gnome-tweaks
+adw-gtk3-theme
+fastfetch

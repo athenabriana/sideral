@@ -1,0 +1,4 @@
+# Browser — RPM, not flatpak. Sourced from imput/helium COPR.
+# That COPR is enabled in build.sh and stays enabled in the shipped image so
+# `rpm-ostree upgrade` keeps Helium fresh between image rebuilds.
+helium-bin
