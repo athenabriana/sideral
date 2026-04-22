@@ -1,4 +1,4 @@
-# System fonts + icon theme.
-adobe-source-serif-pro-fonts
-google-noto-color-emoji-fonts
+# Icon theme only. Source Serif 4 is fetched in post-install.sh because the
+# Fedora RPM ships v3 (Source Serif Pro), not v4. Noto Color Emoji already
+# ships in the bluefin-dx base.
 papirus-icon-theme
