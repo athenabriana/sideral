@@ -10,7 +10,6 @@ hypridle
 hyprpolkitagent
 hyprcursor
 hyprshot
-hyprpicker
 xdg-desktop-portal-hyprland
 
 # ── Launcher, power menu, notifications, AGS framework ──
