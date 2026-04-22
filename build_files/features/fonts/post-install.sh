@@ -1,33 +1,36 @@
 #!/usr/bin/env bash
-# Download Source Serif 4 (latest release) from Adobe's GitHub and install
-# system-wide into /usr/share/fonts/SourceSerif4/. Fedora's RPM ships v3.
+# Fetch Adobe's Source Sans / Source Serif (latest releases) from GitHub
+# and install system-wide. The Fedora RPMs ship older Pro (v3) variants.
 
 set -euo pipefail
 
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
-TMP=/tmp/ss4
-DEST=/usr/share/fonts/SourceSerif4
+install_adobe_font() {
+    local repo="$1" name="$2"
+    local dest="/usr/share/fonts/$name"
+    local tmp="/tmp/$name"
 
-log "Fetching latest Source Serif 4 release URL"
-URL=$(curl -sL https://api.github.com/repos/adobe-fonts/source-serif/releases/latest \
-    | grep -oP '"browser_download_url": "\K[^"]+_Desktop\.zip')
+    log "[$name] Fetching latest release URL from $repo"
+    local url
+    url=$(curl -sL "https://api.github.com/repos/$repo/releases/latest" \
+          | grep -oP '"browser_download_url": "\K[^"]+_Desktop\.zip')
+    [ -n "$url" ] || { echo "Could not resolve $name release URL"; return 1; }
+    echo "  $url"
 
-[ -n "$URL" ] || { echo "Could not resolve Source Serif release URL"; exit 1; }
-log "URL: $URL"
+    mkdir -p "$tmp" "$dest"
+    curl -sL -o "$tmp/font.zip" "$url"
+    unzip -q -o "$tmp/font.zip" -d "$tmp"
 
-mkdir -p "$TMP" "$DEST"
-curl -sL -o "$TMP/ss4.zip" "$URL"
-unzip -q -o "$TMP/ss4.zip" -d "$TMP"
+    find "$tmp" -name "*.otf" -exec cp {} "$dest/" \;
+    chmod 644 "$dest"/*.otf
+    rm -rf "$tmp"
 
-log "Installing OTFs"
-find "$TMP" -name "*.otf" -exec cp {} "$DEST/" \;
-chmod 644 "$DEST"/*.otf
-rm -rf "$TMP"
+    log "[$name] installed ($(ls "$dest" | wc -l) OTFs)"
+}
+
+install_adobe_font adobe-fonts/source-serif SourceSerif4
+install_adobe_font adobe-fonts/source-sans  SourceSans3
 
 log "Refreshing font cache"
-fc-cache -f "$DEST"
-
-log "Source Serif 4 installed:"
-ls "$DEST" | head -5
-echo "  … ($(ls "$DEST" | wc -l) files total)"
+fc-cache -f /usr/share/fonts

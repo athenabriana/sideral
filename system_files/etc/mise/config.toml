@@ -1,18 +1,24 @@
 # System-wide mise defaults baked into the image.
-# Per-user configs at ~/.config/mise/config.toml override this.
-# Per-project .mise.toml files take priority over both.
+# Per-user ~/.config/mise/config.toml and per-project .mise.toml override this.
 #
 # After rebase / first login, run:   mise install
 # to actually download + compile these tool versions.
 
 [tools]
+# Fixed version — no symbolic alias for android-sdk
 android-sdk = "13.0"
-gradle      = "8.7"
-java        = "temurin-17"
-python      = "3.12"
-rust        = "stable"
-uv          = "latest"
+
+# Symbolic versions resolved at install time
+gradle = "latest"
+java   = "temurin-lts"
+python = "latest"
+rust   = "stable"
+uv     = "latest"
 
 [settings]
-# Auto-install tools declared in .mise.toml without prompting
+# Allow experimental features (some plugin types need it)
 experimental = true
+
+# Trust configs anywhere on the system — skip the interactive
+# "do you trust this .mise.toml?" prompt when cd'ing into projects.
+trusted_config_paths = ["/"]
