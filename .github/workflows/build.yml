@@ -1,4 +1,4 @@
-name: build-athena-os
+name: build-athens-os
 
 on:
   push:
@@ -10,8 +10,8 @@ on:
     branches: [main]
 
 env:
-  IMAGE_NAME: athena-os
-  IMAGE_DESC: "Custom Bluefin-DX image with Hyprland + astal-gtk4 + a curated CLI stack."
+  IMAGE_NAME: athens-os
+  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks, a 15-tool mise toolchain, helium-bin, VS Code, and docker-ce."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
 
 concurrency:

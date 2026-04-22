@@ -1,124 +1,102 @@
-# athena-os
+# athens-os
 
-Personal Bluefin-DX derivative with Hyprland, custom AGS bar, and a curated CLI stack.
+Personal Fedora atomic desktop built directly on `ghcr.io/ublue-os/silverblue-main:43`.
+Ships GNOME + tiling-shell with a curated flatpak set, a 15-tool mise toolchain,
+Helium as the default browser, and VS Code + docker-ce for day-to-day dev.
 
-## What's in this image
+## What's in the image
 
-| Layer | What |
-|---|---|
-| **Base** | `ghcr.io/ublue-os/bluefin-dx:stable` |
-| **Hyprland stack** | hyprland, hyprpaper, hyprlock, hypridle, hyprpolkitagent, swww, swaync, waybar, rofi, wlogout, fuzzel |
-| **AGS/Astal** | `astal`, `astal-libs`, plus **astal-gtk4 built from source** (not packaged) |
-| **CLI stack** | gh, mise (rest — starship, btop, just, fzf, jq — come from the bluefin-dx base) |
-| **Fonts** | Adobe Source Serif 4, Noto Color Emoji, Papirus icons |
-| **Flatpaks** | None baked in. Install manually or re-add a manifest later. |
-
-Edit `packages.txt` to change what's baked in. `build_files/build.sh` handles the source build + package installs in one layer.
+| Layer | Contents |
+| --- | --- |
+| **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
+| **Desktop** | GNOME Shell (default from base) + 5 extensions: appindicator, dash-to-panel, bazaar-integration, tilingshell, rounded-window-corners |
+| **Browser** | `helium-bin` (RPM, via `imput/helium` COPR — auto-updates with `rpm-ostree upgrade`) |
+| **Editor** | `code` (RPM, via Microsoft repo — auto-updates with `rpm-ostree upgrade`) |
+| **Containers** | `docker-ce` stack (podman inherited from base) |
+| **Dev tooling** | `gh`, `starship`, `gcc`/`make`/`cmake`, `git-lfs`/`git-subtree`/`git-credential-libsecret`, `android-tools`, kernel-debug stack |
+| **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
+| **User runtime toolchain** | mise installed per-user on first login; 11 language runtimes + 4 CLI tools (act, atuin, direnv, pnpm) declared in `~/.config/mise/config.toml` |
+| **Flatpaks (auto-install on first boot)** | Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile |
 
 ## Repo layout
 
 ```
-athena-os/
-├── Containerfile                     # image recipe (FROM bluefin-dx)
-├── Justfile                          # build / rebase / apply-home / capture-home
+athens-os/
+├── Containerfile                    # image recipe (FROM silverblue-main:43)
+├── Justfile                         # build / rebase / apply-home / capture-home
 ├── build_files/
-│   ├── build.sh                      # orchestrator (COPR → features → cleanup)
+│   ├── build.sh                     # orchestrator (COPRs → features loop → os-release → cleanup)
 │   └── features/
-│       ├── hyprland/packages.txt     # compositor + bar/launcher/notif + utilities
-│       ├── desktop/packages.txt      # kitty + kitty-terminfo
-│       ├── devtools/
-│       │   ├── packages.txt          # gh
-│       │   └── post-install.sh       # installs mise via mise.run
-│       └── fonts/
-│           ├── packages.txt          # papirus-icon-theme
-│           └── post-install.sh       # downloads Source Serif 4 + Source Sans 3
-├── system_files/etc/                 # overlay copied into /etc/
-│   └── profile.d/mise.sh             # bash auto-activation (system-wide hook)
-├── home/.config/                     # user defaults — shipped to /etc/skel/
-│   ├── hypr/, ags/, kitty/, rofi/, wlogout/
-└── .github/workflows/build.yml       # CI: build, tag, push, sign
+│       ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
+│       ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
+│       ├── devtools/         packages.txt  → gh + starship + build deps + git ergonomics + android-tools + code + kernel-debug stack
+│       ├── browser/          packages.txt  → helium-bin
+│       ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
+│       └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
+├── system_files/
+│   ├── etc/
+│   │   ├── dconf/
+│   │   │   ├── profile/user                    → points GNOME at the system dconf DB
+│   │   │   └── db/local.d/{00-athens-focus, 00-athens-gnome-shell, 10-athens-keybinds}
+│   │   ├── flatpak-manifest                    → 7 refs
+│   │   ├── systemd/system/athens-flatpak-install.service (+ multi-user.target.wants symlink)
+│   │   └── yum.repos.d/{vscode.repo, docker-ce.repo}   → enabled so rpm-ostree upgrade pulls updates
+│   └── usr/lib/systemd/user/
+│       ├── athens-mise-install.service         → first-login: install mise + eagerly install act/atuin/direnv
+│       ├── athens-vscode-setup.service         → first-login: install 3 VS Code extensions
+│       └── default.target.wants/ (symlinks)
+├── home/                                      → shipped to /etc/skel/
+│   ├── .bashrc                                → starship + mise + atuin + direnv activation
+│   └── .config/mise/config.toml               → 15-tool toolchain
+└── .github/workflows/build.yml                → CI: build, tag (latest/YYYYMMDD/sha-<short>), push to ghcr.io, cosign keyless
 ```
-
-- Add/remove a package → edit the relevant `packages.txt`
-- Add a whole new feature → create `features/<name>/packages.txt` + optional `post-install.sh`, then append the name to the `FEATURES=(…)` array in `build.sh`
-- System-wide config files (anything you'd drop into `/etc/…`) → put them under `system_files/etc/…`; the Containerfile copies the tree verbatim into the image
 
 ## First-time setup
 
-1. Create a GitHub repo and push:
+1. Create the GitHub repo and push:
    ```bash
-   gh repo create athena-os --public --source . --remote origin --push
+   gh repo create athens-os --public --source . --remote origin --push
    ```
-2. Wait ~10 min for the `build-athena-os` workflow to finish.
-3. Rebase your host to the new image:
+2. Wait ~10 min for the `build-athens-os` workflow to push `ghcr.io/<you>/athens-os:latest`.
+3. Rebase your host:
    ```bash
-   rpm-ostree rebase ostree-unverified-registry:ghcr.io/<YOUR_USER>/athena-os:latest
+   sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/<you>/athens-os:latest
    systemctl reboot
    ```
-4. After reboot you're on your own OS.
+4. First login runs the mise + VS Code setup services automatically; the flatpak manifest installs in the background on the first reboot.
 
-## Iterating
-
-- Change `packages.txt` / `flatpak-manifest` → commit → push → CI builds → rebase to latest (reboot).
-- For **dotfiles** (everything in `~/.config`), manage separately — they iterate faster than the image should rebuild. Recommended: `chezmoi` or a plain git repo at `~/Code/dotfiles`.
-
-## Local build + test (no push)
-
-The `Justfile` wraps everything. Install `just` (already listed in `packages.txt`), then:
+## Local build
 
 ```bash
 just            # list recipes
-just build      # podman build locally
-just lint       # shellcheck build scripts
-just rebase     # rebase host to the locally-built image (followed by reboot)
-just rollback   # back to previous deployment
-just rebase-latest <gh-user>   # pull + rebase to CI-built image
+just build      # podman build locally (runs bootc container lint at the end)
+just lint       # shellcheck all build scripts
+just rebase     # rebase host to the local dev image
+just rollback   # back to the previous deployment
 ```
 
-Raw commands:
-```bash
-podman build -t localhost/athena-os:dev .
-sudo rpm-ostree rebase ostree-unverified-image:containers-storage:localhost/athena-os:dev
-systemctl reboot
-```
+## Iterating on dotfiles
+
+The repo is also the source of truth for `/etc/skel/` user defaults.
+
+- **Fresh account:** skel is copied into `~/` on account creation. Nothing to do.
+- **Existing account:** `just apply-home` rsyncs `home/` → `$HOME` (tracked files only; untracked left alone).
+- **Edit live, capture back:** `just capture-home` pulls tracked files back into the repo. `just diff-home` previews the diff.
+
+Currently tracked under `home/`:
+- `.bashrc` (activates starship, mise, atuin, direnv)
+- `.config/mise/config.toml` (15-tool toolchain)
+
+## mise toolchain
+
+The image ships no `mise` binary in `/usr`. On first graphical login, `athens-mise-install.service` installs mise to `~/.local/bin/` and eagerly pulls the three CLI tools whose shell hooks fire in every bash: `atuin`, `direnv`, `act`.
+
+Other declared tools (node, python, go, rust, java, kotlin, zig, …) are installed lazily on first use — typing `node -v` triggers mise to fetch the right version. If you want everything at once, plain `mise install` (inside any directory) does that.
 
 ## Rollback
 
-If something breaks: reboot, select the previous deployment at GRUB, or:
-
+If a rebase breaks: reboot, pick the previous deployment at GRUB, or:
 ```bash
 rpm-ostree rollback
 systemctl reboot
 ```
-
-## Dotfiles (monorepo)
-
-All user config lives under `home/` and is shipped to `/etc/skel/` in the image.
-
-- On a **fresh account** (new user on a rebased machine), skel is copied into `~/` automatically at account creation — nothing to do.
-- On an **existing account**, run `just apply-home` after rebase to overwrite tracked files.
-- After editing `~/.config/hypr/…` (or ags, kitty, rofi, wlogout) live, run `just capture-home` to pull the edits back into the repo, then commit.
-
-```
-home/
-└── .config/
-    ├── ags/            # custom bar (app.ts, Bar.tsx, style.css)
-    ├── hypr/           # hyprland.conf + conf.d/ + scripts/ + hyprlock/hyprpaper/hypridle
-    ├── kitty/
-    ├── mise/           # toolchain versions (java, node, python, rust, go, kotlin, zig, ...)
-    ├── rofi/
-    └── wlogout/
-```
-
-Not tracked: `hypr/wallpapers/` (binaries), `hypr/fonts/` (redundant — fonts now ship in `/usr/share/fonts/` via the image).
-
-## mise toolchain
-
-`/etc/mise/config.toml` ships with baseline tool versions (Java, Python, Rust, uv, gradle, android-sdk). After rebasing to the new image, run:
-
-```bash
-just mise-setup
-# or directly: mise install
-```
-
-…to actually download & compile those tools into `~/.local/share/mise/`. Any tools listed in a project's `.mise.toml` or in your own `~/.config/mise/config.toml` will override the system defaults.

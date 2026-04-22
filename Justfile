@@ -1,9 +1,9 @@
-# Athena OS — local build recipes.
+# Athens OS — local build + dotfile recipes.
 #   list:    `just`
 #   build:   `just build`
 #   rebase:  `just rebase`
 
-image_name := "athena-os"
+image_name := "athens-os"
 image_tag  := "dev"
 registry   := env_var_or_default("REGISTRY", "localhost")
 
@@ -17,11 +17,11 @@ build:
         --file Containerfile \
         .
 
-# Shellcheck all build scripts
+# Shellcheck every build script
 lint:
-    shellcheck build_files/*.sh
+    shellcheck build_files/*.sh build_files/features/*/post-install.sh
 
-# Rebase host to locally-built image (needs reboot after)
+# Rebase host to the locally-built image (requires reboot after)
 rebase:
     sudo rpm-ostree rebase \
         ostree-unverified-image:containers-storage:{{registry}}/{{image_name}}:{{image_tag}}
@@ -33,39 +33,28 @@ rebase-latest gh_user:
         ostree-unverified-registry:ghcr.io/{{gh_user}}/{{image_name}}:latest
     @echo "Now run: systemctl reboot"
 
-# Remove the local image
+# Remove the local dev image
 clean:
     -podman rmi {{registry}}/{{image_name}}:{{image_tag}}
 
-# Show what would change vs. current deployment
+# Show RPM-level diff vs the current deployment
 diff:
     sudo rpm-ostree db diff
-
-# Install mise tools defined in /etc/mise/config.toml
-mise-setup:
-    @echo "Installing tools from /etc/mise/config.toml into your user mise dir..."
-    mise install
 
 # Push repo's home/ → live $HOME (overwrites tracked files, leaves untracked alone)
 apply-home:
     rsync -a --info=NAME home/ $HOME/
 
-# Pull live dotfiles back into repo's home/ (so git sees your edits)
+# Pull live tracked dotfiles back into the repo (so git sees your edits)
 capture-home:
-    rsync -a --info=NAME --delete \
-        --exclude 'wallpapers/' --exclude 'fonts/' \
-        $HOME/.config/hypr/ home/.config/hypr/
-    rsync -a --info=NAME --delete $HOME/.config/ags/   home/.config/ags/
-    rsync -a --info=NAME --delete $HOME/.config/rofi/  home/.config/rofi/
-    rsync -a --info=NAME --delete $HOME/.config/wlogout/ home/.config/wlogout/
-    rsync -a --info=NAME --delete $HOME/.config/kitty/ home/.config/kitty/
-    rsync -a --info=NAME --delete $HOME/.config/mise/  home/.config/mise/
+    rsync -a --info=NAME --delete $HOME/.config/mise/ home/.config/mise/
+    rsync -a --info=NAME $HOME/.bashrc home/.bashrc
 
 # Show diff: repo vs live $HOME
 diff-home:
     -diff -ruN $HOME/.config home/.config 2>&1 | head -200
 
-# Rollback to previous deployment
+# Rollback to the previous deployment
 rollback:
     sudo rpm-ostree rollback
     @echo "Now run: systemctl reboot"
