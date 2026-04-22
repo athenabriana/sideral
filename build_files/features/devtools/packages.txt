@@ -1,4 +1,3 @@
-# CLI tools not already in bluefin-dx base.
-# (fish, starship, fzf, btop, just, jq come pre-installed — don't re-list.)
+# CLI tools not in bluefin-dx base (or its pre-enabled COPRs).
+# mise is not packaged as an RPM — installed via curl in post-install.sh.
 gh
-mise

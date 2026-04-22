@@ -12,10 +12,10 @@ FEATURES_DIR="/ctx/features"
 FEATURES=(hyprland desktop devtools fonts)
 
 # ── COPR repos (enabled for build, disabled afterward) ─────────────────
+# Note: bluefin-dx already ships ublue-os/{packages,staging} + che/nerd-fonts enabled.
 COPR_REPOS=(
-    solopasha/hyprland
-    erikreider/SwayNotificationCenter
-    che/nerd-fonts
+    solopasha/hyprland                   # hyprland + most hypr* packages
+    erikreider/SwayNotificationCenter    # swaync (upstream-maintained)
 )
 
 log "Enabling COPR repos"
