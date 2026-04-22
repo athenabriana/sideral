@@ -1,10 +1,4 @@
-# Terminal + Hyprland-workflow utilities that bluefin-dx does NOT ship.
-# Already in base (verified against bluefin-dx:stable): nautilus, gnome-control-center, wl-clipboard.
+# Generic desktop apps (not Hyprland-specific).
+# Already in bluefin-dx base: nautilus, gnome-control-center, wl-clipboard.
 kitty
 kitty-terminfo
-brightnessctl
-playerctl
-cliphist
-grim
-slurp
-swappy

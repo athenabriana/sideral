@@ -1,4 +1,5 @@
-# Hyprland compositor, session glue, and the bar/shell stack that runs on top.
+# Hyprland compositor, session glue, bar/shell stack, and workflow utilities
+# that only make sense because we're running Hyprland.
 # astal-gtk4 is built from source in post-install.sh.
 
 # ── Compositor + session ──
@@ -12,8 +13,8 @@ hyprshot
 hyprpicker
 xdg-desktop-portal-hyprland
 
-# ── Bar, launcher, notifications, AGS framework ──
-waybar
+# ── Launcher, power menu, notifications, AGS framework ──
+# (waybar dropped — migrated to AGS)
 rofi-wayland
 wlogout
 SwayNotificationCenter
@@ -21,3 +22,11 @@ astal
 astal-libs
 astal-gjs
 aylurs-gtk-shell2
+
+# ── Hyprland workflow utilities (bound to keybinds / used by our scripts) ──
+brightnessctl
+playerctl
+cliphist
+grim
+slurp
+swappy
