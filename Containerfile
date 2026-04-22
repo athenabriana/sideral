@@ -1,30 +1,32 @@
-# Athena OS — personal Bluefin-DX derivative
+# Athena OS — custom Bluefin-DX derivative with Hyprland + astal-gtk4 + curated CLIs.
 #
-# Build locally:      podman build -t athena-os .
-# Push to ghcr.io:    podman push ghcr.io/<USER>/athena-os:latest
-# Rebase host:        rpm-ostree rebase ostree-unverified-registry:ghcr.io/<USER>/athena-os:latest
+# Local build:    just build
+# Local rebase:   just rebase
+# CI build:       push to main → GH Actions → ghcr.io/<user>/athena-os:latest
+# Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/athena-os:latest
 
 ARG BASE_IMAGE="ghcr.io/ublue-os/bluefin-dx:stable"
+
+# Stage 1: scratch carrier for build scripts — bind-mounted, never in final image.
+FROM scratch AS ctx
+COPY build_files /build_files
+COPY packages.txt /build_files/packages.txt
+
+# Stage 2: the real image. One RUN does the heavy lifting in a single layer.
 FROM ${BASE_IMAGE}
 
-# ── Layer 1: system packages ────────────────────────────────────────────
-COPY build_files/install-packages.sh /tmp/install-packages.sh
-COPY packages.txt /tmp/packages.txt
-RUN chmod +x /tmp/install-packages.sh && /tmp/install-packages.sh && \
-    rm /tmp/install-packages.sh /tmp/packages.txt && \
+RUN --mount=type=bind,from=ctx,source=/build_files,target=/ctx \
+    --mount=type=cache,dst=/var/cache \
+    --mount=type=cache,dst=/var/log \
+    --mount=type=tmpfs,dst=/tmp \
+    /ctx/build.sh && \
     ostree container commit
 
-# ── Layer 2: build astal-gtk4 from source ───────────────────────────────
-COPY build_files/build-astal-gtk4.sh /tmp/build-astal-gtk4.sh
-RUN chmod +x /tmp/build-astal-gtk4.sh && /tmp/build-astal-gtk4.sh && \
-    rm /tmp/build-astal-gtk4.sh && \
-    ostree container commit
-
-# ── Layer 3: flatpak installation manifest (applied on first boot) ──────
-COPY files/etc/flatpak-manifest /etc/flatpak-manifest
-COPY build_files/flatpak-install.service /etc/systemd/system/flatpak-install.service
+# First-boot flatpak installer (reads /etc/flatpak-manifest, runs once).
+COPY files/etc/flatpak-manifest           /etc/flatpak-manifest
+COPY build_files/flatpak-install.service  /etc/systemd/system/flatpak-install.service
 RUN systemctl enable flatpak-install.service && \
     ostree container commit
 
-# ── Final housekeeping ──────────────────────────────────────────────────
-RUN ostree container commit
+# Final bootc sanity check — catches image structure bugs early.
+RUN bootc container lint

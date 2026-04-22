@@ -42,9 +42,20 @@ Edit `packages.txt` and `files/etc/flatpak-manifest` to change what's baked in. 
 
 ## Local build + test (no push)
 
+The `Justfile` wraps everything. Install `just` (already listed in `packages.txt`), then:
+
 ```bash
-podman build -t athena-os:dev .
-# Rebase locally to test:
+just            # list recipes
+just build      # podman build locally
+just lint       # shellcheck build scripts
+just rebase     # rebase host to the locally-built image (followed by reboot)
+just rollback   # back to previous deployment
+just rebase-latest <gh-user>   # pull + rebase to CI-built image
+```
+
+Raw commands:
+```bash
+podman build -t localhost/athena-os:dev .
 sudo rpm-ostree rebase ostree-unverified-image:containers-storage:localhost/athena-os:dev
 systemctl reboot
 ```
