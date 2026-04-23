@@ -1,0 +1,15 @@
+[Unit]
+Description=Watch /nix/store for changes; trigger SELinux relabel
+# Only arm after nix is installed and the store dir actually exists.
+ConditionPathExists=/nix/store
+
+[Path]
+# PathChanged fires on create / delete / rename / attr-change of direct
+# children of /nix/store — i.e., whenever nix-daemon adds a new store path.
+# systemd coalesces triggers while the target service is still running, so
+# a big `nix profile install` batch results in one relabel, not thousands.
+PathChanged=/nix/store
+Unit=athens-nix-relabel.service
+
+[Install]
+WantedBy=multi-user.target
