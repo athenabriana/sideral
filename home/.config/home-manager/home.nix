@@ -7,8 +7,20 @@
 # Edit & apply from the repo:    just home-edit && just home-apply
 # Edit & apply from your home:   $EDITOR ~/.config/home-manager/home.nix && home-manager switch
 # Roll back one generation:      home-manager generations && home-manager switch <gen-path>
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
+let
+  # nix-software-center is not in upstream nixpkgs, so we fetch directly from
+  # GitHub. builtins.fetchGit is pinned by rev (deterministic, no sha256 needed)
+  # and works in channels-only mode (no flakes — D-02). Bumping: update `rev`.
+  nix-software-center-src = builtins.fetchGit {
+    url     = "https://github.com/snowfallorg/nix-software-center.git";
+    rev     = "181c1c61eab79130879257550dba0b36bd6bb8c9";  # 2026-02-15
+    ref     = "refs/heads/main";
+    shallow = true;
+  };
+  nix-software-center = import nix-software-center-src { inherit pkgs lib; };
+in
 {
   # ── Identity — resolved at switch time, so one file works for any user ──
   home.username      = builtins.getEnv "USER";
@@ -18,9 +30,10 @@
   # Never bump without reading home-manager release notes.
   home.stateVersion = "24.11";
 
-  # ── User-profile packages (ad-hoc CLI tooling + runtime manager) ────────
-  home.packages = with pkgs; [
-    mise
+  # ── User-profile packages (ad-hoc CLI tooling + runtime manager + GUI) ──
+  home.packages = [
+    pkgs.mise
+    nix-software-center
   ];
 
   # ── Bash: the login / interactive shell ─────────────────────────────────

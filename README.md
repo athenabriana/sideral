@@ -97,6 +97,12 @@ Fresh account: skel is copied into `~/` on user creation, first login runs the s
 
 Existing account: edit `~/.config/home-manager/home.nix` directly and run `home-manager switch`, or iterate in the repo copy and use `just home-apply`.
 
+## nix-software-center (GUI package browser)
+
+Shipped in `home.nix` via `builtins.fetchGit` pinned to a commit of [snowfallorg/nix-software-center](https://github.com/snowfallorg/nix-software-center) — not in upstream nixpkgs, so we fetch it directly. Pinning by `rev` means no sha256 to manage; bumping is a one-line edit.
+
+Launch from the GNOME app grid as "Nix Software Center". It can browse nixpkgs, install via `nix profile` / `nix-env`, and run apps without installing via `nix-shell` / `nix run`. Flakes-based install is exposed in its preferences menu (off by default, matching D-02).
+
 ## mise toolchain
 
 `mise` is installed as a nix package via `home.packages`; `which mise` should resolve to `~/.nix-profile/bin/mise` after the first home-manager switch. The 12-tool toolchain (node/bun/pnpm, python/uv, java/kotlin/gradle, go/rust/zig, android-sdk) is declared inline inside `home.nix` via `home.file.".config/mise/config.toml".text`.
