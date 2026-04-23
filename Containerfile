@@ -1,7 +1,8 @@
 # athens-os — a personal Fedora atomic desktop derived directly from
-# ublue-os/silverblue-main. Ships GNOME + tiling-shell, a curated flatpak set,
-# 15-tool mise toolchain, and a surgical RPM layer (helium-bin, code, docker-ce,
-# docker compose, gnome extensions, dev + kernel-debug stack, fonts).
+# ublue-os/silverblue-main. Ships GNOME + tiling-shell, a curated flatpak set
+# (browser + GUI apps), home-manager-driven user layer (mise, vscode, CLI QoL),
+# and a surgical RPM layer (docker-ce + compose, gnome extensions + bazaar, dev
+# + kernel-debug stack, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase

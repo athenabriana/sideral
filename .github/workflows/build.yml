@@ -11,7 +11,7 @@ on:
 
 env:
   IMAGE_NAME: athens-os
-  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks, a 15-tool mise toolchain, helium-bin, VS Code, and docker-ce."
+  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks (Zen Browser + GUI apps), home-manager user layer (mise, vscode, CLI QoL), and a narrow RPM layer (docker-ce, dev + kernel-debug stack, fonts)."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
 
 concurrency:

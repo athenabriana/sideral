@@ -11,15 +11,15 @@ default browser, and VS Code + docker-ce for day-to-day dev.
 | --- | --- |
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
 | **Desktop** | GNOME Shell (default from base) + 5 extensions: appindicator, dash-to-panel, bazaar-integration, tilingshell, rounded-window-corners |
-| **Browser** | `helium-bin` (RPM, via `imput/helium` COPR — auto-updates with `rpm-ostree upgrade`) |
+| **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `athens-flatpak-install.service`) |
 | **Editor** | `vscode` via `programs.vscode` in home.nix (includes `ms-vscode-remote.remote-ssh` + `remote-containers`; user can remove with a one-line edit) |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
-| **Dev tooling** | `gh`, `starship`, `gcc`/`make`/`cmake`, `git-lfs`/`git-subtree`/`git-credential-libsecret`, `android-tools`, kernel-debug stack |
+| **Dev tooling** | RPM: `git-lfs`/`git-subtree`/`git-credential-libsecret`, `android-tools`, kernel-debug stack. home.nix: `gh`, `starship`, `gcc`/`make`/`cmake`. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
 | **Nix** | Upstream CppNix installed via `nix-installer` (ostree planner) on first boot; `/nix` persisted via bind mount from `/var/lib/nix` |
 | **User environment** | home-manager (channels, `release-24.11`) bootstraps on first login from `~/.config/home-manager/home.nix`; owns bash, starship, atuin, git, mise, and CLI QoL (zoxide/fzf/bat/eza/ripgrep/nix-index/gh) |
 | **User runtime toolchain** | `mise` via `home.packages`; 12 runtimes (node/bun/pnpm, python/uv, java/kotlin/gradle, go/rust/zig, android-sdk) declared inline in `home.nix` |
-| **Flatpaks (auto-install on first boot)** | Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile |
+| **Flatpaks (auto-install on first boot)** | Zen Browser, Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile |
 
 ## Repo layout
 
@@ -32,8 +32,7 @@ athens-os/
 │   └── features/
 │       ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
 │       ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
-│       ├── devtools/         packages.txt  → gh + starship + build deps + git ergonomics + android-tools + code + kernel-debug stack
-│       ├── browser/          packages.txt  → helium-bin
+│       ├── devtools/         packages.txt  → git ergonomics (lfs / subtree / libsecret) + android-tools + kernel-debug stack
 │       ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
 │       └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
 ├── system_files/

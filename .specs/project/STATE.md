@@ -14,7 +14,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 ## Locked decisions
 See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) and `.specs/features/nix-home/context.md` (15 decisions). Highlights:
 - Desktop: GNOME + tiling-shell, Hyprland dropped entirely.
-- Browser: `helium-bin` via `imput/helium` COPR (COPR kept enabled for updates).
+- Browser: Zen Browser via flatpak (`app.zen_browser.zen`). helium-bin dropped 2026-04-23 due to imput/helium COPR's `/opt/helium` unpack conflict with Silverblue's tmpfiles-managed `/opt`; supersedes earlier "helium via COPR" decision.
 - Editor: `vscode` via `programs.vscode` in home.nix (with `ms-vscode-remote.remote-ssh` + `remote-containers`); supersedes ATH-14, ATH-15, ATH-17 (VS Code RPM + athens-vscode-setup.service removed; vscode.repo file deleted).
 - Container: `docker-ce` + `containerd.io` from docker-ce-stable repo.
 - **User layer:** nix + home-manager is the sole source of user-level config. `/etc/skel` reduced to one file: `~/.config/home-manager/home.nix`.
@@ -49,7 +49,7 @@ SPEC-DEV-01. Update spec.md NXH-01 text when promoting to Verified.
 - **GNOME-extension download at build time** needs the real `gnome-shell --version` of the running container — we call it inside the container (since silverblue-main ships gnome-shell), then query `extensions.gnome.org/extension-info/?uuid=<uuid>&shell_version=<N>`. `glib2-devel`/`jq`/`unzip` are installed and removed in the same script so they don't bloat the final layer.
 - **`dconf update` must run after `COPY system_files/etc /etc`.** The Containerfile now has a second RUN step for that, followed by the final `ostree container commit`.
 - **flatpak-install service is system-level, not user.** System-wide flatpaks live under `/var/lib/flatpak`, which is mutable on atomic. User-level would require a per-user unit, which we already use for `mise` and `vscode-setup`.
-- **imput/helium COPR is left enabled** after build so `rpm-ostree upgrade` pulls new Helium releases between image builds. Same applies to Microsoft's vscode repo and docker-ce repo.
+- **Persistent COPR pattern**: repos enabled during build.sh + kept enabled in the shipped image let `rpm-ostree upgrade` pull new releases without touching the image. Currently used for `ublue-os/packages` (bazaar). Same applies to docker-ce.repo (Docker Inc's official dnf repo, shipped as /etc/yum.repos.d/docker-ce.repo).
 - **Dev host shell used here had no podman / just / shellcheck**, so the final gate was limited to `bash -n` on shell scripts, YAML parse, and INI parse on dconf files. The real `just build` gate runs in CI.
 
 ## Deferred

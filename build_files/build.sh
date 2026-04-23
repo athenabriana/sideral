@@ -6,10 +6,11 @@
 #   post-install.sh    — optional script, run after packages install
 #
 # Repo strategy:
-#   • imput/helium COPR is enabled here and LEFT ENABLED in the shipped image
-#     so `rpm-ostree upgrade` can pull new Helium releases.
 #   • The docker-ce-stable repo is registered here AND shipped as
-#     /etc/yum.repos.d/docker-ce.repo for the same reason.
+#     /etc/yum.repos.d/docker-ce.repo so `rpm-ostree upgrade` can pull new
+#     Docker releases between image rebuilds.
+#   • ublue-os/packages COPR stays enabled in the shipped image to source
+#     bazaar (GNOME app store) and any future ublue-shared RPMs.
 #   • Any other build-time repos would be disabled before image commit.
 
 set -euo pipefail
@@ -28,13 +29,12 @@ curl -sSfL "$NIX_INSTALLER_URL" -o /usr/libexec/nix-installer
 chmod 0755 /usr/libexec/nix-installer
 
 FEATURES_DIR="/ctx/features"
-FEATURES=(gnome devtools browser container fonts gnome-extensions)
+FEATURES=(gnome devtools container fonts gnome-extensions)
 
 # ── COPRs that stay enabled in the shipped image (for `rpm-ostree upgrade`) ──
+# Universal Blue's curated packages repo — source of `bazaar` (GNOME app
+# store) and other ublue-specific RPMs. Same COPR used by Bazzite/Aurora.
 PERSISTENT_COPRS=(
-    imput/helium
-    # Universal Blue's curated packages repo — source of `bazaar` (GNOME app
-    # store) and other ublue-specific RPMs. Same COPR used by Bazzite/Aurora.
     ublue-os/packages
 )
 
