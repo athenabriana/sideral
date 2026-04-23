@@ -93,6 +93,8 @@ just home-diff      # build the generation so you can inspect what would change
 
 Roll back: `home-manager generations` then `home-manager switch <path-from-list>`. home-manager keeps every prior generation as a symlink under `/nix/var/nix/profiles/per-user/$USER/`.
 
+**First-shell UX**: on the very first login, opening a terminal before `athens-home-manager-setup.service` finishes would normally leave you with a bare Fedora default shell. `/etc/profile.d/athens-hm-status.sh` handles this by polling the setup marker for up to 5 minutes, then sourcing `hm-session-vars.sh` + `~/.bashrc` into your current shell — no reopen needed. Times out gracefully into a usable Fedora shell if setup stalls; run `journalctl --user -u athens-home-manager-setup -f` to see why.
+
 Fresh account: skel is copied into `~/` on user creation, first login runs the setup service, no further action.
 
 Existing account: edit `~/.config/home-manager/home.nix` directly and run `home-manager switch`, or iterate in the repo copy and use `just home-apply`.
@@ -111,7 +113,7 @@ Tools install lazily on first use (`not_found_auto_install = true`); `mise insta
 
 ## Nix first-boot notes
 
-- **SELinux**: the installer lands store paths as `default_t` on Fedora atomic (upstream [nix-installer#1383](https://github.com/NixOS/nix-installer/issues/1383)). The install service runs `restorecon -Rv /nix` once. After large `nix profile install` batches, re-run `sudo restorecon -Rv /nix` if you see permission errors.
+- **SELinux**: Fedora's stock policy has no rules for `/nix` (not FHS-standard), so files land `default_t` and fail to execute (upstream [nix-installer#1383](https://github.com/NixOS/nix-installer/issues/1383)). athens-os root-fixes this by shipping `/etc/selinux/targeted/contexts/files/file_contexts.local` mapping `/nix` → `usr_t`, `/nix/store/*/bin` → `bin_t`, etc. `athens-nix-relabel.path` watches `/nix/store` and triggers `athens-nix-relabel.service` (`restorecon -RF /nix`) whenever `nix profile install` adds store paths, so labels stay correct automatically. Manual recovery if ever needed: `sudo systemctl start athens-nix-relabel.service`.
 - **composefs (silverblue-main F42+)**: if `findmnt /nix` shows no mount after the install service completes, the active composefs-backed root may be blocking the bind mount. Workaround: add `rd.systemd.unit=root.transient` as a kernel argument (`sudo rpm-ostree kargs --append=rd.systemd.unit=root.transient`) and reboot.
 - **Channel default**: `/etc/nix/nix.conf` is whatever the installer writes — no athens-os override. Flakes are off by default (classic CppNix behavior). Enable per-user by writing `experimental-features = nix-command flakes` into `~/.config/nix/nix.conf`.
 - **nix-installer version**: pinned via `NIX_INSTALLER_VERSION` at the top of `build_files/build.sh`. The baked binary lives at `/usr/libexec/nix-installer`; bump via PR to the URL scheme in `build.sh`.
