@@ -12,7 +12,7 @@ default browser, and VS Code + docker-ce for day-to-day dev.
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
 | **Desktop** | GNOME Shell (default from base) + 5 extensions: appindicator, dash-to-panel, bazaar-integration, tilingshell, rounded-window-corners |
 | **Browser** | `helium-bin` (RPM, via `imput/helium` COPR — auto-updates with `rpm-ostree upgrade`) |
-| **Editor** | `code` (RPM, via Microsoft repo — auto-updates with `rpm-ostree upgrade`) |
+| **Editor** | `vscode` via `programs.vscode` in home.nix (includes `ms-vscode-remote.remote-ssh` + `remote-containers`; user can remove with a one-line edit) |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
 | **Dev tooling** | `gh`, `starship`, `gcc`/`make`/`cmake`, `git-lfs`/`git-subtree`/`git-credential-libsecret`, `android-tools`, kernel-debug stack |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
@@ -44,10 +44,9 @@ athens-os/
 │   │   ├── flatpak-manifest                    → 7 refs
 │   │   ├── systemd/system/athens-flatpak-install.service (+ multi-user.target.wants symlink)
 │   │   ├── systemd/system/athens-nix-install.service   (+ multi-user.target.wants symlink)  → first-boot: install Nix with ostree planner
-│   │   └── yum.repos.d/{vscode.repo, docker-ce.repo}   → enabled so rpm-ostree upgrade pulls updates
+│   │   └── yum.repos.d/docker-ce.repo                   → enabled so rpm-ostree upgrade pulls updates
 │   └── usr/lib/systemd/user/
 │       ├── athens-home-manager-setup.service   → first-login: install home-manager + home-manager switch
-│       ├── athens-vscode-setup.service         → first-login: install 3 VS Code extensions
 │       └── default.target.wants/ (symlinks)
 ├── home/                                      → shipped to /etc/skel/
 │   └── .config/home-manager/home.nix          → single source of truth for user env (bash, starship, atuin, git, mise, CLI QoL)
@@ -67,7 +66,7 @@ athens-os/
    systemctl reboot
    ```
 4. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
-5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch`) and `athens-vscode-setup.service`.
+5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, nix-software-center, and the rest of `home.nix`).
 
 ## Local build
 

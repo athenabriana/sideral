@@ -30,6 +30,10 @@ in
   # Never bump without reading home-manager release notes.
   home.stateVersion = "24.11";
 
+  # Allow proprietary builds (vscode, vscode-extensions, some fonts).
+  # Flip to allowUnfreePredicate if you ever want a narrower gate.
+  nixpkgs.config.allowUnfree = true;
+
   # ── User-profile packages (ad-hoc CLI tooling + runtime manager + GUI) ──
   home.packages = [
     pkgs.mise
@@ -55,6 +59,19 @@ in
 
   # ── Git (name / email intentionally unset — user fills in) ──────────────
   programs.git.enable = true;
+
+  # ── Editor: VS Code (Microsoft proprietary build) ───────────────────────
+  # Declarative install + preloaded extensions for remote/devcontainer flow.
+  # mutableExtensionsDir defaults to true, so users can still install more
+  # via the VS Code UI (e.g., ms-azuretools.vscode-containers once it lands
+  # in nixpkgs — for now grab it from the marketplace).
+  programs.vscode = {
+    enable = true;
+    extensions = with pkgs.vscode-extensions; [
+      ms-vscode-remote.remote-ssh
+      ms-vscode-remote.remote-containers
+    ];
+  };
 
   # ── CLI quality-of-life ─────────────────────────────────────────────────
   programs.zoxide.enable    = true;   # smart `cd` with frecency (z / zi)

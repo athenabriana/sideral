@@ -15,7 +15,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) and `.specs/features/nix-home/context.md` (15 decisions). Highlights:
 - Desktop: GNOME + tiling-shell, Hyprland dropped entirely.
 - Browser: `helium-bin` via `imput/helium` COPR (COPR kept enabled for updates).
-- Editor: `code` from Microsoft's repo (vscode.repo kept enabled for updates).
+- Editor: `vscode` via `programs.vscode` in home.nix (with `ms-vscode-remote.remote-ssh` + `remote-containers`); supersedes ATH-14, ATH-15, ATH-17 (VS Code RPM + athens-vscode-setup.service removed; vscode.repo file deleted).
 - Container: `docker-ce` + `containerd.io` from docker-ce-stable repo.
 - **User layer:** nix + home-manager is the sole source of user-level config. `/etc/skel` reduced to one file: `~/.config/home-manager/home.nix`.
 - **Nix:** upstream CppNix via `NixOS/experimental-nix-installer`, baked binary at `/usr/libexec/nix-installer`, first-boot `ostree` planner, `/nix` bind-mounted from `/var/lib/nix`, `restorecon` post-install, default NixOS behavior (flakes off, channels).
