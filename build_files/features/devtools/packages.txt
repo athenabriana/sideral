@@ -5,11 +5,11 @@
 
 # gh + starship are NOT layered — shipped via home.nix
 # (programs.gh / programs.starship).  Plain CLIs belong in the user layer.
-
-# ── Build dependencies for native bindings (npm native modules, pyenv, etc.) ──
-gcc
-make
-cmake
+#
+# gcc + make + cmake are NOT layered either — they ship via home.packages
+# in home.nix so the full compiler lineage (mise-built runtimes + C
+# extensions compiled by pip/npm/cargo) stays consistent with nix's glibc.
+# For ad-hoc builds against system libs: nix-shell -p <lib>.dev
 
 # ── Git ergonomics ──
 git-credential-libsecret

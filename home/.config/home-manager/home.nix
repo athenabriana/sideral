@@ -38,6 +38,12 @@ in
   home.packages = [
     pkgs.mise
     nix-software-center
+    # Native-build toolchain — used by pip/npm/cargo C-ext builds and by
+    # mise when compiling Python/Ruby from source. Keeping them in nix
+    # (not RPM) keeps the compiler lineage consistent with nix's glibc.
+    pkgs.gcc
+    pkgs.gnumake
+    pkgs.cmake
   ];
 
   # ── Bash: the login / interactive shell ─────────────────────────────────
