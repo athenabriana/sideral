@@ -3,9 +3,8 @@
 # ~/.config/home-manager/home.nix and is materialized by
 # athens-home-manager-setup.service on first login.
 
-# ── GitHub + prompt ──
-gh
-starship
+# gh + starship are NOT layered — shipped via home.nix
+# (programs.gh / programs.starship).  Plain CLIs belong in the user layer.
 
 # ── Build dependencies for native bindings (npm native modules, pyenv, etc.) ──
 gcc
