@@ -1,6 +1,7 @@
 # CLI / dev tooling not covered by silverblue-main base or mise.
-# mise itself is NOT layered — installed per-user to ~/.local/bin via
-# athens-mise-install.service on first login.
+# mise itself is NOT layered — it ships via home.packages in
+# ~/.config/home-manager/home.nix and is materialized by
+# athens-home-manager-setup.service on first login.
 
 # ── GitHub + prompt ──
 gh

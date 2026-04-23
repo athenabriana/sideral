@@ -16,6 +16,17 @@ set -euo pipefail
 
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
+# ── Pinned nix-installer (upstream CppNix, ostree planner) ──────────────
+# Staged at /usr/libexec/nix-installer; invoked by athens-nix-install.service
+# on first boot. Upstream repo was renamed from experimental-nix-installer
+# to nix-installer (same code, no longer "experimental"); both URLs work.
+NIX_INSTALLER_VERSION="2.34.5"
+NIX_INSTALLER_URL="https://github.com/NixOS/nix-installer/releases/download/${NIX_INSTALLER_VERSION}/nix-installer-x86_64-linux"
+
+log "Staging nix-installer ${NIX_INSTALLER_VERSION} at /usr/libexec/nix-installer"
+curl -sSfL "$NIX_INSTALLER_URL" -o /usr/libexec/nix-installer
+chmod 0755 /usr/libexec/nix-installer
+
 FEATURES_DIR="/ctx/features"
 FEATURES=(gnome devtools browser container fonts gnome-extensions)
 

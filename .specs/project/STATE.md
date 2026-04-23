@@ -3,23 +3,45 @@
 Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current feature
-- `athens-os` — fork from `fedora-athens`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 28 requirements across 5 user stories. See `.specs/features/athens-os/spec.md`.
+- `nix-home` — migrates user-level config to nix + home-manager, collapses `/etc/skel` to a single `home.nix`, moves mise from RPM to nix. 40 requirements across 7 user stories. See `.specs/features/nix-home/spec.md`.
+
+## Roadmap
+- See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog (`gnome-extras`, `ublue-adopt`, `nix-extras-v2`, hardware, security) features.
+
+## Previous feature
+- `athens-os` — fork from `fedora-athens`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 27 requirements across 5 user stories. See `.specs/features/athens-os/spec.md`. Requirements ATH-17, ATH-23, ATH-24, ATH-26 are superseded by `nix-home` (see that feature's spec.md → Supersedes table).
 
 ## Locked decisions
-See `.specs/features/athens-os/context.md` (9 decisions). Highlights:
+See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) and `.specs/features/nix-home/context.md` (15 decisions). Highlights:
 - Desktop: GNOME + tiling-shell, Hyprland dropped entirely.
 - Browser: `helium-bin` via `imput/helium` COPR (COPR kept enabled for updates).
 - Editor: `code` from Microsoft's repo (vscode.repo kept enabled for updates).
 - Container: `docker-ce` + `containerd.io` from docker-ce-stable repo.
-- mise: user-level install via first-login systemd unit; no `/usr` mise binary.
-- Shell: bash only; `/etc/skel/.bashrc` activates starship+mise+atuin+direnv.
+- **User layer:** nix + home-manager is the sole source of user-level config. `/etc/skel` reduced to one file: `~/.config/home-manager/home.nix`.
+- **Nix:** upstream CppNix via `NixOS/experimental-nix-installer`, baked binary at `/usr/libexec/nix-installer`, first-boot `ostree` planner, `/nix` bind-mounted from `/var/lib/nix`, `restorecon` post-install, default NixOS behavior (flakes off, channels).
+- **home-manager:** channels-based (release-24.11), bootstrapped on first login via user systemd unit, starter `home.nix` declares bash/starship/git/atuin + `pkgs.mise` + inlined mise config.
+- **mise:** moved from RPM to nix (via `home.packages`); `mise.jdx.dev/rpm/` repo and `athens-mise-install.service` removed.
+- **Dropped:** `direnv` (user declined), `act` (on-demand via `nix profile install`), `atuin`/`starship`/`mise` from `/etc/skel/.bashrc` (now home-manager-managed).
+- Shell: bash only; `~/.bashrc` now home-manager-managed (was `/etc/skel/.bashrc`).
 - Fonts: Source Serif 4 + Source Sans 3 built from Adobe GitHub at image time; cascadia-code, jetbrains-mono, adwaita, opendyslexic from Fedora.
 - Flatpaks: 7 curated refs via systemd oneshot on first boot.
 - No distrobox pre-bake (DistroShelf flatpak available on demand).
-- No brew (user declined; mise + flatpak + docker cover the gaps).
+- **Host-only:** mise and nix are both host-only; `host + distrobox` invariant dropped.
+- No brew (user declined; nix via flakes + nix profile covers ad-hoc CLI tooling, mise covers language runtimes).
 
 ## Known blockers
 None yet.
+
+## nix-home implementation status (Apr 2026)
+All 9 tasks implemented locally. Local gate limited to `bash -n` + INI parse + grep invariants
+(shellcheck/podman/just not on this dev host). Full `just build` + `bootc container lint` runs in
+CI. Runtime criteria (NXH-06/27/28) require VM rebase to verify.
+
+**Spec deviation**: NXH-01 URL/asset text is stale. Upstream renamed
+`experimental-nix-installer` → `nix-installer`; x86_64 asset is `nix-installer-x86_64-linux`
+(dropped the `-unknown-linux-gnu` suffix). Using `2.34.5` pin. Spec intent (upstream CppNix via
+installer's ostree planner, per D-01) unchanged. See `.specs/features/nix-home/tasks.md`
+SPEC-DEV-01. Update spec.md NXH-01 text when promoting to Verified.
 
 ## Lessons
 - **docker-ce repo is both shipped AND registered at build time.** Shipped file (`/etc/yum.repos.d/docker-ce.repo`) is for `rpm-ostree upgrade` to see. Inline `dnf5 config-manager addrepo --from-repofile=<URL>` in `build.sh` is for the build itself — the shipped copy isn't available during the RUN step because `COPY system_files/etc /etc` happens *after* `build.sh`.

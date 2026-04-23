@@ -41,18 +41,18 @@ clean:
 diff:
     sudo rpm-ostree db diff
 
-# Push repo's home/ → live $HOME (overwrites tracked files, leaves untracked alone)
-apply-home:
-    rsync -a --info=NAME home/ $HOME/
+# Edit the repo's home.nix in $EDITOR (falls back to vi)
+home-edit:
+    ${EDITOR:-vi} home/.config/home-manager/home.nix
 
-# Pull live tracked dotfiles back into the repo (so git sees your edits)
-capture-home:
-    rsync -a --info=NAME --delete $HOME/.config/mise/ home/.config/mise/
-    rsync -a --info=NAME $HOME/.bashrc home/.bashrc
+# Apply the repo's home.nix to live $HOME via home-manager switch
+home-apply:
+    home-manager switch -f home/.config/home-manager/home.nix
 
-# Show diff: repo vs live $HOME
-diff-home:
-    -diff -ruN $HOME/.config home/.config 2>&1 | head -200
+# Preview what `home-apply` would change vs the currently-active generation
+home-diff:
+    home-manager build -f home/.config/home-manager/home.nix
+    @echo "Built generation above; compare via: home-manager generations"
 
 # Rollback to the previous deployment
 rollback:
