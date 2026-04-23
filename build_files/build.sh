@@ -33,6 +33,9 @@ FEATURES=(gnome devtools browser container fonts gnome-extensions)
 # ── COPRs that stay enabled in the shipped image (for `rpm-ostree upgrade`) ──
 PERSISTENT_COPRS=(
     imput/helium
+    # Universal Blue's curated packages repo — source of `bazaar` (GNOME app
+    # store) and other ublue-specific RPMs. Same COPR used by Bazzite/Aurora.
+    ublue-os/packages
 )
 
 # ── Enable persistent COPRs ─────────────────────────────────────────────
