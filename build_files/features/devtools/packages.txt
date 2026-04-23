@@ -16,19 +16,5 @@ git-credential-libsecret
 git-subtree
 git-lfs
 
-# ── Mobile ──
-android-tools
-
 # VS Code is NOT layered — it ships via programs.vscode in home.nix so
 # users can remove it with a one-line edit + `home-manager switch`.
-
-# ── Kernel debug / profiling (bluefin-dx parity) ──
-bcc
-bpftop
-bpftrace
-sysprof
-trace-cmd
-tiptop
-nicstat
-iotop
-udica

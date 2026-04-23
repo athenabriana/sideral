@@ -9,18 +9,6 @@
 # Roll back one generation:      home-manager generations && home-manager switch <gen-path>
 { config, pkgs, lib, ... }:
 
-let
-  # nix-software-center is not in upstream nixpkgs, so we fetch directly from
-  # GitHub. builtins.fetchGit is pinned by rev (deterministic, no sha256 needed)
-  # and works in channels-only mode (no flakes — D-02). Bumping: update `rev`.
-  nix-software-center-src = builtins.fetchGit {
-    url     = "https://github.com/snowfallorg/nix-software-center.git";
-    rev     = "181c1c61eab79130879257550dba0b36bd6bb8c9";  # 2026-02-15
-    ref     = "refs/heads/main";
-    shallow = true;
-  };
-  nix-software-center = import nix-software-center-src { inherit pkgs lib; };
-in
 {
   # ── Identity — resolved at switch time, so one file works for any user ──
   home.username      = builtins.getEnv "USER";
@@ -34,10 +22,9 @@ in
   # Flip to allowUnfreePredicate if you ever want a narrower gate.
   nixpkgs.config.allowUnfree = true;
 
-  # ── User-profile packages (ad-hoc CLI tooling + runtime manager + GUI) ──
+  # ── User-profile packages (ad-hoc CLI tooling + runtime manager) ────────
   home.packages = [
     pkgs.mise
-    nix-software-center
     # Native-build toolchain — used by pip/npm/cargo C-ext builds and by
     # mise when compiling Python/Ruby from source. Keeping them in nix
     # (not RPM) keeps the compiler lineage consistent with nix's glibc.

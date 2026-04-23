@@ -14,7 +14,7 @@ default browser, and VS Code + docker-ce for day-to-day dev.
 | **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `athens-flatpak-install.service`) |
 | **Editor** | `vscode` via `programs.vscode` in home.nix (includes `ms-vscode-remote.remote-ssh` + `remote-containers`; user can remove with a one-line edit) |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
-| **Dev tooling** | RPM: `git-lfs`/`git-subtree`/`git-credential-libsecret`, `android-tools`, kernel-debug stack. home.nix: `gh`, `starship`, `gcc`/`make`/`cmake`. |
+| **Dev tooling** | RPM: `git-lfs`/`git-subtree`/`git-credential-libsecret`. home.nix: `gh`, `starship`, `gcc`/`make`/`cmake`. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
 | **Nix** | Upstream CppNix installed via `nix-installer` (ostree planner) on first boot; `/nix` persisted via bind mount from `/var/lib/nix` |
 | **User environment** | home-manager (channels, `release-24.11`) bootstraps on first login from `~/.config/home-manager/home.nix`; owns bash, starship, atuin, git, mise, and CLI QoL (zoxide/fzf/bat/eza/ripgrep/nix-index/gh) |
@@ -32,7 +32,7 @@ athens-os/
 │   └── features/
 │       ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
 │       ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
-│       ├── devtools/         packages.txt  → git ergonomics (lfs / subtree / libsecret) + android-tools + kernel-debug stack
+│       ├── devtools/         packages.txt  → git ergonomics (lfs / subtree / libsecret)
 │       ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
 │       └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
 ├── system_files/
@@ -65,7 +65,7 @@ athens-os/
    systemctl reboot
    ```
 4. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
-5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, nix-software-center, and the rest of `home.nix`).
+5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, and the rest of `home.nix`).
 
 ## Local build
 
@@ -96,12 +96,6 @@ Roll back: `home-manager generations` then `home-manager switch <path-from-list>
 Fresh account: skel is copied into `~/` on user creation, first login runs the setup service, no further action.
 
 Existing account: edit `~/.config/home-manager/home.nix` directly and run `home-manager switch`, or iterate in the repo copy and use `just home-apply`.
-
-## nix-software-center (GUI package browser)
-
-Shipped in `home.nix` via `builtins.fetchGit` pinned to a commit of [snowfallorg/nix-software-center](https://github.com/snowfallorg/nix-software-center) — not in upstream nixpkgs, so we fetch it directly. Pinning by `rev` means no sha256 to manage; bumping is a one-line edit.
-
-Launch from the GNOME app grid as "Nix Software Center". It can browse nixpkgs, install via `nix profile` / `nix-env`, and run apps without installing via `nix-shell` / `nix run`. Flakes-based install is exposed in its preferences menu (off by default, matching D-02).
 
 ## mise toolchain
 
