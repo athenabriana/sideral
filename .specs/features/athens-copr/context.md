@@ -131,7 +131,7 @@ Users enabling our Copr get transitive resolution of all four without enabling a
 
 ## D-11 — Requirement ID prefix: ACR-
 
-**Choice**: Acceptance-criteria IDs are `ACR-NN` (Athens COPR). 37 requirements total in this spec (ACR-01 … ACR-37) after the 2026-04-23 reversal of D-03 (bazaar story removed) + addition of D-13 (-flatpaks story).
+**Choice**: Acceptance-criteria IDs are `ACR-NN` (Athens COPR). **41 requirements** total in this spec (ACR-01 … ACR-41) after the 2026-04-23 reversal of D-03 (bazaar story removed), addition of D-13 (-flatpaks story), and addition of D-14 (-signing story + image trust chain).
 
 **Reasoning**: Distinct from `ATH-` (parent athens-os spec) and `NXH-` (nix-home sibling). Short enough to type in commit messages.
 
@@ -142,6 +142,38 @@ Users enabling our Copr get transitive resolution of all four without enabling a
 **Choice**: Directory is `athens-copr` (no `-base` suffix, no `-rpm` suffix).
 
 **Reasoning**: Concise. The feature is "our Copr project exists" — the base meta-package is one implementation detail inside it, not the feature itself.
+
+---
+
+## D-14 — `athens-os-signing` sub-package + image trust chain
+
+**Choice**: Ship our own `athens-os-signing` sub-package (8th in the count) instead of pulling `ublue-os-signing` from upstream. Combined with cosign keyless signing of our OCI image in CI, this establishes an end-to-end trust chain: users can rebase via `ostree-image-signed:registry:ghcr.io/athenabriana/athens-os:latest` and a tampered registry breaks the rebase.
+
+**What `athens-os-signing` ships**:
+- `/etc/containers/policy.json` (overwrites the base image's lenient default), with:
+  - `default: insecureAcceptAnything` — preserves the user's existing podman/skopeo workflow for arbitrary images
+  - A `transports.docker."ghcr.io/athenabriana/athens-os"` rule of type `sigstoreSigned` referencing the Fulcio root CA (embedded in the policy file) + the workflow OIDC identity (`https://github.com/athenabriana/athens-os/.github/workflows/build.yml@refs/heads/main`) + the OIDC issuer (`https://token.actions.githubusercontent.com`)
+- Optionally: `/etc/containers/registries.d/ghcr.io.yaml` if the default registries.d entry doesn't already point Sigstore lookups at ghcr.io (TBD during implementation)
+
+**No static pub key shipped** — cosign keyless OIDC verifies against Sigstore's transparency log (Rekor) + Fulcio CA + a workflow identity match. Same verification path as our RPM signing (D-05).
+
+**Alternatives considered**:
+- **Pull `ublue-os-signing` directly**: Rejected. Their policy.json scopes `sigstoreSigned` to `ghcr.io/ublue-os/*` against ublue's signing keys; doesn't cover athenabriana/athens-os. Pulling it gives base-image verification but doesn't end-to-end secure our deployed image. Worse: it would conflict on file ownership of `/etc/containers/policy.json` if we tried to install both.
+- **Patch ublue-os-signing's policy.json in `%post`** (`Requires: ublue-os-signing` + scriptlet to add our entry): Rejected. Fragile — every ublue-os-signing update would need to coordinate with our patcher. RPM `%post` modifications to packaged files are an antipattern.
+- **Static-key cosign instead of keyless**: Rejected. We already use keyless OIDC for RPM signing (D-05); using a static key for image signing would mean managing key rotation manually. Keyless gives us "no key material to lose" by design.
+- **Skip image signing entirely; only sign RPMs**: Rejected. Defeats the goal — `rpm-ostree rebase` on user machines pulls the OCI image, which without signing is vulnerable to a compromised registry. RPM signing only matters at install time inside the image; it doesn't protect the rebase path.
+
+**Reasoning**: The whole point of athens-copr is to "package athens-os as real software with verifiable provenance." It would be inconsistent to lock down the RPM artifacts (D-05) while leaving the deployed image (the actual thing users install) unverified. Bluefin/Bazzite/Aurora all ship their own `<distro>-signing` packages for the same reason — packaging cleanliness AND end-to-end trust.
+
+**Trade accepted**:
+- We can't trivially adopt ublue's signing for our base image at the same time. Verifying silverblue-main is a build-time concern (CI workflow can `cosign verify` the base image before using it), not a user-machine concern.
+- If the GHA workflow file path or branch ever changes (e.g., we rename `build.yml` or move to `next` branch), existing user installs need a transition release: ship a new `athens-os-signing` with both old + new identities for a release cycle, then drop the old.
+
+**Implementation**:
+- New ACRs ACR-18 (sub-package contents), ACR-27..29 (image-signing trust chain story)
+- Phase A adds image signing to `build.yml`
+- Phase B migrates `athens-os-signing` 4th in order (after the simplest single-file packages, before flatpaks/dconf/services) so the trust chain can be validated end-to-end on a real signed image before more files migrate
+- Phase C cutover updates README to use `ostree-image-signed:` URL as the canonical install command
 
 ---
 
