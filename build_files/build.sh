@@ -29,7 +29,7 @@ curl -sSfL "$NIX_INSTALLER_URL" -o /usr/libexec/nix-installer
 chmod 0755 /usr/libexec/nix-installer
 
 FEATURES_DIR="/ctx/features"
-FEATURES=(gnome devtools container fonts gnome-extensions)
+FEATURES=(gnome container fonts gnome-extensions)
 
 # ── COPRs that stay enabled in the shipped image (for `rpm-ostree upgrade`) ──
 # Universal Blue's curated packages repo — source of `bazaar` (GNOME app

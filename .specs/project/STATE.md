@@ -20,6 +20,7 @@ See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) an
 - **User layer:** nix + home-manager is the sole source of user-level config. `/etc/skel` reduced to one file: `~/.config/home-manager/home.nix`.
 - **Nix:** upstream CppNix via `NixOS/experimental-nix-installer`, baked binary at `/usr/libexec/nix-installer`, first-boot `ostree` planner, `/nix` bind-mounted from `/var/lib/nix`, `restorecon` post-install, default NixOS behavior (flakes off, channels).
 - **home-manager:** channels-based (release-24.11), bootstrapped on first login via user systemd unit, starter `home.nix` declares bash/starship/git/atuin + `pkgs.mise` + inlined mise config.
+- **Git tooling moved to home.nix (2026-04-23):** `programs.git` enables `lfs` + sets `credential.helper = "libsecret"` (uses libsecret helper from nixpkgs git's libexec). Removed `git-lfs`, `git-subtree`, `git-credential-libsecret` RPMs from devtools layer; `build_files/features/devtools/` deleted entirely (was the last RPM-layered user CLI category).
 - **mise:** moved from RPM to nix (via `home.packages`); `mise.jdx.dev/rpm/` repo and `athens-mise-install.service` removed.
 - **Dropped:** `direnv` (user declined), `act` (on-demand via `nix profile install`), `atuin`/`starship`/`mise` from `/etc/skel/.bashrc` (now home-manager-managed).
 - Shell: bash only; `~/.bashrc` now home-manager-managed (was `/etc/skel/.bashrc`).

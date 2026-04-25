@@ -51,7 +51,18 @@
   programs.atuin.enable = true;
 
   # ── Git (name / email intentionally unset — user fills in) ──────────────
-  programs.git.enable = true;
+  # Replaces RPM-layered git-lfs / git-subtree / git-credential-libsecret;
+  # nixpkgs `pkgs.git` ships with libsecret support enabled on Linux, and
+  # `git subtree` is bundled in core git. credential.helper = "libsecret"
+  # tells git to look up `git-credential-libsecret` in its libexec dir,
+  # which works because the helper is in the same nix-profile derivation.
+  programs.git = {
+    enable = true;
+    lfs.enable = true;
+    extraConfig = {
+      credential.helper = "libsecret";
+    };
+  };
 
   # ── Editor: VS Code (Microsoft proprietary build) ───────────────────────
   # Declarative install + preloaded extensions for remote/devcontainer flow.
