@@ -16,30 +16,43 @@ Decisions locked during spec authoring. Each entry captures the choice, the alte
 
 ---
 
-## D-02 — External repo aggregated: docker-ce-stable (helium dropped)
+## D-02 — Two external repos aggregated: ublue-os/packages + docker-ce-stable
 
-**Choice**: Our Copr project lists exactly one external repo — `https://download.docker.com/linux/fedora/docker-ce.repo` (Docker Inc). Users enabling our Copr get transitive resolution of `docker-ce` + `containerd.io` without enabling any other repo themselves.
+**Choice**: Our Copr project lists exactly two external repos:
+1. `https://copr.fedorainfracloud.org/coprs/ublue-os/packages/repo/fedora-43/ublue-os-packages-fedora-43.repo` — provides `bazaar` (current use) + `ublue-os-signing` (queued, security on rebase) + future ublue adoptions
+2. `https://download.docker.com/linux/fedora/docker-ce.repo` — provides `docker-ce` + `containerd.io`
+
+Users enabling our Copr get transitive resolution of all four without enabling any upstream repo themselves.
 
 **Alternatives considered**:
 - Also aggregate `imput/helium`. Rejected because helium was dropped entirely from the RPM layer (see addendum below). Browser ships via flatpak instead.
-- Include `ublue-os/packages` as a second external repo. Rejected in favor of D-03 (fork bazaar into our own Copr).
-- Aggregate none — let users enable each upstream repo separately. Rejected: loses the single-COPR-enablement goal and leaves `docker-ce.repo` as a loose file.
+- Aggregate only `docker-ce-stable`, fork bazaar into our own Copr. Rejected (see D-03 reversal below) — fork was load-bearing maintenance for zero patches carried.
+- Aggregate none — let users enable each upstream repo separately. Rejected: loses the single-COPR-enablement goal and leaves users with multiple repo files to manage.
 
-**Reasoning**: Docker Inc is closest to their source; we don't rebuild what they maintain. External-repo aggregation means one repo enablement from the user's perspective, with no ongoing packaging work on our side.
+**Reasoning**: Both Docker Inc and Universal Blue maintain their packages well, with active release cycles, F43 chroot support, and broad community use (Bluefin/Bazzite/Aurora all consume `ublue-os/packages`). External-repo aggregation means one repo enablement from the user's perspective, with no ongoing packaging work on our side. We pick up new versions automatically as upstream releases.
 
 **Addendum (2026-04-23) — helium dropped, Zen Browser via flatpak**: The `imput/helium` COPR's `helium-bin` RPM hits a cpio `/opt/helium` unpack conflict on Silverblue's tmpfiles-managed `/opt` directory (CI evidence: run 24855724059). Rather than ship a workaround, we replaced helium with Zen Browser via `app.zen_browser.zen` flatpak — a privacy-focused Firefox fork, still the user's declared preference after a brief Chrome → Firefox iteration. Browser is no longer an RPM-layer concern; the `build_files/features/browser/` directory and the `imput/helium` line in `PERSISTENT_COPRS` were removed in the same change.
 
 ---
 
-## D-03 — bazaar forked into packages/bazaar/ (we become its packager)
+## D-03 — bazaar NOT forked: aggregate via external-repo (REVERSED 2026-04-23)
 
-**Choice**: Fork `ublue-os/packages:staging/bazaar/bazaar.spec` into `packages/bazaar/bazaar.spec` in our repo. Our Copr builds it with the same upstream source (https://github.com/bazaar-org/bazaar). Name stays `bazaar` to preserve `dnf install bazaar` resolution for anyone porting from ublue-based images.
+**Choice**: Use `ublue-os/packages` as a Copr external-repo (per D-02). Do **not** create `packages/bazaar/bazaar.spec`. `athens-os-base.spec` declares `Requires: bazaar` and dnf resolves it transitively from ublue's prebuilt RPM. We don't host or maintain bazaar.
 
 **Alternatives considered**:
-- Leave bazaar as an external-repo dependency on `ublue-os/packages`. Rejected per user direction: "ublue packages should be cloned and 'rewritten' to our need".
-- Rename the fork to `athens-bazaar` to signal our custom build. Rejected: breaks the `Name:` contract that users and scripts may depend on.
+- **Original choice (rejected on review)**: Fork `ublue-os/packages:staging/bazaar/bazaar.spec` into `packages/bazaar/bazaar.spec`, build in our Copr, track upstream tags ourselves. Initial decision was driven by user direction *"ublue packages should be cloned and 'rewritten' to our need"*. Rejected on the second pass when we asked "what would we actually rewrite?" and the answer was nothing — we have zero patches to carry. Forking would be load-bearing maintenance (manual upstream tracking, weekly reminder workflow, version bumps) for the same RPM ublue ships.
+- Rename to `athens-bazaar` to signal a custom build. Moot once we're not building it.
 
-**Reasoning**: Gives us control over bazaar's release cadence and the ability to carry small patches without round-tripping through ublue. Cost: we now track kolunmi/bazaar-org release tags ourselves. Acceptable because bazaar is the only non-authored RPM we currently consume and its release cadence (~monthly) is manageable.
+**Reasoning for reversal**: `ublue-os/packages` is the de-facto canonical bazaar packaging on Fedora — used by Bluefin, Bazzite, Aurora. Active F43 chroot, fresh builds, broad community trust. We have no patches, no opinion on release cadence, no reason to fork. Aggregating is strictly less work for the same outcome. If upstream ever regresses or removes bazaar (an Edge Case noted in spec), we'd fork that one spec then — as an emergency, not as the steady state.
+
+**Trade accepted**: We ride ublue's release cadence by default. If bazaar lands a bad release at upstream, we wait or pin. Acceptable for a personal image.
+
+**Implications for the spec** (applied 2026-04-23):
+- "P2: bazaar forked" user story removed (was ACR-22..26)
+- ACR-38 ("packages/bazaar/UPSTREAM.md tracker") removed
+- D-02 expanded to add `ublue-os/packages` as the second external repo
+- `athens-os-base.spec` Requires gains `ublue-os-signing` since it's in the same repo (free win — security on rebase)
+- Total ACRs: 39 → 37 (removed 6, added 4 for new -flatpaks story per D-13)
 
 ---
 
@@ -118,7 +131,7 @@ Decisions locked during spec authoring. Each entry captures the choice, the alte
 
 ## D-11 — Requirement ID prefix: ACR-
 
-**Choice**: Acceptance-criteria IDs are `ACR-NN` (Athens COPR). 35 requirements total in this spec (ACR-01 … ACR-35).
+**Choice**: Acceptance-criteria IDs are `ACR-NN` (Athens COPR). 37 requirements total in this spec (ACR-01 … ACR-37) after the 2026-04-23 reversal of D-03 (bazaar story removed) + addition of D-13 (-flatpaks story).
 
 **Reasoning**: Distinct from `ATH-` (parent athens-os spec) and `NXH-` (nix-home sibling). Short enough to type in commit messages.
 
@@ -132,9 +145,28 @@ Decisions locked during spec authoring. Each entry captures the choice, the alte
 
 ---
 
+## D-13 — `athens-os-flatpaks` as own sub-package
+
+**Choice**: The flatpak preinstall machinery (`/etc/flatpak-manifest`, `/etc/systemd/system/athens-flatpak-install.service`, and the `multi-user.target.wants/` enablement symlink) lives in its own sub-package `athens-os-flatpaks`. Total sub-packages: 7 (`-base`, `-services`, `-flatpaks`, `-dconf`, `-selinux`, `-shell-ux`, `-user`).
+
+**Alternatives considered**:
+- **Keep manifest in `-base`, service in `-services`** (original spec). Rejected: implicit cross-package coupling — the service in `-services` reads a config file owned by `-base`. Removing `-base` while keeping `-services` would orphan a running service.
+- **Move both to `-services`** (group by mechanism). Rejected: `-services` becomes a grab bag of unrelated concerns (nix install + nix relabel + flatpak + home-manager-setup); poor concern boundary.
+- **Move manifest to `-user`** (user-facing reasoning). Rejected: file lives in `/etc`, read by a system service running as root — putting it in a "user-scope" package is a packaging mismatch even if user-facing in spirit.
+
+**Reasoning**: The flatpak triplet (manifest + service + symlink) is tightly coupled — one reads the others, all three must travel together for clean removal. Putting them in their own sub-package gives users a clean opt-out: `rpm-ostree override remove athens-os-flatpaks` skips the curated set entirely and lets them ship their own. This is the same reasoning that motivated the per-concern sub-package split in D-01; we just had it slightly wrong on the original divide.
+
+**Implementation**:
+- New ACRs ACR-19..ACR-22 cover the sub-package
+- ACR-12 updated: `-base` no longer owns `/etc/flatpak-manifest`
+- ACR-13 updated: `-services` no longer owns the flatpak service or its symlink
+- Phase B migration order updated to include `-flatpaks` between `-user` and `-dconf`
+
+---
+
 ## Open items (flag if they come up during design/implementation)
 
-- **Copr external-repo configuration via `copr-cli`** — unverified whether external repos can be set via API, or if one-time web UI config is required. Design task: check Copr API docs and `copr-cli modify` for external-repo flags.
+- **Copr external-repo configuration via `copr-cli`** — unverified whether external repos can be set via API, or if one-time web UI config is required. Design task: check Copr API docs and `copr-cli modify` for external-repo flags. ACR-02 depends on this working with TWO external repos (ublue-os/packages + docker-ce).
 - **Spec file `Source0:` for packages that ship files from system_files/** — decide: tarball the relevant subtree (`system_files/etc/systemd/system/athens-*.service`) per-package, or tarball the whole `system_files/` per-package and `%install` selectively. Impact: SRPM size and drift detection.
-- **`bazaar` `Version:` bump policy** — manual bump on each kolunmi/bazaar-org tag, or `%global_source_date_epoch` from git-describe? Defer until first bump is needed.
-- **Image-build dependency on Copr availability** — if Copr is down at CI time, image build fails. Mitigation (deferred): cache the latest `athens-os-base.rpm` in the repo's GH Actions cache; fallback install from the cached RPM if Copr is unreachable.
+- **Image-build dependency on Copr availability** — if Copr is down at CI time, image build fails. Mitigation (per ACR-37): cache the latest `athens-os-base.rpm` in the repo's GH Actions cache; fallback install from the cached RPM if Copr is unreachable.
+- **`ublue-os-signing` interaction with rpm-ostree rebase** — adding this RPM ships `/etc/containers/policy.json`. Verify the rebase target URL flips from `ostree-unverified-registry:` to `ostree-image-signed:` cleanly without breaking existing user installs that haven't yet pulled this version.
