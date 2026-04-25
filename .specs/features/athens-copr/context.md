@@ -56,15 +56,22 @@ Users enabling our Copr get transitive resolution of all four without enabling a
 
 ---
 
-## D-04 — Hybrid migration: system_files/ stays as authoring source
+## D-04 — Per-package src/ as authoring source (system_files/ + home/ retire)
 
-**Choice**: `system_files/` and `home/` remain in the repo as the canonical source of each file. RPM spec files generate their staging tarballs from those directories via a build helper (`packages/build-srpm.sh`) rather than duplicating file contents into `packages/<name>/src/`. Local `just build-local` can still `COPY system_files /etc` for fast dev iteration; `just build-release` installs from the Copr.
+**Choice (REVISED 2026-04-23)**: Each athens-os file lives at `packages/<owner-package>/src/<absolute-image-path>`. The `system_files/` and `home/` top-level directories retire entirely — every file there migrates to its owner package's `src/` tree during Phase B. RPM spec files use `Source0` tarballs of their own `src/` subtree.
+
+Local `just build-local` overlays every `packages/*/src/` tree into the image at build time (`Containerfile.dev` runs `cp -a packages/*/src/. /`); `just build-release` runs the canonical `Containerfile` (installs from Copr).
+
+**Original choice (rejected on review)**: `system_files/` + `home/` stay as canonical authoring source; specs generate `Source0` tarballs from subsets. Rejected because it directly contradicted D-07 (which named per-package `src/` as the staging convention) and forced a per-package file-list map in `build-srpm.sh` to know which files belonged to which package — a separate source of truth that drift detection had to keep in sync. Self-contained packages (Option B) eliminate that bookkeeping.
 
 **Alternatives considered**:
-- Parallel sources of truth — `system_files/` for local dev, separate copies in `packages/<name>/src/` for RPM builds. Rejected: drift risk is high; edits land in one place and forget to update the other.
-- Delete `system_files/`, RPM specs are the only source. Rejected: every local iteration requires a Copr rebuild (slow) or `rpmbuild -bb` loop (less familiar). Dev-loop friction too high.
+- **Original choice (hybrid)**: kept files in `system_files/`. Rejected per discussion above.
+- **Parallel sources of truth** — `system_files/` for local dev, separate copies in `packages/<name>/src/` for RPM builds. Rejected: drift risk is high; edits land in one place and forget to update the other.
+- **Symlinked src/** — each `packages/<name>/src/` symlinked to `system_files/` subset. Rejected: symlinks-in-RPM-staging are an antipattern; build-srpm.sh would need to dereference them anyway.
 
-**Reasoning**: One source of truth, one iteration speed. The SRPM build helper is ~30 lines of shell that tarballs the relevant subset of `system_files/` per sub-package. Added ACR-35 for drift detection in CI: verifies that what a sub-package ships matches what `system_files/` contains, so we can't accidentally lose a file in the transition.
+**Reasoning**: Per-package `src/` makes each `packages/<name>/` genuinely self-contained — its `.spec` plus its `src/` tree is everything the package needs to build. Drift detection becomes trivial: `rpm -ql athens-os-<name>` should equal `find packages/<name>/src/ -type f` with the prefix stripped. One mental model: when adding a file to athens-os, you put it in the package that owns it — there's no separate "where does the actual content live" question.
+
+**Trade accepted**: `git mv` operations during Phase B (~30 file moves total). One-time cost. After Phase B + C complete, the repo has a cleaner top-level layout (no `system_files/`, no `home/`).
 
 ---
 
@@ -80,17 +87,13 @@ Users enabling our Copr get transitive resolution of all four without enabling a
 
 ---
 
-## D-06 — No rename of system_files/
+## D-06 — No rename of system_files/ (RETIRED 2026-04-23 with D-04 revision)
 
-**Choice**: Keep the directory name `system_files/` unchanged. Matches Bluefin / Bazzite / Aurora convention.
+**Original choice**: Keep the directory name `system_files/` unchanged.
 
-**Alternatives considered** (offered via AskUserQuestion):
-- `os_files/` — parallels `build_files/`.
-- `rootfs/` — OCI / atomic convention.
-- `files/` — shortest.
-- `athens/` — brand-labelled.
+**Status**: Moot. Under D-04's revised choice (per-package `src/` as authoring source), `system_files/` doesn't exist after Phase C. The "should we rename it?" question doesn't apply when the directory itself goes away.
 
-**Reasoning**: User's instinct to rename wavered once the RPM build mechanics were explained (the dir name has no functional effect on the RPM output). Keeping `system_files/` preserves symmetry with the ublue ecosystem — anyone reading Bluefin/Bazzite PRs for reference sees the same layout. Zero migration work.
+**Historical context preserved**: The original deliberation (rename to `os_files/`, `rootfs/`, `files/`, or `athens/`?) was about cosmetic symmetry with `build_files/` and the ublue ecosystem. The user's instinct to rename wavered once the RPM build mechanics were explained, and we kept it as-is. That choice is now superseded by the larger Option-B decision in D-04.
 
 ---
 

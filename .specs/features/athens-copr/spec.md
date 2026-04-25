@@ -19,7 +19,7 @@ The feature is scoped narrowly: **we package what we author**. We do not rebuild
 - [ ] Every RPM we build is signed via cosign keyless OIDC through GitHub Actions; verification uses Sigstore's Rekor + Fulcio (no pre-shared pub key)
 - [ ] **OCI image** is also signed via cosign keyless OIDC; `athens-os-signing` ships `/etc/containers/policy.json` so users can rebase with `ostree-image-signed:` and the rebase fails on signature mismatch
 - [ ] GHA workflow `copr.yml` triggers on push to `main` touching `packages/**` or `system_files/**` or `home/**`; builds spec files via `copr-cli`; blocks merge on build failure
-- [ ] `system_files/` stays in the repo as the authoring source (hybrid mode); spec files reference it via relative paths; dir is NOT renamed
+- [ ] **Per-package `src/` is the authoring source** (matches ublue-os/packages convention literally). `system_files/` and `home/` retire entirely — every file lives at `packages/<owner-package>/src/<absolute-image-path>`. Self-contained sub-packages: each `packages/<name>/` is everything that package needs to build.
 
 ## Out of Scope
 
@@ -33,8 +33,7 @@ The feature is scoped narrowly: **we package what we author**. We do not rebuild
 | Copr API token management via 1Password / Vault | GitHub secret is fine for personal use |
 | Multi-arch builds (aarch64) | x86_64 only, same as image itself |
 | Fedora versions other than 43 | Add fedora-44 chroot when F44 drops |
-| Renaming `system_files/` directory | Deferred; ublue convention is kept (see decision D-06) |
-| Deleting `system_files/` entirely after migration | Phase-C work, out of this spec's scope |
+| Keeping `system_files/` and `home/` as authoring directories | Reversed in 2026-04-23 revision (Option B chosen); both retire as part of Phase B per-package migration |
 
 ---
 
@@ -101,7 +100,7 @@ The feature is scoped narrowly: **we package what we author**. We do not rebuild
 1. **ACR-20** — `athens-os-flatpaks` owns `/etc/flatpak-manifest`, `/etc/systemd/system/athens-flatpak-install.service`, and the `multi-user.target.wants/athens-flatpak-install.service` enablement symlink. All three coupled files live in one package — no cross-package dependency between manifest and reader.
 2. **ACR-21** — `rpm-ostree override remove athens-os-flatpaks` cleanly removes the curated flatpak set's auto-install path: next boot the service is absent and `/etc/flatpak-manifest` is gone. Flatpaks already installed at `/var/lib/flatpak` are NOT removed (that's the user's `flatpak uninstall` job — RPM removal doesn't touch deployed flatpak state).
 3. **ACR-22** — `athens-os-base` declares `Requires: athens-os-flatpaks` (default install pulls the curated set); a user wanting to opt out replaces base's dependency closure via `rpm-ostree override remove athens-os-flatpaks` after install.
-4. **ACR-23** — The current 8-ref manifest (Zen Browser + 7 GUI apps) ships in this package; future additions/removals to the curated flatpak set are made by editing `system_files/etc/flatpak-manifest` and rebuilding only `athens-os-flatpaks` (no rebuild of unrelated sub-packages).
+4. **ACR-23** — The current 8-ref manifest (Zen Browser + 7 GUI apps) ships in this package; future additions/removals to the curated flatpak set are made by editing `packages/athens-os-flatpaks/src/etc/flatpak-manifest` and rebuilding only `athens-os-flatpaks` (no rebuild of unrelated sub-packages).
 
 **Test**: Fresh image with athens-os-base installed → reboot → `flatpak list --app` shows 8 refs. `rpm-ostree override remove athens-os-flatpaks` → next reboot → `/etc/flatpak-manifest` absent, but already-installed flatpaks remain in `/var/lib/flatpak`.
 
@@ -151,18 +150,18 @@ The feature is scoped narrowly: **we package what we author**. We do not rebuild
 
 ---
 
-### P3: Hybrid authoring (system_files/ stays as source of truth)
+### P3: Self-contained sub-packages (per-package src/)
 
-**Story**: During and after the migration, developers edit files in `system_files/` and `home/` as before. Specs reference those paths via `Source0` and `%install` directives. Local `just build-local` can still use a `COPY`-based dev path for fast iterations without a Copr round-trip.
+**Story**: Each `packages/<name>/` directory is genuinely self-contained — its `.spec` file plus its `src/` tree of staging files is everything the package needs to build. No central `system_files/` or `home/` directory exists. Local `just build-local` overlays all `packages/*/src/` trees into the image without going through Copr.
 
 **Acceptance**:
 
-1. **ACR-35** — Every `packages/<name>/<name>.spec` uses `Source0: %{name}-%{version}.tar.gz` and the `%install` section copies from a `system_files/`-shaped tree inside the tarball. The tarball is generated from our repo's `system_files/` + `home/` by a build script, not authored separately.
-2. **ACR-36** — A script `scripts/build-srpm.sh` (new) creates the SRPM for each package by tarballing the relevant subset of `system_files/` and invoking `rpmbuild -bs`. (Lives under `scripts/`, not `packages/<name>/`, because it's shared across all sub-packages.)
-3. **ACR-37** — `just build-local` produces a functioning image in under 30 seconds of incremental dev iteration (no Copr round-trip). Implementation: a `Containerfile.dev` that rsyncs `system_files/` + `home/` into the image at build time, skipping the RPM-install step for athens-os-* packages. `just build-release` runs the canonical `Containerfile` (installs from Copr). Both variants are documented in README.
-4. **ACR-38** — Drift detection: CI job runs `rpm -ql athens-os-services` (etc. for each sub-package) and diffs the output against the expected file set derived from `find system_files/… -type f` scoped to that sub-package's ownership rules. Non-empty diff exits non-zero.
+1. **ACR-35** — Every `packages/<name>/<name>.spec` uses `Source0: %{name}-%{version}.tar.gz` and the `%install` section unpacks the tarball into `%{buildroot}` preserving the absolute-path layout (`packages/<name>/src/etc/foo` → `/etc/foo` in the installed RPM).
+2. **ACR-36** — A script `scripts/build-srpm.sh` (new) creates the SRPM for each package by tarballing exactly `packages/<name>/src/` and invoking `rpmbuild -bs`. No per-package file lists in the script — each package's content is whatever's in its `src/` subtree.
+3. **ACR-37** — `just build-local` produces a functioning image in under 30 seconds of incremental dev iteration (no Copr round-trip). Implementation: a `Containerfile.dev` that overlays every `packages/*/src/` tree into the image at build time (`for d in packages/*/src; do cp -a "$d/." /; done`), skipping the RPM-install step for athens-os-* packages. `just build-release` runs the canonical `Containerfile` (installs from Copr). Both variants are documented in README.
+4. **ACR-38** — Drift detection: CI job runs `rpm -ql athens-os-<name>` for each sub-package and diffs the output against `find packages/<name>/src/ -type f` (with the `packages/<name>/src/` prefix stripped). Non-empty diff exits non-zero. Trivial because the source-of-truth file layout matches `%files` exactly.
 
-**Test**: Edit `system_files/etc/profile.d/athens-hm-status.sh`, run `just build-local` → script is in the image. Push → Copr rebuilds `athens-os-shell-ux` → `just build-release` → script comes from the RPM, same content.
+**Test**: Edit `packages/athens-os-shell-ux/src/etc/profile.d/athens-hm-status.sh`, run `just build-local` → script is in the image. Push → Copr rebuilds `athens-os-shell-ux` → `just build-release` → script comes from the RPM, same content.
 
 ---
 
@@ -248,47 +247,49 @@ Prove the plumbing works without changing image behavior.
 
 **Exit criterion**: ACR-01, ACR-02, ACR-04 (transitive resolution proven), ACR-24–26 (RPM signing pipeline proven), ACR-27 (image signing pipeline proven), ACR-30–34 (workflow proven) pass.
 
-### Phase B — Sub-package migration (~10 h, one per sitting)
+### Phase B — Sub-package migration (~12 h, one per sitting)
 
-Migrate concerns one at a time. Each lands as its own PR so CI can catch drift early.
+Migrate concerns one at a time. Each lands as its own PR so CI can catch drift early. Each migration is **two coupled changes**: (a) `git mv` files from `system_files/` (or `home/`) into `packages/<pkg>/src/`, preserving absolute-path layout; (b) write the package's `.spec` file. After all migrations, both `system_files/` and `home/` are empty and `git rm -rf` cleans them up at the start of Phase C.
 
 Order (simplest first):
-1. **`athens-os-selinux`** — one file (`file_contexts.local`), no `%post` beyond `restorecon`. Good first migration.
-2. **`athens-os-shell-ux`** — one file (`athens-hm-status.sh`), `/etc/profile.d/` placement only.
-3. **`athens-os-user`** — one file (`home.nix`), ships to `/etc/skel/.config/home-manager/`.
-4. **`athens-os-signing`** — one file (`/etc/containers/policy.json`) + verifying that `rpm-ostree rebase ostree-image-signed:` works against a real signed image. Validates the full ACR-27..29 chain end-to-end.
-5. **`athens-os-flatpaks`** — manifest + service + symlink. Tightly coupled trio; migrate together. Validate with `rpm-ostree override remove athens-os-flatpaks` removal-roundtrip test.
-6. **`athens-os-dconf`** — `/etc/dconf/db/local.d/*` + profile + `%post dconf update`.
-7. **`athens-os-services`** — non-flatpak services: nix-install, nix-relabel, home-manager-setup + their enablement symlinks. Multiple file types, both system + user scopes.
+1. **`athens-os-selinux`** — one file. `git mv system_files/etc/selinux/targeted/contexts/files/file_contexts.local packages/athens-os-selinux/src/etc/selinux/targeted/contexts/files/file_contexts.local` + write spec with `%posttrans restorecon`. Good first migration.
+2. **`athens-os-shell-ux`** — one file (`athens-hm-status.sh` → `packages/athens-os-shell-ux/src/etc/profile.d/`).
+3. **`athens-os-user`** — one file. `git mv home/.config/home-manager/home.nix packages/athens-os-user/src/etc/skel/.config/home-manager/home.nix`. Empties the `home/` top-level dir; remove it. Update Justfile recipes that reference `home/.config/...` to point at the new path.
+4. **`athens-os-signing`** — author `packages/athens-os-signing/src/etc/containers/policy.json` from scratch (no equivalent in current `system_files/`). Validate full ACR-27..29 trust chain end-to-end against a real signed image.
+5. **`athens-os-flatpaks`** — `git mv` the manifest + service + enablement symlink as a coupled trio. Validate with `rpm-ostree override remove athens-os-flatpaks` removal-roundtrip test.
+6. **`athens-os-dconf`** — `git mv` all `/etc/dconf/db/local.d/*` + profile file. Spec runs `%post dconf update`.
+7. **`athens-os-services`** — heaviest. `git mv` all `athens-*.service`, `.path`, and the `multi-user.target.wants/` + `default.target.wants/` enablement symlinks across system + user scopes. After this migration, `system_files/` should be reduced to RPM-feature artifacts only (none — at this point `system_files/` is empty and gets removed in Phase C).
 
-Each migration: write spec → rebuild in Copr → verify file ownership via `rpm -qf` → land drift-detection CI.
+Each migration: `git mv` → write spec → rebuild in Copr → verify file ownership via `rpm -qf` → land drift-detection CI.
 
-**Exit criterion**: ACR-12–23 pass; ACR-28/29 (signing trust chain proven on real hardware); ACR-35/36/38 operational; dev-loop via `just build-local` (ACR-37) works.
+**Exit criterion**: ACR-12–23 pass; ACR-28/29 (signing trust chain proven on real hardware); ACR-35/36/38 operational; dev-loop via `just build-local` (ACR-37) works; both `system_files/` and `home/` directories are empty (ready for Phase C deletion).
 
 ### Phase C — Cutover (~2 h)
 
-Switch the image build to consume from Copr.
+Switch the image build to consume from Copr; delete the now-empty legacy directories.
 
-> **Pre-Phase-C state** (as of 2026-04-23, after the RPM cleanup): `build_files/features/` has only `gnome/`, `gnome-extensions/`, `container/`, `fonts/` left — the `devtools/` and `browser/` dirs were already deleted in earlier work. `PERSISTENT_COPRS` only contains `ublue-os/packages` (helium dropped). `system_files/etc/yum.repos.d/` only contains `docker-ce.repo` (vscode.repo deleted). This is what Phase C migrates _from_, not the original "many features + many repos" assumption made when the spec was first drafted.
+> **Pre-Phase-C state**: At the end of Phase B, every athens-os-shipped file lives at `packages/<pkg>/src/<absolute-path>`. `system_files/` and `home/` are empty (or contain only `docker-ce.repo`, which is also retired in Phase C since the external-repo aggregation handles it). `build_files/features/` has only `gnome/`, `gnome-extensions/`, `container/`, `fonts/` left.
 
-1. Edit `build.sh`:
+1. **Delete legacy directories**:
+   ```bash
+   git rm -rf system_files/ home/
+   ```
+   Every file that was previously here now lives in its owner package's `src/` tree.
+2. Edit `build.sh`:
    ```diff
    + dnf5 -y copr enable athenabriana/athens-os
    + dnf5 -y install --setopt=install_weak_deps=False athens-os-base
    ```
-   The existing per-feature loop stays for the non-athens RPMs (GNOME extensions, docker-ce stack, fonts). Only `system_files/`-shipping responsibilities move into the meta-package.
-2. Remove `ublue-os/packages` from `PERSISTENT_COPRS` (our own Copr's external-repo aggregation handles bazaar transitively).
-3. Delete `system_files/etc/yum.repos.d/docker-ce.repo` (external-repo aggregation in our Copr makes it redundant).
-4. Delete the Containerfile's `COPY system_files /etc` and `COPY home /etc/skel` — RPMs own those files now.
-5. Add a new `Containerfile.dev` that DOES use `COPY` for fast local iteration without Copr round-trips (per ACR-37).
-6. Update `Justfile`: rename existing `just build` → `just build-release`; add new `just build-local` that uses `Containerfile.dev`.
+   Per-feature loop stays for the non-athens RPMs (GNOME extensions, docker-ce stack, fonts).
+3. Remove `ublue-os/packages` from `PERSISTENT_COPRS` (our own Copr's external-repo aggregation handles bazaar transitively).
+4. Delete the Containerfile's `COPY system_files /etc` and `COPY home /etc/skel` — those directories don't exist anymore.
+5. Add a new `Containerfile.dev` that overlays every `packages/*/src/` tree into the image at build time (per ACR-37). One-liner: `RUN for d in /ctx/packages/*/src; do cp -a "$d/." /; done`.
+6. Update `Justfile`: rename existing `just build` → `just build-release`; add new `just build-local` that uses `Containerfile.dev`. Update home-iteration recipes (`home-edit`, `home-apply`, `home-diff`, `home-capture`) to point at `packages/athens-os-user/src/etc/skel/.config/home-manager/home.nix`.
 7. Update README's installation command to use `ostree-image-signed:` URL (per ACR-29).
 8. Confirm CI goes green with the new flow.
 9. Update README with the new architecture narrative + verification commands.
 
-**Exit criterion**: ACR-03, ACR-05, ACR-07, ACR-09, ACR-10, ACR-11 all pass; existing image users can `rpm-ostree upgrade` to the new base without losing any files; `rpm-ostree rebase ostree-image-signed:...` is the documented install path.
-
-**Deferred from Phase C** (separate future feature): delete `system_files/` entirely (would force every dev iteration through Copr — too much friction). Hybrid mode is the steady state.
+**Exit criterion**: ACR-03, ACR-05, ACR-07, ACR-09, ACR-10, ACR-11 all pass; existing image users can `rpm-ostree upgrade` to the new base without losing any files; `rpm-ostree rebase ostree-image-signed:...` is the documented install path; both `system_files/` and `home/` directories are gone from the repo.
 
 ---
 
@@ -321,3 +322,4 @@ Any assumption that breaks requires a spec revision before Phase A can proceed.
 - [ ] `rpm-ostree override remove athens-os-shell-ux` cleanly removes `/etc/profile.d/athens-hm-status.sh` (including enablement state) — proves sub-packaging granularity works
 - [ ] `rpm-ostree override remove athens-os-flatpaks` cleanly removes the flatpak auto-install path (manifest + service + symlink) — proves the new sub-package boundary
 - [ ] `rpm-ostree override remove athens-os-signing` falls back to `insecureAcceptAnything` default; subsequent `rpm-ostree rebase ostree-image-signed:...` fails (proves the trust chain is enforced via athens-os-signing, not silently bypassed)
+- [ ] Repo top-level after Phase C contains no `system_files/` or `home/` directories — every athens-os file lives under `packages/<owner>/src/`. `git ls-files | grep -E '^(system_files|home)/'` returns empty.
