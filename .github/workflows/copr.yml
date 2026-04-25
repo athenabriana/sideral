@@ -1,0 +1,136 @@
+name: copr-build-athens-os
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'scripts/build-srpm.sh'
+      - '.github/workflows/copr.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'scripts/build-srpm.sh'
+      - '.github/workflows/copr.yml'
+  workflow_dispatch: {}
+
+env:
+  COPR_PROJECT: athenabriana/athens-os
+
+permissions:
+  contents: read
+  id-token: write   # required for cosign keyless OIDC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build SRPMs + push to Copr
+    runs-on: ubuntu-24.04
+    container: fedora:43
+
+    steps:
+      - name: Install build deps
+        run: |
+          dnf5 install -y --setopt=install_weak_deps=False \
+              git \
+              rpm-build \
+              copr-cli \
+              cosign \
+              ca-certificates
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # build-srpm.sh uses git rev-parse for sha
+
+      - name: Mark repo safe for git inside container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Configure copr-cli
+        if: github.event_name != 'pull_request'
+        env:
+          COPR_API_TOKEN: ${{ secrets.COPR_API_TOKEN }}
+        run: |
+          if [ -z "$COPR_API_TOKEN" ]; then
+              echo "::error::COPR_API_TOKEN secret not set — see Phase A setup steps in spec"
+              exit 1
+          fi
+          mkdir -p ~/.config
+          # The secret value is the literal `~/.config/copr` config file
+          # (a few lines of [copr-cli] / login / username / token / copr_url),
+          # copy-pasted from https://copr.fedorainfracloud.org/api/.
+          printf '%s' "$COPR_API_TOKEN" > ~/.config/copr
+          chmod 600 ~/.config/copr
+
+      - name: Enumerate packages
+        id: pkgs
+        run: |
+          # Phase A: build all packages every relevant push.
+          # Phase B will narrow to changed packages only via path-diff.
+          packages=()
+          for d in packages/*/; do
+              [ -d "$d" ] || continue
+              packages+=("$(basename "$d")")
+          done
+          if [ ${#packages[@]} -eq 0 ]; then
+              echo "::warning::No packages found under packages/"
+              echo "" > changed-packages.txt
+          else
+              printf '%s\n' "${packages[@]}" | tee changed-packages.txt
+          fi
+
+      - name: Build SRPMs
+        run: |
+          chmod +x scripts/build-srpm.sh
+          mkdir -p _build
+          while IFS= read -r pkg; do
+              [ -z "$pkg" ] && continue
+              echo "::group::Build SRPM: $pkg"
+              ./scripts/build-srpm.sh "$pkg"
+              echo "::endgroup::"
+          done < changed-packages.txt
+          echo "Produced SRPMs:"
+          ls -1 _build/ || true
+
+      - name: Push SRPMs to Copr
+        if: github.event_name != 'pull_request'
+        run: |
+          shopt -s nullglob
+          srpms=( _build/*.src.rpm )
+          if [ ${#srpms[@]} -eq 0 ]; then
+              echo "::warning::No SRPMs to push"
+              exit 0
+          fi
+          for srpm in "${srpms[@]}"; do
+              echo "::group::copr-cli build $(basename "$srpm")"
+              copr-cli build "${COPR_PROJECT}" "$srpm" --nowait
+              echo "::endgroup::"
+          done
+
+      - name: Sign SRPMs (cosign keyless via OIDC)
+        if: github.event_name != 'pull_request'
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          shopt -s nullglob
+          for rpm in _build/*.src.rpm; do
+              echo "::group::cosign sign-blob $(basename "$rpm")"
+              cosign sign-blob --yes \
+                  --output-signature "${rpm}.sig" \
+                  --output-certificate "${rpm}.crt" \
+                  "$rpm"
+              echo "::endgroup::"
+          done
+
+      - name: Upload SRPMs + signatures as workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: athens-os-srpms-${{ github.run_number }}
+          path: _build/
+          retention-days: 30
+          if-no-files-found: warn

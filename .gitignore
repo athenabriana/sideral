@@ -3,3 +3,6 @@
 cosign.key
 *.swp
 .DS_Store
+
+# Local artifacts from scripts/build-srpm.sh
+_build/
