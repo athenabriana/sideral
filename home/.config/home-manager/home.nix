@@ -41,6 +41,16 @@
       if command -v mise >/dev/null 2>&1; then
         eval "$(mise activate bash)"
       fi
+
+      # Nix env — sets NIX_PATH, NIX_PROFILES, NIX_REMOTE=daemon, and adds
+      # /nix/var/nix/profiles/default/bin (nix CLI itself) to PATH. On the
+      # host this is redundant with /etc/profile.d/nix.sh; inside distrobox
+      # containers (which have their own /etc) it's load-bearing — without
+      # this, `nix`, `nix-shell`, `nix-build` aren't on PATH even when /nix
+      # is mounted.
+      if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+        . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+      fi
     '';
   };
 

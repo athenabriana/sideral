@@ -109,6 +109,27 @@ Tools install lazily on first use (`not_found_auto_install = true`); `mise insta
 - **Channel default**: `/etc/nix/nix.conf` is whatever the installer writes — no athens-os override. Flakes are off by default (classic CppNix behavior). Enable per-user by writing `experimental-features = nix-command flakes` into `~/.config/nix/nix.conf`.
 - **nix-installer version**: pinned via `NIX_INSTALLER_VERSION` at the top of `build_files/build.sh`. The baked binary lives at `/usr/libexec/nix-installer`; bump via PR to the URL scheme in `build.sh`.
 
+## Distrobox + nix integration
+
+Every distrobox container created on athens-os auto-mounts the host's nix store. Configured via `system_files/etc/distrobox/distrobox.conf`:
+
+```
+container_additional_volumes="/nix /var/lib/nix /etc/nix"
+```
+
+Combined with the bashrc snippet in `home.nix` that sources `/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh` if `/nix` is present, every interactive shell — host or any distrobox container — gets `nix`, `nix-shell`, `nix-build`, `NIX_PATH`, and `NIX_REMOTE=daemon` wired automatically. Inside any container:
+
+```bash
+distrobox create --image fedora:42 dev
+distrobox enter dev
+$ nix --version                # works
+$ nix-shell -p hyperfine        # talks to host's nix-daemon over /nix socket
+$ nix profile install nixpkgs#act
+$ mise --version                # already on PATH from ~/.nix-profile/bin
+```
+
+Read-write by default so containers can install packages into the shared store. To make it read-only, append `:ro` to each path in `distrobox.conf`.
+
 ## Iterating on dotfiles
 
 Layer choice:
