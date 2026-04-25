@@ -3,6 +3,9 @@
 Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current feature
+- `athens-copr` — packages athens-os customizations into 8 sub-packages under `packages/<name>/src/`. Phase A code skeleton + Phase B migrations + Phase C-light cutover all landed 2026-04-25. **Stay-unverified mode** — Containerfile uses an overlay (`cp -a packages/*/src/. /`) instead of `dnf5 install athens-os-base`. Copr project + COPR_API_TOKEN secret deferred indefinitely; the `copr.yml` workflow lives but exits early on missing secret. 41 requirements; signing requirements (ACR-27..29) parked until user flips to signed-rebase. See `.specs/features/athens-copr/spec.md` + `packages/athens-os-signing/UPGRADE.md`.
+
+## Past feature (verified-pending-VM)
 - `nix-home` — migrates user-level config to nix + home-manager, collapses `/etc/skel` to a single `home.nix`, moves mise from RPM to nix. 40 requirements across 7 user stories. See `.specs/features/nix-home/spec.md`.
 
 ## Roadmap
@@ -14,8 +17,9 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
   - Superseded by 2026-04-23 cleanup: ATH-12 (helium → Zen flatpak), ATH-14, ATH-15, ATH-18 (VS Code RPM removed), ATH-13 count (7 → 8 flatpaks).
   - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, dotfile workflow, mise lazy-install behavior).
 
-## Pending feature
-- `athens-copr` — packages athens-os customizations into our own Copr project (sub-packages: `athens-os-base`, `-services`, `-dconf`, `-selinux`, `-shell-ux`, `-skel`/`-user`). 39 requirements across 8 user stories. Spec authored, implementation at zero. See `.specs/features/athens-copr/spec.md`.
+## Pending decisions
+- **Copr project activation** — `athenabriana/athens-os` Copr project not yet created. `copr.yml` workflow exits early on missing `COPR_API_TOKEN` secret. To activate (~10 min): create the public Copr project, add ublue-os/packages + docker-ce-stable as external repos, set the GitHub secret. Spec docs the steps in detail.
+- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/athens-os-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/athens-os-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`.
 
 ## Locked decisions
 See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) and `.specs/features/nix-home/context.md` (15 decisions). Highlights:

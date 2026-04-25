@@ -41,17 +41,20 @@ clean:
 diff:
     sudo rpm-ostree db diff
 
+# home.nix lives under athens-os-user's src tree (athens-copr feature).
+home_nix := "packages/athens-os-user/src/etc/skel/.config/home-manager/home.nix"
+
 # Edit the repo's home.nix in $EDITOR (falls back to vi)
 home-edit:
-    ${EDITOR:-vi} home/.config/home-manager/home.nix
+    ${EDITOR:-vi} {{home_nix}}
 
 # Apply the repo's home.nix to live $HOME via home-manager switch
 home-apply:
-    home-manager switch -f home/.config/home-manager/home.nix
+    home-manager switch -f {{home_nix}}
 
 # Preview what `home-apply` would change vs the currently-active generation
 home-diff:
-    home-manager build -f home/.config/home-manager/home.nix
+    home-manager build -f {{home_nix}}
     @echo "Built generation above; compare via: home-manager generations"
 
 # Rollback to the previous deployment

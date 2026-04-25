@@ -70,28 +70,9 @@ for feature in "${FEATURES[@]}"; do
     fi
 done
 
-# ── Rewrite /etc/os-release as Athens OS identity ───────────────────────
-log "Rewriting /etc/os-release"
-cat > /etc/os-release <<'EOF'
-NAME="Athens OS"
-ID=athens-os
-ID_LIKE="fedora"
-PRETTY_NAME="Athens OS 43 (Silverblue)"
-VARIANT="Silverblue"
-VARIANT_ID=silverblue
-VERSION="43"
-VERSION_ID=43
-VERSION_CODENAME=""
-PLATFORM_ID="platform:f43"
-ANSI_COLOR="0;38;2;60;110;180"
-LOGO=fedora-logo-icon
-HOME_URL="https://github.com/"
-DOCUMENTATION_URL="https://github.com/"
-SUPPORT_URL="https://github.com/"
-BUG_REPORT_URL="https://github.com/"
-OSTREE_VERSION="43"
-DEFAULT_HOSTNAME="athens"
-EOF
+# /etc/os-release is now owned by athens-os-base (athens-copr feature).
+# Lives at packages/athens-os-base/src/etc/os-release; the Containerfile's
+# packages/*/src/ overlay step lays it down after this script runs.
 
 # ── Cleanup ─────────────────────────────────────────────────────────────
 log "Cleaning dnf caches"

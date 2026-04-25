@@ -1,22 +1,28 @@
-# athens-os-base — meta-package
+# athens-os-base — meta-package + core system identity files
 #
-# Phase A skeleton: pulls the curated docker-ce stack + bazaar from the
-# Copr's external-repo aggregation. Owns no files (yet) — by design. In
-# Phase B the rest of the athens-os-* sub-packages get added to Requires
-# and the meta-package owns /etc/os-release.
-#
-# Version is set by build-srpm.sh via --define "_athens_version YYYYMMDD.<run>".
-# Falls back to 0.0.0 for local rpmbuild without that define (smoke test).
+# Owns: /etc/os-release, /etc/distrobox/distrobox.conf, /etc/yum.repos.d/docker-ce.repo
+# Requires: all 7 athens-os-* sub-packages + transitive third-party deps
 
 Name:           athens-os-base
 Version:        %{?_athens_version}%{!?_athens_version:0.0.0}
 Release:        1%{?dist}
-Summary:        athens-os meta-package — pulls all sub-packages + transitive deps
+Summary:        athens-os meta-package — pulls all sub-packages + system identity
 License:        MIT
 URL:            https://github.com/athenabriana/athens-os
+Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
-# Transitive third-party deps via Copr external-repo aggregation:
+# Sub-packages (all required by default; users can rpm-ostree override
+# remove athens-os-flatpaks etc. for granular opt-out).
+Requires:       athens-os-services = %{version}-%{release}
+Requires:       athens-os-flatpaks = %{version}-%{release}
+Requires:       athens-os-dconf    = %{version}-%{release}
+Requires:       athens-os-selinux  = %{version}-%{release}
+Requires:       athens-os-shell-ux = %{version}-%{release}
+Requires:       athens-os-user     = %{version}-%{release}
+Requires:       athens-os-signing  = %{version}-%{release}
+
+# Third-party deps via Copr external-repo aggregation:
 #   bazaar         — from ublue-os/packages
 #   docker-ce      — from docker-ce-stable
 #   containerd.io  — from docker-ce-stable
@@ -24,20 +30,28 @@ Requires:       bazaar
 Requires:       docker-ce
 Requires:       containerd.io
 
-# Phase B will add Requires for the 7 athens-os-* sub-packages:
-#   athens-os-services, athens-os-flatpaks, athens-os-dconf,
-#   athens-os-selinux, athens-os-shell-ux, athens-os-user, athens-os-signing
-
 %description
 Meta-package for athens-os, a personal Fedora atomic desktop layered on
-ublue-os/silverblue-main. Phase A skeleton pulls the curated docker-ce
-stack and bazaar app store; the rest of the athens-os-* sub-packages
-will be added in Phase B as the package layer is fleshed out.
+ublue-os/silverblue-main. Installs the full athens-os customization
+layer plus the curated docker-ce stack and bazaar app store.
 
-This package owns no files by design — it's purely a dependency anchor.
+Owns: /etc/os-release (athens-os identity), /etc/distrobox/distrobox.conf
+(distrobox auto-mount of /nix), /etc/yum.repos.d/docker-ce.repo (kept so
+rpm-ostree upgrade pulls Docker updates between image rebuilds).
+
+%prep
+%setup -q
+
+%install
+mkdir -p %{buildroot}
+cp -a etc %{buildroot}/
 
 %files
+/etc/os-release
+/etc/distrobox/distrobox.conf
+/etc/yum.repos.d/docker-ce.repo
 
 %changelog
 * Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
-- Phase A skeleton: meta-package, Requires bazaar + docker-ce stack
+- Initial: meta-package + os-release + distrobox.conf + docker-ce.repo
+- Requires: all 7 athens-os-* sub-packages + bazaar + docker-ce + containerd.io
