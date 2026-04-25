@@ -39,7 +39,7 @@ athens-os/
 │   │   ├── dconf/
 │   │   │   ├── profile/user                    → points GNOME at the system dconf DB
 │   │   │   └── db/local.d/{00-athens-focus, 00-athens-gnome-shell, 10-athens-keybinds}
-│   │   ├── flatpak-manifest                    → 7 refs
+│   │   ├── flatpak-manifest                    → 8 refs (Zen Browser + 7 GUI apps)
 │   │   ├── systemd/system/athens-flatpak-install.service (+ multi-user.target.wants symlink)
 │   │   ├── systemd/system/athens-nix-install.service   (+ multi-user.target.wants symlink)  → first-boot: install Nix with ostree planner
 │   │   └── yum.repos.d/docker-ce.repo                   → enabled so rpm-ostree upgrade pulls updates

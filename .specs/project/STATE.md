@@ -9,7 +9,13 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 - See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog (`gnome-extras`, `ublue-adopt`, `nix-extras-v2`, hardware, security) features.
 
 ## Previous feature
-- `athens-os` — fork from `fedora-athens`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 27 requirements across 5 user stories. See `.specs/features/athens-os/spec.md`. Requirements ATH-17, ATH-23, ATH-24, ATH-26 are superseded by `nix-home` (see that feature's spec.md → Supersedes table).
+- `athens-os` — fork from `fedora-athens`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 27 requirements across 5 user stories. See `.specs/features/athens-os/spec.md`.
+  - Superseded by `nix-home`: ATH-17, ATH-23, ATH-24, ATH-26 (mise + VS Code extensions moved into home.nix; first-login services collapsed to one).
+  - Superseded by 2026-04-23 cleanup: ATH-12 (helium → Zen flatpak), ATH-14, ATH-15, ATH-18 (VS Code RPM removed), ATH-13 count (7 → 8 flatpaks).
+  - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, dotfile workflow, mise lazy-install behavior).
+
+## Pending feature
+- `athens-copr` — packages athens-os customizations into our own Copr project (sub-packages: `athens-os-base`, `-services`, `-dconf`, `-selinux`, `-shell-ux`, `-skel`/`-user`). 39 requirements across 8 user stories. Spec authored, implementation at zero. See `.specs/features/athens-copr/spec.md`.
 
 ## Locked decisions
 See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) and `.specs/features/nix-home/context.md` (15 decisions). Highlights:
@@ -20,15 +26,21 @@ See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) an
 - **User layer:** nix + home-manager is the sole source of user-level config. `/etc/skel` reduced to one file: `~/.config/home-manager/home.nix`.
 - **Nix:** upstream CppNix via `NixOS/experimental-nix-installer`, baked binary at `/usr/libexec/nix-installer`, first-boot `ostree` planner, `/nix` bind-mounted from `/var/lib/nix`, `restorecon` post-install, default NixOS behavior (flakes off, channels).
 - **home-manager:** channels-based (release-24.11), bootstrapped on first login via user systemd unit, starter `home.nix` declares bash/starship/git/atuin + `pkgs.mise` + inlined mise config.
-- **Git tooling moved to home.nix (2026-04-23):** `programs.git` enables `lfs` + sets `credential.helper = "libsecret"` (uses libsecret helper from nixpkgs git's libexec). Removed `git-lfs`, `git-subtree`, `git-credential-libsecret` RPMs from devtools layer; `build_files/features/devtools/` deleted entirely (was the last RPM-layered user CLI category).
-- **mise:** moved from RPM to nix (via `home.packages`); `mise.jdx.dev/rpm/` repo and `athens-mise-install.service` removed.
-- **Dropped:** `direnv` (user declined), `act` (on-demand via `nix profile install`), `atuin`/`starship`/`mise` from `/etc/skel/.bashrc` (now home-manager-managed).
-- Shell: bash only; `~/.bashrc` now home-manager-managed (was `/etc/skel/.bashrc`).
+- **2026-04-23 cleanup — RPM layer narrowed to system-integration only.** Single sweep removed every plain CLI from the RPM layer; everything user-facing now lives in nix or flatpak. Specifically:
+  - **Removed RPMs** (now via home.nix): `gh`, `starship`, `gcc`, `make`, `cmake`, `git-lfs`, `git-subtree`, `git-credential-libsecret`, `code` (VS Code).
+  - **Removed RPMs** (no replacement, niche/unused): `nix-software-center` (snowfallorg fetch), `android-tools` (use `nix shell` ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload never needed).
+  - **Removed RPM** (replaced by flatpak): `helium-bin` (tmpfiles `/opt` conflict on Silverblue, see Browser entry above) → Zen Browser via flatpak.
+  - **Removed feature dirs**: `build_files/features/devtools/` and `build_files/features/browser/` deleted entirely. Remaining RPM features: gnome, container, fonts, gnome-extensions only.
+  - **home.nix integration**: `programs.vscode` (with `ms-vscode-remote.remote-ssh` + `remote-containers`), `programs.git` (with `lfs.enable` + `credential.helper = "libsecret"`), `programs.gh`, `programs.starship`, `pkgs.gcc`/`gnumake`/`cmake` in `home.packages`.
+  - **`/etc/distrobox/distrobox.conf`** added — auto-mounts `/nix`, `/var/lib/nix`, `/etc/nix` into every distrobox container; bashrc snippet sources nix-daemon profile so `nix`, `nix-shell`, `nix-build` work inside containers without per-container flags.
+- **mise:** moved from RPM to nix (via `home.packages`); `mise.jdx.dev/rpm/` repo and `athens-mise-install.service` removed. Config inlined into `home.nix` via `home.file.".config/mise/config.toml".text`.
+- **Dropped from mise toolchain**: `direnv` (user declined), `act` (on-demand via `nix profile install`); `atuin` moved to `programs.atuin.enable`. mise toolchain now 12 tools (was 15).
+- Shell: bash only; `~/.bashrc` is fully home-manager-generated (was hand-authored `/etc/skel/.bashrc`).
 - Fonts: Source Serif 4 + Source Sans 3 built from Adobe GitHub at image time; cascadia-code, jetbrains-mono, adwaita, opendyslexic from Fedora.
-- Flatpaks: 7 curated refs via systemd oneshot on first boot.
-- No distrobox pre-bake (DistroShelf flatpak available on demand).
-- **Host-only:** mise and nix are both host-only; `host + distrobox` invariant dropped.
-- No brew (user declined; nix via flakes + nix profile covers ad-hoc CLI tooling, mise covers language runtimes).
+- Flatpaks: **8 curated refs** via systemd oneshot on first boot — Zen Browser + Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile.
+- No distrobox pre-bake (DistroShelf flatpak available on demand). `/nix` IS auto-mounted into every distrobox.
+- **Host-first, distrobox-shared:** mise and nix run on the host; distrobox containers share the host's `/nix` store via the new auto-mount config.
+- No brew (user declined; nix via `nix profile install` covers ad-hoc CLI tooling, mise covers language runtimes).
 
 ## Known blockers
 None yet.

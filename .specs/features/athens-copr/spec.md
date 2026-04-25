@@ -247,15 +247,25 @@ Each migration: write spec → rebuild in Copr → verify file ownership via `rp
 
 Switch the image build to consume from Copr.
 
-1. Edit `build.sh` — replace per-feature RPM install loop and `COPY system_files /etc` with `dnf5 copr enable athenabriana/athens-os && dnf5 install -y athens-os-base`.
-2. Remove `ublue-os/packages` from `PERSISTENT_COPRS` (our own Copr now ships bazaar).
-3. Delete `system_files/etc/yum.repos.d/docker-ce.repo` (external-repo aggregation makes it redundant).
-4. Confirm CI goes green with the new flow.
-5. Update README with the new architecture narrative.
+> **Pre-Phase-C state** (as of 2026-04-23, after the RPM cleanup): `build_files/features/` has only `gnome/`, `gnome-extensions/`, `container/`, `fonts/` left — the `devtools/` and `browser/` dirs were already deleted in earlier work. `PERSISTENT_COPRS` only contains `ublue-os/packages` (helium dropped). `system_files/etc/yum.repos.d/` only contains `docker-ce.repo` (vscode.repo deleted). This is what Phase C migrates _from_, not the original "many features + many repos" assumption made when the spec was first drafted.
+
+1. Edit `build.sh` — replace the remaining per-feature loop entries (still keeping gnome/container/fonts/gnome-extensions because those are Fedora-main + non-athens RPMs) with the new pattern:
+   ```diff
+   + dnf5 -y copr enable athenabriana/athens-os
+   + dnf5 -y install --setopt=install_weak_deps=False athens-os-base
+   ```
+   The existing per-feature loop stays for the non-athens RPMs (GNOME extensions, docker-ce, fonts). Only `system_files/`-shipping responsibilities move into the meta-package.
+2. Remove `ublue-os/packages` from `PERSISTENT_COPRS` (our own Copr now ships bazaar transitively via `athens-os-base` Requires).
+3. Delete `system_files/etc/yum.repos.d/docker-ce.repo` (external-repo aggregation in our Copr makes it redundant).
+4. Delete the Containerfile's `COPY system_files /etc` and `COPY home /etc/skel` — RPMs own those files now.
+5. Add a new `Containerfile.dev` that DOES use `COPY` for fast local iteration without Copr round-trips (per ACR-34).
+6. Update `Justfile`: rename existing `just build` → `just build-release`; add new `just build-local` that uses `Containerfile.dev`.
+7. Confirm CI goes green with the new flow.
+8. Update README with the new architecture narrative + verification commands.
 
 **Exit criterion**: ACR-03, ACR-04, ACR-05, ACR-07, ACR-09, ACR-10, ACR-11 all pass; existing image users can `rpm-ostree upgrade` to the new base without losing any files.
 
-**Deferred from Phase C** (separate future feature): delete `system_files/` entirely.
+**Deferred from Phase C** (separate future feature): delete `system_files/` entirely (would force every dev iteration through Copr — too much friction). Hybrid mode is the steady state.
 
 ---
 

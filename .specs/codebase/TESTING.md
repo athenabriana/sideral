@@ -18,12 +18,17 @@ Runs `podman build` with the current `Containerfile`. The final step is `bootc c
 Only run when explicitly validating a full pass:
 1. `just rebase` on a disposable VM or scratch deployment.
 2. `systemctl reboot`.
-3. Log in, check:
+3. Log in, wait for first-shell bootstrap UX banner to disappear, then check:
    - `gnome-extensions list --enabled` → 5 UUIDs (ATH-04)
-   - `flatpak list --app` → 7 refs (ATH-13)
-   - `code --list-extensions` → 3 UUIDs (ATH-17)
-   - `mise ls` → act/atuin/direnv installed, others lazy (ATH-26/27)
+   - `flatpak list --app` → 8 refs incl. `app.zen_browser.zen` (ATH-13, post-2026-04-23 count)
+   - `home-manager generations | head -1` → at least one generation present (NXH-12)
+   - `which code` → `~/.nix-profile/bin/code` (VS Code via home.nix, supersedes ATH-17)
+   - `code --list-extensions` → `ms-vscode-remote.remote-ssh` + `ms-vscode-remote.remote-containers` (declarative via `programs.vscode.extensions`; user can add more via UI)
+   - `mise ls` → 12 declared tools, all lazy (ATH-27 still valid; ATH-26 superseded — no eager-install service)
+   - `which nix && which nix-shell` → both resolve (NXH-06)
+   - `nix-shell -p hyperfine --run 'hyperfine --version'` → succeeds (NXH-27, validates daemon + store)
    - `rpm-ostree status` → athens-os current, previous deployment preserved (ATH-08)
+   - **Distrobox check** (NXH+distrobox.conf): `distrobox create --image fedora:42 t && distrobox enter t -- nix --version` → succeeds, proves /nix is mounted and bashrc sources daemon profile
 
 ## Task-level gate matrix
 | Task touches | Gate |
