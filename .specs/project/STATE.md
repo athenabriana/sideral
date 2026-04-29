@@ -3,7 +3,7 @@
 Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current feature
-- `athens-copr` — packages athens-os customizations into 8 sub-packages under `packages/<name>/src/`. Phase A code skeleton + Phase B migrations + Phase C-light cutover all landed 2026-04-25. **Stay-unverified mode** — Containerfile uses an overlay (`cp -a packages/*/src/. /`) instead of `dnf5 install athens-os-base`. Copr project + COPR_API_TOKEN secret deferred indefinitely; the `copr.yml` workflow lives but exits early on missing secret. 41 requirements; signing requirements (ACR-27..29) parked until user flips to signed-rebase. See `.specs/features/athens-copr/spec.md` + `packages/athens-os-signing/UPGRADE.md`.
+- `athens-rpms` — packages athens-os customizations into 8 sub-packages under `packages/<name>/src/`. Renamed from `athens-copr` on 2026-04-29 when the Copr publishing path was dropped in favor of **inline RPM build inside the Containerfile** (rpmbuild + dnf install + rpmbuild removal in one RUN layer). 26 requirements (was 41); 15 dropped with the Copr/cosign-RPM model. Phase R (Containerfile swap from overlay to inline-rpmbuild) is the remaining work — see `.specs/features/athens-rpms/spec.md` + D-15 in context.md. Signing requirements (ACR-27..29) still parked until user flips to signed-rebase; see `packages/athens-os-signing/UPGRADE.md`.
 
 ## Past feature (verified-pending-VM)
 - `nix-home` — migrates user-level config to nix + home-manager, collapses `/etc/skel` to a single `home.nix`, moves mise from RPM to nix. 40 requirements across 7 user stories. See `.specs/features/nix-home/spec.md`.
@@ -18,11 +18,11 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
   - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, dotfile workflow, mise lazy-install behavior).
 
 ## Pending decisions
-- **Copr project activation** — `athenabriana/athens-os` Copr project not yet created. `copr.yml` workflow exits early on missing `COPR_API_TOKEN` secret. To activate (~10 min): create the public Copr project, add ublue-os/packages + docker-ce-stable as external repos, set the GitHub secret. Spec docs the steps in detail.
-- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/athens-os-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/athens-os-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`.
+- **Phase R cutover** — swap Containerfile lines 40–44 (cp-overlay) for the inline-rpmbuild RUN block per athens-rpms/spec.md ACR-01..05. Also: delete `.github/workflows/copr.yml` (workflow no longer needed) and remove `COPR_API_TOKEN` from GitHub repo secrets (manual UI step). ~3 h of work.
+- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/athens-os-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/athens-os-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`. Independent of Phase R.
 
 ## Locked decisions
-See `.specs/features/athens-os/context.md` (9 decisions, some now superseded) and `.specs/features/nix-home/context.md` (15 decisions). Highlights:
+See `.specs/features/athens-os/context.md` (9 decisions, some now superseded), `.specs/features/nix-home/context.md` (15 decisions), and `.specs/features/athens-rpms/context.md` (15 decisions, 4 superseded by D-15 inline-rpm). Highlights:
 - Desktop: GNOME + tiling-shell, Hyprland dropped entirely.
 - Browser: Zen Browser via flatpak (`app.zen_browser.zen`). helium-bin dropped 2026-04-23 due to imput/helium COPR's `/opt/helium` unpack conflict with Silverblue's tmpfiles-managed `/opt`; supersedes earlier "helium via COPR" decision.
 - Editor: `vscode` via `programs.vscode` in home.nix (with `ms-vscode-remote.remote-ssh` + `remote-containers`); supersedes ATH-14, ATH-15, ATH-17 (VS Code RPM + athens-vscode-setup.service removed; vscode.repo file deleted).

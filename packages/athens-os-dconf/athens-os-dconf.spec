@@ -38,5 +38,5 @@ dconf update >/dev/null 2>&1 || :
 /etc/dconf/profile/user
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: focus + gnome-shell + keybinds + profile pointing at local.d

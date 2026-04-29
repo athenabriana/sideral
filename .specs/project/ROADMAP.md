@@ -6,7 +6,8 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Current
 
-- **`nix-home`** — migrate user-level config to nix + home-manager, collapse `/etc/skel` to a single `home.nix`, move mise from RPM to nix. 40 requirements, 15 locked decisions. See `.specs/features/nix-home/`.
+- **`athens-rpms`** — package athens-os customizations into 8 sub-packages, build them inline inside the Containerfile (no Copr, no token, no external service). Renamed from `athens-copr` on 2026-04-29 when the publish-via-Copr model was dropped. 26 requirements (was 41), 15 locked decisions (4 superseded by D-15). Phase R = swap Containerfile overlay for inline-rpmbuild. See `.specs/features/athens-rpms/`.
+- **`nix-home`** — migrate user-level config to nix + home-manager, collapse `/etc/skel` to a single `home.nix`, move mise from RPM to nix. Implementation done locally; runtime verification pending VM rebase. 40 requirements, 15 locked decisions. See `.specs/features/nix-home/`.
 
 ## Previous (shipped)
 
@@ -29,7 +30,7 @@ Features in flight, queued, and parked. Updated as decisions are made.
 | `fedora-multimedia` swap | `dnf5 swap ffmpeg-free ffmpeg --allowerasing` via RPMFusion → hardware-accelerated H.264/HEVC in Helium/apps | Bluefin `build_files/` |
 | Actions cache for `/var/lib/containers` | Cuts base-image pull time; keeps builds under 12 min | [ublue-os/container-storage-action](https://github.com/ublue-os/container-storage-action) |
 
-**Entry criterion**: `nix-home` Verified.
+**Entry criterion**: `nix-home` Verified AND `athens-rpms` Phase R landed.
 
 ---
 

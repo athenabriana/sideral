@@ -33,5 +33,5 @@ cp -a etc %{buildroot}/
 /etc/profile.d/athens-hm-status.sh
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: poll-and-source bootstrap UX (athens-hm-status.sh)

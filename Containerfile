@@ -3,15 +3,17 @@
 # (Zen Browser + GUI apps), home-manager-driven user layer (mise, vscode, CLI QoL),
 # and a narrow RPM layer (docker-ce + compose, gnome extensions + bazaar, fonts).
 #
-# Local build:    just build (alias for build-local)
+# Local build:    just build
 # Local rebase:   just rebase
 # CI build:       push to main → GH Actions → ghcr.io/<user>/athens-os:latest
 # Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/athens-os:latest
 #
-# Phase B+C-light layout (athens-copr feature, 2026-04-25): athens-os files
-# live under packages/<owner-package>/src/<absolute-image-path>. The Containerfile
-# overlays all packages/*/src/ trees instead of COPY system_files /etc. When the
-# Copr setup is later activated, this changes to `dnf5 install athens-os-base`.
+# RPM layer (athens-rpms feature, 2026-04-29): athens-os customizations live
+# under packages/<owner-package>/src/<absolute-image-path> and are built into
+# real RPMs inline during this image build. rpmbuild + rpm -Uvh + rpm -e of
+# the toolchain happen in one RUN layer so no rpmbuild artifacts bloat the
+# final image. RPMs exist only inside the image — there is no Copr project,
+# no external repo, no token. The image rebuild IS the upgrade.
 
 ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:43"
 
@@ -20,9 +22,15 @@ ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:43"
 FROM scratch AS ctx
 COPY build_files /build_files
 COPY packages /packages
+COPY scripts /scripts
 
 # Stage 2: the real image.
 FROM ${BASE_IMAGE}
+
+# Inherits build-time arg used by scripts/build-rpms.sh to stamp version.
+# CI overrides via --build-arg ATHENS_VERSION=YYYYMMDD.<run>; local builds
+# default to 0.0.0.dev (sentinel for "this didn't come from CI").
+ARG ATHENS_VERSION=0.0.0.dev
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -31,19 +39,38 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build_files/build.sh && \
     ostree container commit
 
-# Overlay every athens-os-* sub-package's src/ tree into the image.
-# Each packages/<name>/src/ mirrors absolute image paths; cp -a preserves
-# permissions, symlinks, and dotfiles. This is the dev-mode equivalent of
-# `dnf5 install athens-os-base` — same files land in the same places, just
-# without RPM metadata. When Copr is activated this RUN block is replaced
-# by a `dnf5 copr enable + install athens-os-base` pair.
-RUN --mount=type=bind,from=ctx,source=/packages,target=/ctx-packages \
-    for d in /ctx-packages/*/src; do \
-        [ -d "$d" ] && cp -a "$d/." /; \
-    done && \
+# Build athens-os-* RPMs inline, install them, remove the build toolchain.
+# Single RUN layer = no rpmbuild scratch in the final image. RPMs exist only
+# inside this image.
+#
+# Several athens-os files conflict with base-image packages on file
+# ownership (/etc/os-release vs fedora-release-common, /etc/containers/policy.json
+# vs containers-common, /etc/yum.repos.d/docker-ce.repo vs docker-ce). rpm
+# -Uvh --replacefiles transfers ownership cleanly — the standard
+# derivative-distro pattern. dnf install rejects file conflicts.
+#
+# Requires: bazaar/docker-ce/containerd.io must already be installed
+# (build.sh above did that via the gnome-extensions and container features);
+# rpm -Uvh verifies presence but won't fetch.
+#
+# `rpm -e` (not `dnf remove`) for the toolchain teardown: dnf would
+# auto-remove ~73 transitively-pulled packages (cpio, diffutils, elfutils,
+# file, …), several of which are part of the silverblue base. rpm -e
+# removes only the two packages we asked for; the now-orphaned deps stay
+# put. Net image size impact is near zero on silverblue-main where those
+# packages were already present.
+RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+    --mount=type=cache,dst=/var/cache \
+    --mount=type=tmpfs,dst=/tmp \
+    dnf5 install -y rpm-build rpmdevtools && \
+    /ctx/scripts/build-rpms.sh /ctx/packages /tmp/rpmbuild "${ATHENS_VERSION}" && \
+    rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/athens-os-*.rpm && \
+    rpm -e rpm-build rpmdevtools && \
+    rm -rf /tmp/rpmbuild && \
     ostree container commit
 
 # Compile dconf local DB from /etc/dconf/db/local.d snippets so GNOME reads them.
+# Runs after the RPM install above so athens-os-dconf's snippets are present.
 RUN dconf update && \
     ostree container commit
 

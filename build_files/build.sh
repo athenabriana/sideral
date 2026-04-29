@@ -70,9 +70,11 @@ for feature in "${FEATURES[@]}"; do
     fi
 done
 
-# /etc/os-release is now owned by athens-os-base (athens-copr feature).
+# /etc/os-release is now owned by athens-os-base (athens-rpms feature).
 # Lives at packages/athens-os-base/src/etc/os-release; the Containerfile's
-# packages/*/src/ overlay step lays it down after this script runs.
+# inline rpmbuild step builds the RPM after this script runs and installs
+# it via `rpm -Uvh --replacefiles` to claim file ownership from
+# fedora-release-common.
 
 # ── Cleanup ─────────────────────────────────────────────────────────────
 log "Cleaning dnf caches"

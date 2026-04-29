@@ -28,7 +28,7 @@ athens-os/
 ├── Containerfile                    # image recipe (FROM silverblue-main:43)
 ├── Justfile                         # build / rebase / home-edit / home-apply / home-diff
 ├── build_files/
-│   ├── build.sh                     # orchestrator: stage nix-installer → COPRs → features loop → os-release
+│   ├── build.sh                     # orchestrator: stage nix-installer → upstream COPRs → features loop
 │   └── features/
 │       ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
 │       ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org

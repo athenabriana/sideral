@@ -52,6 +52,6 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/docker-ce.repo
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: meta-package + os-release + distrobox.conf + docker-ce.repo
 - Requires: all 7 athens-os-* sub-packages + bazaar + docker-ce + containerd.io

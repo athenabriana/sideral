@@ -39,5 +39,5 @@ fi
 /etc/selinux/targeted/contexts/files/file_contexts.local
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: file_contexts.local mapping /nix → usr_t/bin_t/lib_t/var_t

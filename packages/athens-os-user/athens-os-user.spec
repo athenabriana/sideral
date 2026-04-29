@@ -29,5 +29,5 @@ cp -a etc %{buildroot}/
 /etc/skel/.config/home-manager/home.nix
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: home.nix for new-user home-manager bootstrap

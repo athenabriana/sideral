@@ -40,5 +40,5 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/multi-user.target.wants/athens-flatpak-install.service
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: 8-ref manifest (Zen Browser + 7 GUI apps) + flatpak-install service

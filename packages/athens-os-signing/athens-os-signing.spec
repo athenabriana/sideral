@@ -34,5 +34,5 @@ cp -a etc %{buildroot}/
 /etc/containers/policy.json
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: permissive placeholder policy.json (stay-unverified mode)

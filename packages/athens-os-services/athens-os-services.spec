@@ -41,5 +41,5 @@ cp -a etc usr %{buildroot}/
 /usr/lib/systemd/user/default.target.wants/athens-home-manager-setup.service
 
 %changelog
-* Wed Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+* Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: athens-nix-install + nix-relabel + home-manager-setup units
