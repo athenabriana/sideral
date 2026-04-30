@@ -179,6 +179,13 @@ jobs:
       # Pinned to v0.2 (commit 840217d). The post-rootfs hook installs
       # Anaconda into the live env so the ISO has a working "Install to
       # disk" flow — without it titanoboa produces a live-only ISO.
+      #
+      # titanoboa's iso-dest move runs `realpath` (no -m) on the destination,
+      # so the parent dir must exist before the action runs.
+      - name: Pre-create output dir
+        if: steps.dryrun.outputs.skip == 'false'
+        run: mkdir -p ${{ github.workspace }}/output
+
       - name: Build live ISO with titanoboa
         id: build-iso
         if: steps.dryrun.outputs.skip == 'false'
