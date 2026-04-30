@@ -29,6 +29,30 @@ idle-delay=uint32 0
 EOF
 glib-compile-schemas /usr/share/glib-2.0/schemas
 
+# ── Disable services that misbehave in the live env ─────────────────
+# These all assume rpm-ostree state, network metadata services, or
+# first-boot user setup — none of which apply to a squashfs-backed
+# liveuser session. `|| true` because not every service exists in
+# every athens-os build (e.g. flatpak-preinstall.service is from
+# athens-os-flatpaks but may be renamed in future).
+for unit in \
+    rpm-ostreed-automatic.timer \
+    rpm-ostree-countme.service \
+    bootloader-update.service \
+    flatpak-preinstall.service \
+    athens-flatpak-install.service \
+    fwupd-refresh.timer \
+    ; do
+    systemctl disable "$unit" 2>/dev/null || true
+done
+
+# Don't autostart gnome-software in the live env — anaconda is the
+# only software op that matters here
+rm -f /etc/xdg/autostart/org.gnome.Software.desktop
+tee /usr/share/gnome-shell/search-providers/org.gnome.Software-search-provider.ini <<'EOF'
+DefaultDisabled=true
+EOF
+
 # ── Anaconda install ─────────────────────────────────────────────────
 # anaconda-live needs fedora-logos but it conflicts with the
 # generic-logos that silverblue ships. Swap in rpmdb only — the actual

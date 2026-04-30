@@ -187,6 +187,7 @@ jobs:
           iso-dest: ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
           compression: squashfs
           hook-post-rootfs: ${{ github.workspace }}/iso_files/configure_iso_anaconda.sh
+          flatpaks-list: ${{ github.workspace }}/iso_files/flatpaks.txt
 
       - name: Compress + checksum
         if: steps.dryrun.outputs.skip == 'false'
