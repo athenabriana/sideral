@@ -54,22 +54,14 @@ DefaultDisabled=true
 EOF
 
 # ── Anaconda install ─────────────────────────────────────────────────
-# anaconda-live needs fedora-logos but it conflicts with the
-# generic-logos that silverblue ships. Swap in rpmdb only — the actual
-# files don't matter for the live env. (rhbz#2433186)
-rpm --erase --nodeps --justdb generic-logos || true
-dnf download fedora-logos
-rpm -i --justdb fedora-logos*.rpm
-rm -f fedora-logos*.rpm
-
+# silverblue-main:43 already ships fedora-logos, so the Bluefin
+# generic-logos→fedora-logos rpmdb swap (rhbz#2433186) doesn't apply here.
 dnf install -y \
     libblockdev-btrfs \
     libblockdev-lvm \
     libblockdev-dm \
     anaconda-live \
     firefox
-
-rpm --erase --nodeps --justdb fedora-logos || true
 
 # ── Anaconda profile ─────────────────────────────────────────────────
 mkdir -p /etc/anaconda/profile.d
