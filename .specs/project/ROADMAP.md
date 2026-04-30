@@ -6,11 +6,11 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Current
 
-- **`athens-rpms`** — package athens-os customizations into 8 sub-packages, build them inline inside the Containerfile (no Copr, no token, no external service). Renamed from `athens-copr` on 2026-04-29 when the publish-via-Copr model was dropped. 26 requirements (was 41), 15 locked decisions (4 superseded by D-15). Phase R = swap Containerfile overlay for inline-rpmbuild. See `.specs/features/athens-rpms/`.
 - **`nix-home`** — migrate user-level config to nix + home-manager, collapse `/etc/skel` to a single `home.nix`, move mise from RPM to nix. Implementation done locally; runtime verification pending VM rebase. 40 requirements, 15 locked decisions. See `.specs/features/nix-home/`.
 
 ## Previous (shipped)
 
+- **`athens-rpms`** — package athens-os customizations into 8 sub-packages, build them inline inside the Containerfile (no Copr, no token, no external service). Renamed from `athens-copr` on 2026-04-29; Phase R landed 2026-04-30 (CI run 25188178498, sha `e06bc39`). 26 requirements; ACR-29 (signed-rebase README cutover) and ACR-38 (drift-detection CI) deferred and non-blocking. See `.specs/features/athens-rpms/`.
 - **`athens-os`** — fork from Hyprland lineage into GNOME + tiling-shell on silverblue-main:43. 27 requirements. Four requirements (ATH-17, ATH-23, ATH-24, ATH-26) superseded by `nix-home`.
 
 ---

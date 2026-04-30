@@ -231,13 +231,16 @@ Validated during the inline-build trial (2026-04-29):
 
 ## Success Criteria
 
-- [ ] `just build` produces an image that passes `bootc container lint`
-- [ ] `rpm -qa | grep athens-os` on the built image lists all 8 sub-packages with matching versions
-- [ ] `rpm -qf` on any shipped path returns exactly one `athens-os-*` package
-- [ ] Image size grows by ≤5 MB vs. the pre-swap overlay-only image
-- [ ] `rpm-ostree override remove athens-os-shell-ux` cleanly removes `/etc/profile.d/athens-hm-status.sh` (proves sub-packaging granularity works)
-- [ ] `rpm-ostree override remove athens-os-flatpaks` cleanly removes the flatpak auto-install path
-- [ ] `cosign verify ghcr.io/athenabriana/athens-os:latest` succeeds with cert-identity + OIDC-issuer flags (image signing — independent of RPM strategy)
-- [ ] `rpm-ostree rebase ostree-image-signed:registry:ghcr.io/athenabriana/athens-os:latest` succeeds on a fresh machine with athens-os-signing installed
-- [ ] Drift-detection CI is green on every merge
-- [ ] No reference to `Copr`, `copr-cli`, or `COPR_API_TOKEN` remains in the repo
+CI run 25188178498 on commit `e06bc39` (2026-04-30, 6m24s end-to-end) verified the inline-build path against `silverblue-main:43`:
+
+- [x] `just build` (CI equivalent: `buildah bud -f Containerfile`) produces an image that passes `bootc container lint`
+- [x] All 8 sub-packages (`athens-os-{base,dconf,flatpaks,selinux,services,shell-ux,signing,user}-0.0.0.dev-1.fc43.noarch.rpm`) build inline and install via `rpm -Uvh --replacefiles --replacepkgs`
+- [x] Image was signed via cosign keyless (OIDC) and pushed to `ghcr.io/athenabriana/athens-os:latest`, `:20260430`, `:sha-e06bc39`
+- [x] No reference to `Copr`, `copr-cli`, or `COPR_API_TOKEN` remains in the repo
+- [ ] `rpm -qf` on any shipped path returns exactly one `athens-os-*` package *(verifiable on a rebased host; not part of CI gate)*
+- [ ] Image size grows by ≤5 MB vs. the pre-swap overlay-only image *(measurement deferred — no reference build to compare against post-swap)*
+- [ ] `rpm-ostree override remove athens-os-shell-ux` cleanly removes `/etc/profile.d/athens-hm-status.sh` *(verifiable on rebased host)*
+- [ ] `rpm-ostree override remove athens-os-flatpaks` cleanly removes the flatpak auto-install path *(verifiable on rebased host)*
+- [ ] `cosign verify ghcr.io/athenabriana/athens-os:latest` succeeds with cert-identity + OIDC-issuer flags *(deferred to ACR-29 README cutover)*
+- [ ] `rpm-ostree rebase ostree-image-signed:registry:ghcr.io/athenabriana/athens-os:latest` succeeds on a fresh machine with athens-os-signing installed *(blocked on ACR-29; signed-rebase flip)*
+- [ ] Drift-detection CI is green on every merge *(deferred to ACR-38)*

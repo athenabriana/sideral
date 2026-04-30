@@ -3,13 +3,16 @@
 Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current feature
-- `athens-rpms` — packages athens-os customizations into 8 sub-packages under `packages/<name>/src/`. Renamed from `athens-copr` on 2026-04-29 when the Copr publishing path was dropped in favor of **inline RPM build inside the Containerfile** (rpmbuild + dnf install + rpmbuild removal in one RUN layer). 26 requirements (was 41); 15 dropped with the Copr/cosign-RPM model. Phase R (Containerfile swap from overlay to inline-rpmbuild) is the remaining work — see `.specs/features/athens-rpms/spec.md` + D-15 in context.md. Signing requirements (ACR-27..29) still parked until user flips to signed-rebase; see `packages/athens-os-signing/UPGRADE.md`.
+- None. `athens-rpms` Phase R landed and CI is green (run 25188178498, sha `e06bc39`, 6m24s end-to-end). All 8 sub-packages build inline, install cleanly, and the image was signed + pushed to `ghcr.io/athenabriana/athens-os:latest`. Two deferred ACRs remain (29: README signed-rebase cutover, 38: drift-detection CI job) — both documented in `.specs/features/athens-rpms/spec.md` Rollout § "Deferred follow-ups" and intentionally non-blocking.
+
+## Past feature (verified)
+- `athens-rpms` — 26 requirements, inline RPM build inside the Containerfile (rpmbuild + `rpm -Uvh --replacefiles` + `rpm -e` toolchain teardown in one RUN layer). Renamed from `athens-copr` 2026-04-29 when the Copr publishing path was dropped (D-15). See `.specs/features/athens-rpms/spec.md`. Signing requirements (ACR-27..29) still parked until user flips to signed-rebase; see `packages/athens-os-signing/UPGRADE.md`.
 
 ## Past feature (verified-pending-VM)
 - `nix-home` — migrates user-level config to nix + home-manager, collapses `/etc/skel` to a single `home.nix`, moves mise from RPM to nix. 40 requirements across 7 user stories. See `.specs/features/nix-home/spec.md`.
 
 ## Roadmap
-- See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog (`gnome-extras`, `ublue-adopt`, `nix-extras-v2`, hardware, security) features.
+- See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog (`gnome-extras`, `ublue-adopt`, `nix-extras-v2`, hardware, security) features. `image-ops` entry criterion (`nix-home` Verified AND `athens-rpms` Phase R landed) is half-met — only `nix-home` VM verification remains.
 
 ## Previous feature
 - `athens-os` — fork from `fedora-athens`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 27 requirements across 5 user stories. See `.specs/features/athens-os/spec.md`.
@@ -18,8 +21,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
   - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, dotfile workflow, mise lazy-install behavior).
 
 ## Pending decisions
-- **Phase R cutover** — swap Containerfile lines 40–44 (cp-overlay) for the inline-rpmbuild RUN block per athens-rpms/spec.md ACR-01..05. Also: delete `.github/workflows/copr.yml` (workflow no longer needed) and remove `COPR_API_TOKEN` from GitHub repo secrets (manual UI step). ~3 h of work.
-- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/athens-os-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/athens-os-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`. Independent of Phase R.
+- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/athens-os-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/athens-os-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`. (This is the same work as ACR-29.)
 
 ## Locked decisions
 See `.specs/features/athens-os/context.md` (9 decisions, some now superseded), `.specs/features/nix-home/context.md` (15 decisions), and `.specs/features/athens-rpms/context.md` (15 decisions, 4 superseded by D-15 inline-rpm). Highlights:
@@ -68,6 +70,11 @@ SPEC-DEV-01. Update spec.md NXH-01 text when promoting to Verified.
 - **flatpak-install service is system-level, not user.** System-wide flatpaks live under `/var/lib/flatpak`, which is mutable on atomic. User-level would require a per-user unit, which we already use for `mise` and `vscode-setup`.
 - **Persistent COPR pattern**: repos enabled during build.sh + kept enabled in the shipped image let `rpm-ostree upgrade` pull new releases without touching the image. Currently used for `ublue-os/packages` (bazaar). Same applies to docker-ce.repo (Docker Inc's official dnf repo, shipped as /etc/yum.repos.d/docker-ce.repo).
 - **Dev host shell used here had no podman / just / shellcheck**, so the final gate was limited to `bash -n` on shell scripts, YAML parse, and INI parse on dconf files. The real `just build` gate runs in CI.
+- **Phase R lessons (2026-04-30, run 25188178498)**:
+  - **`/ctx` bind-mount layout is `/ctx/build_files/...`, not `/ctx/...`** — Containerfile does `COPY build_files /build_files` then mounts the carrier at `/ctx`, so features live at `/ctx/build_files/features`. A wrong `FEATURES_DIR=/ctx/features` made the per-feature install loop silently no-op (every `[ -f .../packages.txt ]` false, no error), and the failure surfaced two RUN layers later when `rpm -Uvh athens-os-base` couldn't resolve `bazaar/docker-ce/containerd.io`. Lesson: when a downstream RPM Requires-check fails for packages you "know" are installed, suspect the upstream install loop ran zero iterations.
+  - **RPM file-path Requires resolves through the rpmdb, not the filesystem.** `Requires: /usr/libexec/nix-installer` against a curl-staged binary (no owning package) can never satisfy. Use `ConditionPathExists=` in the systemd unit instead.
+  - **`rpm -Uvh --replacefiles --replacepkgs` does not bypass package-level `Conflicts:`.** `--replacefiles` only handles file-ownership transfer. silverblue-main:43 ships `ublue-os-signing` and our `athens-os-signing.spec` declares `Conflicts:` against it (intentionally — we target a different sigstore policy identity). Containerfile must `rpm -e --nodeps ublue-os-signing` *before* the install step. `--nodeps` is safe because nothing in the base image Requires it.
+  - **`set -o pipefail` makes `var=$(... | grep ...)` a hidden landmine** when the grep can find nothing. The unauthenticated GitHub-API call in `features/fonts/post-install.sh` for adobe-fonts/source-sans hit a rate limit on the second back-to-back call, returned an error JSON without any `browser_download_url`, grep emitted nothing, and the whole image build aborted *before* reaching the script's own "Could not resolve URL" fallback. Pattern: capture the response into a variable first, then `grep ... || true`, then validate.
 
 ## Deferred
 - Tailscale daemon + GNOME indicator.
