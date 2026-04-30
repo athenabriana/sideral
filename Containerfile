@@ -49,8 +49,15 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # -Uvh --replacefiles transfers ownership cleanly — the standard
 # derivative-distro pattern. dnf install rejects file conflicts.
 #
+# `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:43 ships
+# ublue-os-signing pre-installed, and athens-os-signing declares Conflicts:
+# against it (different sigstore policy targets). rpm -Uvh refuses package-
+# level Conflicts even with --replacefiles, so we remove the predecessor
+# explicitly. --nodeps is safe here because nothing else in the base image
+# Requires ublue-os-signing.
+#
 # Requires: bazaar/docker-ce/containerd.io must already be installed
-# (build.sh above did that via the gnome-extensions and container features);
+# (build.sh above did that via the gnome and container features);
 # rpm -Uvh verifies presence but won't fetch.
 #
 # `rpm -e` (not `dnf remove`) for the toolchain teardown: dnf would
@@ -64,6 +71,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     dnf5 install -y rpm-build rpmdevtools && \
     /ctx/scripts/build-rpms.sh /ctx/packages /tmp/rpmbuild "${ATHENS_VERSION}" && \
+    rpm -e --nodeps ublue-os-signing && \
     rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/athens-os-*.rpm && \
     rpm -e rpm-build rpmdevtools && \
     rm -rf /tmp/rpmbuild && \

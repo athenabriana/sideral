@@ -14,7 +14,9 @@ Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 Requires:       systemd
-Requires:       /usr/libexec/nix-installer
+# /usr/libexec/nix-installer is staged as a raw curl in build.sh — no package
+# owns the file, so an RPM file-path Requires can never resolve. The systemd
+# unit guards on ConditionPathExists at runtime instead.
 
 %description
 Ships athens-os's systemd units:
