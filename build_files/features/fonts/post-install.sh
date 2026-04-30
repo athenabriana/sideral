@@ -12,10 +12,26 @@ install_adobe_font() {
     local tmp="/tmp/$name"
 
     log "[$name] Fetching latest release URL from $repo"
-    local url
-    url=$(curl -sL "https://api.github.com/repos/$repo/releases/latest" \
-          | grep -oP '"browser_download_url": "\K[^"]+_Desktop\.zip')
-    [ -n "$url" ] || { echo "Could not resolve $name release URL"; return 1; }
+    local response url
+    # GH API auth via $GITHUB_TOKEN if present (raises rate limit from 60/h to 5000/h);
+    # falls back to unauthenticated.
+    local auth=()
+    [ -n "${GITHUB_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+    response=$(curl -sL "${auth[@]}" "https://api.github.com/repos/$repo/releases/latest" || true)
+    # `|| true` survives empty grep; pipefail would otherwise abort the script
+    # before we can print a useful error or fall back.
+    url=$(printf '%s' "$response" \
+          | grep -oP '"browser_download_url": "\K[^"]+_Desktop\.zip' \
+          | head -1 \
+          || true)
+    if [ -z "$url" ]; then
+        echo "WARN: Could not resolve $name release URL (rate limit or asset rename?)."
+        echo "      First 400 chars of API response:"
+        printf '%s\n' "$response" | head -c 400
+        echo
+        echo "      Skipping $name; Fedora-shipped Source v3 variants remain available."
+        return 0
+    fi
     echo "  $url"
 
     mkdir -p "$tmp" "$dest"
