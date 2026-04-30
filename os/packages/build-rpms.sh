@@ -5,7 +5,7 @@
 # as Source0, runs `rpmbuild -bb` with version + git-sha stamped via macros,
 # emits the resulting .rpm files under <topdir>/RPMS/noarch/.
 #
-# Usage:    scripts/build-rpms.sh <packages-dir> <output-topdir> [version]
+# Usage:    packages/build-rpms.sh <packages-dir> <output-topdir> [version]
 #
 # Default version: $_ATHENS_VERSION env, else "0.0.0.dev".
 #                  CI sets _ATHENS_VERSION="$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}".

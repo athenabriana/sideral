@@ -25,15 +25,19 @@ default browser, and VS Code + docker-ce for day-to-day dev.
 
 ```
 athens-os/
-├── Containerfile                    # image recipe (FROM silverblue-main:43)
 ├── Justfile                         # build / rebase / home-edit / home-apply / home-diff
-├── build_files/
+├── os/                              # everything that lands in the OCI image
+│   ├── Containerfile                # image recipe (FROM silverblue-main:43)
 │   ├── build.sh                     # orchestrator: stage nix-installer → upstream COPRs → features loop
-│   └── features/
-│       ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
-│       ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
-│       ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
-│       └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
+│   ├── features/
+│   │   ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
+│   │   ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
+│   │   ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
+│   │   └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
+│   └── packages/                    # athens-os-* RPM sources (built inline by build-rpms.sh)
+├── iso/                             # live-installer assets consumed by titanoboa
+│   ├── anaconda-hook.sh             # post-rootfs hook: install Anaconda + brand the live env
+│   └── flatpaks.txt                 # flatpaks preinstalled in the live ISO
 ├── system_files/
 │   ├── etc/
 │   │   ├── dconf/
@@ -107,7 +111,7 @@ Tools install lazily on first use (`not_found_auto_install = true`); `mise insta
 - **SELinux**: Fedora's stock policy has no rules for `/nix` (not FHS-standard), so files land `default_t` and fail to execute (upstream [nix-installer#1383](https://github.com/NixOS/nix-installer/issues/1383)). athens-os root-fixes this by shipping `/etc/selinux/targeted/contexts/files/file_contexts.local` mapping `/nix` → `usr_t`, `/nix/store/*/bin` → `bin_t`, etc. `athens-nix-relabel.path` watches `/nix/store` and triggers `athens-nix-relabel.service` (`restorecon -RF /nix`) whenever `nix profile install` adds store paths, so labels stay correct automatically. Manual recovery if ever needed: `sudo systemctl start athens-nix-relabel.service`.
 - **composefs (silverblue-main F42+)**: if `findmnt /nix` shows no mount after the install service completes, the active composefs-backed root may be blocking the bind mount. Workaround: add `rd.systemd.unit=root.transient` as a kernel argument (`sudo rpm-ostree kargs --append=rd.systemd.unit=root.transient`) and reboot.
 - **Channel default**: `/etc/nix/nix.conf` is whatever the installer writes — no athens-os override. Flakes are off by default (classic CppNix behavior). Enable per-user by writing `experimental-features = nix-command flakes` into `~/.config/nix/nix.conf`.
-- **nix-installer version**: pinned via `NIX_INSTALLER_VERSION` at the top of `build_files/build.sh`. The baked binary lives at `/usr/libexec/nix-installer`; bump via PR to the URL scheme in `build.sh`.
+- **nix-installer version**: pinned via `NIX_INSTALLER_VERSION` at the top of `os/build.sh`. The baked binary lives at `/usr/libexec/nix-installer`; bump via PR to the URL scheme in `build.sh`.
 
 ## Distrobox + nix integration
 

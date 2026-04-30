@@ -69,7 +69,8 @@ jobs:
         id: build
         uses: redhat-actions/buildah-build@v2
         with:
-          containerfiles: ./Containerfile
+          context: ./os
+          containerfiles: ./os/Containerfile
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -186,8 +187,8 @@ jobs:
           image-ref: ${{ steps.tags.outputs.image_ref }}
           iso-dest: ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
           compression: squashfs
-          hook-post-rootfs: ${{ github.workspace }}/iso_files/configure_iso_anaconda.sh
-          flatpaks-list: ${{ github.workspace }}/iso_files/flatpaks.txt
+          hook-post-rootfs: ${{ github.workspace }}/iso/anaconda-hook.sh
+          flatpaks-list: ${{ github.workspace }}/iso/flatpaks.txt
 
       - name: Compress + checksum
         if: steps.dryrun.outputs.skip == 'false'

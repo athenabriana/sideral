@@ -14,12 +14,12 @@ default:
 build:
     podman build \
         --tag {{registry}}/{{image_name}}:{{image_tag}} \
-        --file Containerfile \
-        .
+        --file os/Containerfile \
+        os
 
 # Shellcheck every build script
 lint:
-    shellcheck build_files/*.sh build_files/features/*/post-install.sh
+    shellcheck os/*.sh os/features/*/post-install.sh
 
 # Rebase host to the locally-built image (requires reboot after)
 rebase:
@@ -42,7 +42,7 @@ diff:
     sudo rpm-ostree db diff
 
 # home.nix lives under athens-os-user's src tree (athens-copr feature).
-home_nix := "packages/athens-os-user/src/etc/skel/.config/home-manager/home.nix"
+home_nix := "os/packages/athens-os-user/src/etc/skel/.config/home-manager/home.nix"
 
 # Edit the repo's home.nix in $EDITOR (falls back to vi)
 home-edit:

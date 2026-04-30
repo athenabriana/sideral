@@ -28,7 +28,7 @@ log "Staging nix-installer ${NIX_INSTALLER_VERSION} at /usr/libexec/nix-installe
 curl -sSfL "$NIX_INSTALLER_URL" -o /usr/libexec/nix-installer
 chmod 0755 /usr/libexec/nix-installer
 
-FEATURES_DIR="/ctx/build_files/features"
+FEATURES_DIR="/ctx/features"
 FEATURES=(gnome container fonts gnome-extensions)
 
 # ── COPRs that stay enabled in the shipped image (for `rpm-ostree upgrade`) ──

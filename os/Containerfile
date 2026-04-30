@@ -20,14 +20,14 @@ ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:43"
 # Stage 1: scratch carrier for build scripts + package sources — bind-mounted,
 # never embedded in final image.
 FROM scratch AS ctx
-COPY build_files /build_files
+COPY build.sh /build.sh
+COPY features /features
 COPY packages /packages
-COPY scripts /scripts
 
 # Stage 2: the real image.
 FROM ${BASE_IMAGE}
 
-# Inherits build-time arg used by scripts/build-rpms.sh to stamp version.
+# Inherits build-time arg used by packages/build-rpms.sh to stamp version.
 # CI overrides via --build-arg ATHENS_VERSION=YYYYMMDD.<run>; local builds
 # default to 0.0.0.dev (sentinel for "this didn't come from CI").
 ARG ATHENS_VERSION=0.0.0.dev
@@ -36,7 +36,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/build_files/build.sh && \
+    /ctx/build.sh && \
     ostree container commit
 
 # Build athens-os-* RPMs inline, install them, remove the build toolchain.
@@ -70,7 +70,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/tmp \
     dnf5 install -y rpm-build rpmdevtools && \
-    /ctx/scripts/build-rpms.sh /ctx/packages /tmp/rpmbuild "${ATHENS_VERSION}" && \
+    /ctx/packages/build-rpms.sh /ctx/packages /tmp/rpmbuild "${ATHENS_VERSION}" && \
     rpm -e --nodeps ublue-os-signing && \
     rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/athens-os-*.rpm && \
     rpm -e rpm-build rpmdevtools && \
