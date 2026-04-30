@@ -51,7 +51,7 @@ Features in flight, queued, and parked. Updated as decisions are made.
 - **`ublue-os-signing`** package — ships `/etc/containers/policy.json` correctly out of the box (partial overlap with `image-ops`; decide whether to reuse the package or hand-roll).
 - **`ujust` recipe fragment layout** — `/etc/ublue-os/just/*.just` aggregated into `/etc/justfile`. One fragment per concern. Strong fit since athens-os already ships a Justfile.
 - **Welcome script** — minimal `just onboard` invoking a first-run wizard (prompt for git identity, offer to log into `gh`, optionally run `home-manager switch`).
-- **bootc-image-builder recipes** — `just build-qcow2` / `build-iso` for when installable ISOs become useful. Skip for now (personal rebase-only workflow).
+- **bootc-image-builder recipes** — ~~`just build-qcow2`~~ / `build-iso` for when installable ISOs become useful. Promoted out of backlog 2026-04-30: `.github/workflows/build-iso.yml` builds an Anaconda ISO from `ghcr.io/<owner>/athens-os:<tag>` and publishes to GitHub Releases (workflow_dispatch + push of `v*` tags). qcow2 / raw still skipped (rebase-only workflow).
 
 ### `nix-extras-v2`
 
@@ -88,7 +88,7 @@ Features in flight, queued, and parked. Updated as decisions are made.
 - **KDE / gaming / Bazzite-style additions** — out of scope for dev-focused personal image
 - **CachyOS / Xanmod kernel swap** — too risky on atomic; no concrete need
 - **USBGuard, hardened_malloc** — dev-hostile
-- **ISO / qcow2 / raw disk outputs** — rebase-only workflow; revisit if bare-metal reinstall becomes relevant
+- **qcow2 / raw disk outputs** — rebase-only workflow for daily use; revisit if VM-style images become relevant. (ISO output landed 2026-04-30; see `.github/workflows/build-iso.yml`.)
 - **Matrix builds (aarch64, variants)** — single amd64 image for personal use
 - **Public distribution** — personal use only
 
