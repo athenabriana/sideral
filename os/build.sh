@@ -6,12 +6,13 @@
 #   post-install.sh    — optional script, run after packages install
 #
 # Repo strategy:
-#   • Three "persistent" repos are registered here AND shipped under
+#   • Four "persistent" repos are registered here AND shipped under
 #     /etc/yum.repos.d/ (via sideral-base) so `rpm-ostree upgrade` can pull
 #     new releases between image rebuilds:
-#       - docker-ce-stable      (docker-ce + containerd.io)
-#       - mise.jdx.dev/rpm      (mise)
+#       - docker-ce-stable       (docker-ce + containerd.io)
+#       - mise.jdx.dev/rpm       (mise)
 #       - packages.microsoft.com (code / VS Code)
+#       - copr atim/starship     (starship; not in Fedora main)
 #   • The shipped /etc/yum.repos.d/ copies aren't yet on disk during this
 #     RUN step (sideral-base is built later inline), so we register each
 #     repo from upstream URL here and rely on the shipped copy taking over
@@ -33,6 +34,9 @@ dnf5 -y config-manager addrepo --from-repofile=https://mise.jdx.dev/rpm/mise.rep
 
 log "Registering Microsoft VS Code repo"
 dnf5 -y config-manager addrepo --from-repofile=https://packages.microsoft.com/yumrepos/vscode/config.repo
+
+log "Registering atim/starship COPR (starship not in Fedora main)"
+dnf5 -y config-manager addrepo --from-repofile=https://copr.fedorainfracloud.org/coprs/atim/starship/repo/fedora-43/atim-starship-fedora-43.repo
 
 # ── Per-feature install loop ────────────────────────────────────────────
 for feature in "${FEATURES[@]}"; do

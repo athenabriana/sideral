@@ -1,7 +1,7 @@
 # sideral-base — meta-package + core system identity files
 #
 # Owns: /etc/os-release, /etc/distrobox/distrobox.conf,
-#       /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
+#       /etc/yum.repos.d/{docker-ce,mise,vscode,_copr_atim-starship}.repo
 # Requires: all sideral-* sub-packages + transitive third-party deps
 
 Name:           sideral-base
@@ -38,9 +38,10 @@ layer plus the curated docker-ce stack and the chezmoi-driven CLI
 toolset (sideral-cli-tools).
 
 Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
-(distrobox defaults), /etc/yum.repos.d/docker-ce.repo, mise.repo, and
-vscode.repo (kept enabled so `rpm-ostree upgrade` pulls Docker, mise,
-and VS Code updates between image rebuilds).
+(distrobox defaults), /etc/yum.repos.d/docker-ce.repo, mise.repo,
+vscode.repo, and _copr_atim-starship.repo (kept enabled so
+`rpm-ostree upgrade` pulls Docker, mise, VS Code, and starship updates
+between image rebuilds).
 
 %prep
 %setup -q
@@ -55,8 +56,13 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/docker-ce.repo
 /etc/yum.repos.d/mise.repo
 /etc/yum.repos.d/vscode.repo
+/etc/yum.repos.d/_copr_atim-starship.repo
 
 %changelog
+* Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
+- Ship /etc/yum.repos.d/_copr_atim-starship.repo. starship isn't in Fedora
+  main; the atim/starship COPR is the maintained source. Fixes CI build
+  break introduced in -3 (`No match for argument: starship`).
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
 - Drop Requires: sideral-user (package removed alongside home.nix retirement;
   /etc/skel ships nothing user-facing now).
