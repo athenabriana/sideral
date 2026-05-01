@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build + push
+    name: Build container image
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -80,9 +80,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: redhat-actions/push-to-registry@v2
         with:
-          image: ${{ steps.build.outputs.image }}
           tags: ${{ steps.build.outputs.tags }}
-          registry: ${{ env.IMAGE_REGISTRY }}
 
       - name: Install cosign
         if: github.event_name != 'pull_request'
@@ -97,7 +95,7 @@ jobs:
           cosign sign --yes "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
 
   release:
-    name: Cut release + publish ISO
+    name: Build ISO & publish release
     runs-on: ubuntu-24.04
     needs: build
     if: >
