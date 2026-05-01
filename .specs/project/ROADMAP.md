@@ -1,4 +1,4 @@
-# athens-os — Roadmap
+# sideral — Roadmap
 
 Features in flight, queued, and parked. Updated as decisions are made.
 
@@ -10,8 +10,8 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Previous (shipped)
 
-- **`athens-rpms`** — package athens-os customizations into 8 sub-packages, build them inline inside the Containerfile (no Copr, no token, no external service). Renamed from `athens-copr` on 2026-04-29; Phase R landed 2026-04-30 (CI run 25188178498, sha `e06bc39`). 26 requirements; ACR-29 (signed-rebase README cutover) and ACR-38 (drift-detection CI) deferred and non-blocking. See `.specs/features/athens-rpms/`.
-- **`athens-os`** — fork from Hyprland lineage into GNOME + tiling-shell on silverblue-main:43. 27 requirements. Four requirements (ATH-17, ATH-23, ATH-24, ATH-26) superseded by `nix-home`.
+- **`sideral-rpms`** — package sideral customizations into 8 sub-packages, build them inline inside the Containerfile (no Copr, no token, no external service). Renamed from `sideral-copr` on 2026-04-29; Phase R landed 2026-04-30 (CI run 25188178498, sha `e06bc39`). 26 requirements; ACR-29 (signed-rebase README cutover) and ACR-38 (drift-detection CI) deferred and non-blocking. See `.specs/features/sideral-rpms/`.
+- **`sideral`** — fork from Hyprland lineage into GNOME + tiling-shell on silverblue-main:43. 27 requirements. Four requirements (ATH-17, ATH-23, ATH-24, ATH-26) superseded by `nix-home`.
 
 ---
 
@@ -30,7 +30,7 @@ Features in flight, queued, and parked. Updated as decisions are made.
 | `fedora-multimedia` swap | `dnf5 swap ffmpeg-free ffmpeg --allowerasing` via RPMFusion → hardware-accelerated H.264/HEVC in Helium/apps | Bluefin `build_files/` |
 | Actions cache for `/var/lib/containers` | Cuts base-image pull time; keeps builds under 12 min | [ublue-os/container-storage-action](https://github.com/ublue-os/container-storage-action) |
 
-**Entry criterion**: `nix-home` Verified AND `athens-rpms` Phase R landed.
+**Entry criterion**: `nix-home` Verified AND `sideral-rpms` Phase R landed.
 
 ---
 
@@ -49,9 +49,9 @@ Features in flight, queued, and parked. Updated as decisions are made.
 **Scope**: selectively borrow opinionated patterns from ublue-os ecosystem.
 
 - **`ublue-os-signing`** package — ships `/etc/containers/policy.json` correctly out of the box (partial overlap with `image-ops`; decide whether to reuse the package or hand-roll).
-- **`ujust` recipe fragment layout** — `/etc/ublue-os/just/*.just` aggregated into `/etc/justfile`. One fragment per concern. Strong fit since athens-os already ships a Justfile.
+- **`ujust` recipe fragment layout** — `/etc/ublue-os/just/*.just` aggregated into `/etc/justfile`. One fragment per concern. Strong fit since sideral already ships a Justfile.
 - **Welcome script** — minimal `just onboard` invoking a first-run wizard (prompt for git identity, offer to log into `gh`, optionally run `home-manager switch`).
-- **bootc-image-builder recipes** — ~~`just build-qcow2`~~ / `build-iso` for when installable ISOs become useful. Promoted out of backlog 2026-04-30: `.github/workflows/build-iso.yml` builds an Anaconda ISO from `ghcr.io/<owner>/athens-os:<tag>` and publishes to GitHub Releases (workflow_dispatch + push of `v*` tags). qcow2 / raw still skipped (rebase-only workflow).
+- **bootc-image-builder recipes** — ~~`just build-qcow2`~~ / `build-iso` for when installable ISOs become useful. Promoted out of backlog 2026-04-30: `.github/workflows/build-iso.yml` builds an Anaconda ISO from `ghcr.io/<owner>/sideral:<tag>` and publishes to GitHub Releases (workflow_dispatch + push of `v*` tags). qcow2 / raw still skipped (rebase-only workflow).
 
 ### `nix-extras-v2`
 
@@ -62,7 +62,7 @@ Features in flight, queued, and parked. Updated as decisions are made.
 - `programs.carapace` — multi-shell completion engine
 - `sops-nix` — secrets management (SSH keys, GPG keys, API tokens) once actually needed
 - Nixpkgs overlays directory for personal packages not yet upstream
-- Multi-host home.nix structure (`modules/cli.nix`, `modules/dev.nix`, `hosts/athens.nix`) for future Mac/NixOS portability
+- Multi-host home.nix structure (`modules/cli.nix`, `modules/dev.nix`, `hosts/sideral.nix`) for future Mac/NixOS portability
 
 ### Hardware support
 

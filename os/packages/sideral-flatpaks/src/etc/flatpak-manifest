@@ -1,0 +1,15 @@
+# Flatpaks auto-installed on first boot by sideral-flatpak-install.service.
+# Format: <remote> <ref>
+# Lines starting with # and blank lines are ignored.
+
+# ── Browser ──
+flathub app.zen_browser.zen
+
+# ── GNOME quality-of-life ──
+flathub com.github.tchx84.Flatseal
+flathub io.github.flattool.Warehouse
+flathub com.mattjakeman.ExtensionManager
+flathub io.podman_desktop.PodmanDesktop
+flathub com.ranfdev.DistroShelf
+flathub net.nokyan.Resources
+flathub it.mijorus.smile

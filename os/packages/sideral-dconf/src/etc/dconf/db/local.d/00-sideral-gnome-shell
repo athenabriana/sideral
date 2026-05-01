@@ -1,0 +1,96 @@
+# Sideral OS — GNOME Shell extension defaults.
+# Captured verbatim from user's live machine. Stripped:
+#   • 5 monitor-specific panel keys (panel-anchors / lengths / positions /
+#     sizes / element-positions — they reference a specific GPU device ID)
+#   • 3 state/version markers (extension-version, prefs-opened,
+#     last-version-name-installed, settings-version)
+# All other values preserved, even if they match upstream defaults.
+
+[org/gnome/shell/extensions/dash-to-panel]
+animate-appicon-hover=false
+animate-appicon-hover-animation-extent={'RIPPLE': 4, 'PLANK': 4, 'SIMPLE': 1}
+animate-appicon-hover-animation-travel={'SIMPLE': 0.050000000000000003, 'RIPPLE': 0.40000000000000002, 'PLANK': 0.0}
+appicon-margin=2
+appicon-padding=4
+appicon-style='NORMAL'
+context-menu-entries='[{"title":"Terminal","cmd":"TERMINALSETTINGS"},{"title":"System monitor","cmd":"gnome-system-monitor"},{"title":"Files","cmd":"nautilus"}]'
+dot-color-1='#5294e2'
+dot-color-2='#5294e2'
+dot-color-3='#5294e2'
+dot-color-4='#5294e2'
+dot-color-dominant=false
+dot-color-override=false
+dot-color-unfocused-1='#5294e2'
+dot-color-unfocused-2='#5294e2'
+dot-color-unfocused-3='#5294e2'
+dot-color-unfocused-4='#5294e2'
+dot-color-unfocused-different=false
+dot-position='BOTTOM'
+dot-size=0
+dot-style-focused='DASHES'
+dot-style-unfocused='SQUARES'
+focus-highlight=true
+focus-highlight-color='#EEEEEE'
+focus-highlight-dominant=false
+focus-highlight-opacity=25
+global-border-radius=3
+group-apps=false
+group-apps-label-max-width=0
+group-apps-underline-unfocused=false
+group-apps-use-fixed-width=false
+group-apps-use-launchers=false
+highlight-appicon-hover=true
+hot-keys=true
+hotkeys-overlay-combo='NEVER'
+leftbox-padding=-1
+panel-side-margins=6
+panel-side-padding=0
+panel-top-bottom-margins=4
+panel-top-bottom-padding=4
+show-tooltip=false
+show-window-previews=false
+status-icon-padding=-1
+stockgs-keep-dash=false
+stockgs-keep-top-panel=false
+stockgs-panelbtn-click-only=false
+trans-bg-color='#000000'
+trans-border-width=1
+trans-panel-opacity=0.5
+trans-use-border=false
+trans-use-custom-bg=true
+trans-use-custom-gradient=false
+trans-use-custom-opacity=true
+trans-use-dynamic-opacity=false
+tray-padding=10
+tray-size=16
+window-preview-size=100
+window-preview-title-position='TOP'
+
+[org/gnome/shell/extensions/rounded-window-corners-reborn]
+global-rounded-corner-settings={'padding': <{'left': uint32 1, 'right': 1, 'top': 1, 'bottom': 1}>, 'keepRoundedCorners': <{'maximized': false, 'fullscreen': false}>, 'borderRadius': <uint32 12>, 'smoothing': <0.0>, 'borderColor': <(0.5, 0.5, 0.5, 1.0)>, 'enabled': <true>}
+skip-libadwaita-app=true
+
+[org/gnome/shell/extensions/tilingshell]
+edge-tiling-mode='adaptive'
+enable-autotiling=true
+enable-blur-selected-tilepreview=false
+enable-blur-snap-assistant=false
+enable-smart-window-border-radius=true
+enable-snap-assist=true
+enable-span-multiple-tiles=false
+enable-tiling-system-windows-suggestions=false
+enable-window-border=true
+inner-gaps=uint32 12
+layouts-json='[{"id":"512048","tiles":[{"x":0,"y":0,"width":0.5,"height":1,"groups":[1]},{"x":0.5,"y":0,"width":0.4999999999999997,"height":1,"groups":[1]}]}]'
+move-window-down=['']
+overridden-settings="{\"org.gnome.mutter.keybindings\":{\"toggle-tiled-right\":\"['<Super>Right']\",\"toggle-tiled-left\":\"['<Super>Left']\"},\"org.gnome.desktop.wm.keybindings\":{\"maximize\":\"['<Super>Up']\",\"unmaximize\":\"['<Super>Down']\"},\"org.gnome.mutter\":{\"edge-tiling\":\"true\"}}"
+quarter-tiling-threshold=uint32 30
+selected-layouts=[['512048'], ['512048']]
+show-indicator=false
+snap-assist-sync-layout=true
+span-window-all-tiles=['<Super>Up']
+tiling-system-activation-key=['0']
+tiling-system-deactivation-key=['-1']
+window-border-color='rgb(255,255,255)'
+window-border-width=uint32 1
+window-use-custom-border-color=true

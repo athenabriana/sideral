@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-rpms.sh — build every athens-os-* binary RPM inline.
+# build-rpms.sh — build every sideral-* binary RPM inline.
 #
 # Reads packages/<pkg>/<pkg>.spec for each subdir, tarballs packages/<pkg>/src/
 # as Source0, runs `rpmbuild -bb` with version + git-sha stamped via macros,
@@ -7,16 +7,16 @@
 #
 # Usage:    packages/build-rpms.sh <packages-dir> <output-topdir> [version]
 #
-# Default version: $_ATHENS_VERSION env, else "0.0.0.dev".
-#                  CI sets _ATHENS_VERSION="$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}".
+# Default version: $_SIDERAL_VERSION env, else "0.0.0.dev".
+#                  CI sets _SIDERAL_VERSION="$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}".
 #
-# Output:   <output-topdir>/RPMS/noarch/athens-os-*.rpm
+# Output:   <output-topdir>/RPMS/noarch/sideral-*.rpm
 
 set -euo pipefail
 
 PKG_ROOT="${1:?usage: build-rpms.sh <packages-dir> <output-topdir> [version]}"
 TOPDIR="${2:?usage: build-rpms.sh <packages-dir> <output-topdir> [version]}"
-VERSION="${3:-${_ATHENS_VERSION:-0.0.0.dev}}"
+VERSION="${3:-${_SIDERAL_VERSION:-0.0.0.dev}}"
 
 [ -d "$PKG_ROOT" ] || { echo "packages dir not found: $PKG_ROOT" >&2; exit 1; }
 
@@ -42,7 +42,7 @@ for pkgdir in "$PKG_ROOT"/*/; do
 
     rpmbuild -bb \
         --define "_topdir $TOPDIR" \
-        --define "_athens_version $VERSION" \
+        --define "_sideral_version $VERSION" \
         --define "dist .fc43" \
         "$TOPDIR/SPECS/$pkg.spec" >&2
 done
@@ -51,11 +51,11 @@ rm -rf "$TOPDIR/_stage"
 
 # Sanity: every package should have produced exactly one .rpm.
 expected="$(find "$PKG_ROOT" -mindepth 1 -maxdepth 1 -type d | wc -l)"
-produced="$(find "$TOPDIR/RPMS" -name 'athens-os-*.rpm' | wc -l)"
+produced="$(find "$TOPDIR/RPMS" -name 'sideral-*.rpm' | wc -l)"
 if [ "$expected" != "$produced" ]; then
     echo "rpmbuild produced $produced RPMs, expected $expected" >&2
     exit 1
 fi
 
 echo "built $produced RPMs under $TOPDIR/RPMS/" >&2
-find "$TOPDIR/RPMS" -name 'athens-os-*.rpm' -print
+find "$TOPDIR/RPMS" -name 'sideral-*.rpm' -print

@@ -18,7 +18,7 @@ set -euo pipefail
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 # ── Pinned nix-installer (upstream CppNix, ostree planner) ──────────────
-# Staged at /usr/libexec/nix-installer; invoked by athens-nix-install.service
+# Staged at /usr/libexec/nix-installer; invoked by sideral-nix-install.service
 # on first boot. Upstream repo was renamed from experimental-nix-installer
 # to nix-installer (same code, no longer "experimental"); both URLs work.
 NIX_INSTALLER_VERSION="2.34.5"
@@ -70,8 +70,8 @@ for feature in "${FEATURES[@]}"; do
     fi
 done
 
-# /etc/os-release is now owned by athens-os-base (athens-rpms feature).
-# Lives at packages/athens-os-base/src/etc/os-release; the Containerfile's
+# /etc/os-release is now owned by sideral-base (sideral-rpms feature).
+# Lives at packages/sideral-base/src/etc/os-release; the Containerfile's
 # inline rpmbuild step builds the RPM after this script runs and installs
 # it via `rpm -Uvh --replacefiles` to claim file ownership from
 # fedora-release-common.

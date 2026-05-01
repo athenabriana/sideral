@@ -8,7 +8,7 @@
 
 ## Architecture Overview
 
-athens-os becomes a **three-layer stack**. Each layer has distinct lifecycle, ownership, and atomicity
+sideral becomes a **three-layer stack**. Each layer has distinct lifecycle, ownership, and atomicity
 guarantees.
 
 ```mermaid
@@ -24,21 +24,21 @@ graph TD
     end
 
     subgraph FirstBoot["First boot (per-host, once)"]
-        S1[athens-nix-install.service]
+        S1[sideral-nix-install.service]
         S2[/usr/libexec/nix-installer install ostree<br/>--persistence /var/lib/nix]
         S3[restorecon -Rv /nix]
-        S4[Marker:<br/>/var/lib/athens/nix-setup-done]
+        S4[Marker:<br/>/var/lib/sideral/nix-setup-done]
         S1 --> S2
         S2 --> S3
         S3 --> S4
     end
 
     subgraph FirstLogin["First login (per-user, once)"]
-        U1[athens-home-manager-setup.service]
+        U1[sideral-home-manager-setup.service]
         U2[nix-channel --add<br/>home-manager release-24.11]
         U3[nix-shell '<home-manager>' -A install]
         U4[home-manager switch]
-        U5[Marker:<br/>~/.cache/athens/home-manager-setup-done]
+        U5[Marker:<br/>~/.cache/sideral/home-manager-setup-done]
         U1 --> U2
         U2 --> U3
         U3 --> U4
@@ -75,8 +75,8 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
 
 | Pattern | Source | Applied to |
 |---|---|---|
-| System oneshot + sentinel marker + idempotent retry | `system_files/etc/systemd/system/athens-flatpak-install.service` | `athens-nix-install.service` |
-| User oneshot + per-user marker + `default.target.wants/` symlink | `system_files/usr/lib/systemd/user/athens-vscode-setup.service` | `athens-home-manager-setup.service` |
+| System oneshot + sentinel marker + idempotent retry | `system_files/etc/systemd/system/sideral-flatpak-install.service` | `sideral-nix-install.service` |
+| User oneshot + per-user marker + `default.target.wants/` symlink | `system_files/usr/lib/systemd/user/sideral-vscode-setup.service` | `sideral-home-manager-setup.service` |
 | `ConditionPathExists=!<marker>` guard for idempotency | Both services above | Both new services |
 | Inline `bash -c '...'` ExecStart | Both services above | Both new services |
 | Persistent COPR / repo pattern | `build_files/build.sh` PERSISTENT_COPRS | N/A — we explicitly remove the mise repo equivalent |
@@ -121,13 +121,13 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
 - **Reuses**: Logging `log()` helper; `set -euo pipefail` pattern.
 - **Satisfies**: NXH-01, NXH-15 (inline env var pin).
 
-### 2. `athens-nix-install.service` — first-boot system oneshot
+### 2. `sideral-nix-install.service` — first-boot system oneshot
 
 - **Purpose**: On first boot of a freshly-rebased host, install nix with the `ostree` planner, persist
   `/nix` as a bind mount from `/var/lib/nix`, and relabel SELinux contexts. Idempotent: on failure,
   marker absent → retries next boot.
-- **Location**: `system_files/etc/systemd/system/athens-nix-install.service` + symlink at
-  `system_files/etc/systemd/system/multi-user.target.wants/athens-nix-install.service`.
+- **Location**: `system_files/etc/systemd/system/sideral-nix-install.service` + symlink at
+  `system_files/etc/systemd/system/multi-user.target.wants/sideral-nix-install.service`.
 - **Interfaces** (unit file):
 
   ```ini
@@ -136,7 +136,7 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
   Documentation=https://github.com/NixOS/experimental-nix-installer
   Wants=network-online.target
   After=network-online.target ostree-remount.service
-  ConditionPathExists=!/var/lib/athens/nix-setup-done
+  ConditionPathExists=!/var/lib/sideral/nix-setup-done
 
   [Service]
   Type=oneshot
@@ -145,7 +145,7 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
       --persistence /var/lib/nix \
       --no-confirm
   ExecStartPost=/usr/sbin/restorecon -Rv /nix
-  ExecStartPost=/usr/bin/bash -c 'mkdir -p /var/lib/athens && touch /var/lib/athens/nix-setup-done'
+  ExecStartPost=/usr/bin/bash -c 'mkdir -p /var/lib/sideral && touch /var/lib/sideral/nix-setup-done'
   StandardOutput=journal
   StandardError=journal
 
@@ -155,16 +155,16 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
 
 - **Dependencies**: `/usr/libexec/nix-installer` (from component 1), network, `/var/lib/` writable.
 - **Reuses**: Marker-file idempotency pattern and `WantedBy=multi-user.target` symlink layout from
-  `athens-flatpak-install.service`.
+  `sideral-flatpak-install.service`.
 - **Satisfies**: NXH-02, NXH-03, NXH-04, NXH-05, NXH-06, NXH-07.
 
-### 3. `athens-home-manager-setup.service` — first-login user oneshot
+### 3. `sideral-home-manager-setup.service` — first-login user oneshot
 
 - **Purpose**: On first login of each user, add the pinned home-manager channel, install the
   `home-manager` CLI, and run the first `home-manager switch` to materialize `$HOME` from the
   `/etc/skel`-seeded `~/.config/home-manager/home.nix`. Per-user idempotent.
-- **Location**: `system_files/usr/lib/systemd/user/athens-home-manager-setup.service` + symlink at
-  `system_files/usr/lib/systemd/user/default.target.wants/athens-home-manager-setup.service`.
+- **Location**: `system_files/usr/lib/systemd/user/sideral-home-manager-setup.service` + symlink at
+  `system_files/usr/lib/systemd/user/default.target.wants/sideral-home-manager-setup.service`.
 - **Interfaces** (unit file):
 
   ```ini
@@ -172,7 +172,7 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
   Description=Bootstrap home-manager on first login
   Documentation=https://nix-community.github.io/home-manager/
   After=default.target
-  ConditionPathExists=!%h/.cache/athens/home-manager-setup-done
+  ConditionPathExists=!%h/.cache/sideral/home-manager-setup-done
   ConditionPathExists=/nix/var/nix/profiles/default/bin/nix
 
   [Service]
@@ -181,14 +181,14 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
   Environment=HOME_MANAGER_CHANNEL=https://github.com/nix-community/home-manager/archive/release-24.11.tar.gz
   ExecStart=/usr/bin/bash -lc '\
       set -e; \
-      mkdir -p %h/.cache/athens; \
+      mkdir -p %h/.cache/sideral; \
       . /etc/profile.d/nix.sh 2>/dev/null || . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh; \
       nix-channel --add "$HOME_MANAGER_CHANNEL" home-manager; \
       nix-channel --update; \
       nix-shell "<home-manager>" -A install; \
       export PATH="$HOME/.nix-profile/bin:$PATH"; \
       home-manager switch; \
-      touch %h/.cache/athens/home-manager-setup-done'
+      touch %h/.cache/sideral/home-manager-setup-done'
   StandardOutput=journal
   StandardError=journal
 
@@ -196,11 +196,11 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
   WantedBy=default.target
   ```
 
-- **Dependencies**: `athens-nix-install.service` must have completed on a prior boot (guarded by
+- **Dependencies**: `sideral-nix-install.service` must have completed on a prior boot (guarded by
   second `ConditionPathExists` pointing at a nix-installed file); network; `/etc/skel` seed must have
   provided `~/.config/home-manager/home.nix` at user creation.
 - **Reuses**: Per-user marker + `WantedBy=default.target` symlink pattern from
-  `athens-vscode-setup.service`. The existing `athens-mise-install.service` is removed entirely; this
+  `sideral-vscode-setup.service`. The existing `sideral-mise-install.service` is removed entirely; this
   new unit is the conceptual replacement for the user-level slot.
 - **Satisfies**: NXH-08, NXH-09, NXH-10, NXH-11.
 
@@ -330,8 +330,8 @@ anything outside `$HOME` and `/nix/var/nix/profiles/per-user/$USER`. Clean separ
 |---|---|
 | `home/.bashrc` | home-manager writes `~/.bashrc` from `programs.bash.initExtra` |
 | `home/.config/mise/config.toml` | Inlined into `home.nix` via `home.file` |
-| `system_files/usr/lib/systemd/user/athens-mise-install.service` | mise now via `home.packages` |
-| `system_files/usr/lib/systemd/user/default.target.wants/athens-mise-install.service` | symlink orphan after unit removal |
+| `system_files/usr/lib/systemd/user/sideral-mise-install.service` | mise now via `home.packages` |
+| `system_files/usr/lib/systemd/user/default.target.wants/sideral-mise-install.service` | symlink orphan after unit removal |
 
 - **Satisfies**: NXH-20, NXH-21, NXH-26.
 
@@ -356,10 +356,10 @@ The starter `home.nix` is both a config file and the data model users will edit.
 
 | Marker | Scope | Meaning | Consumer |
 |---|---|---|---|
-| `/var/lib/athens/nix-setup-done` | system, per-host | nix installer ran successfully | `athens-nix-install.service` `ConditionPathExists!` guard |
-| `~/.cache/athens/home-manager-setup-done` | user, per-user-per-host | home-manager bootstrap ran successfully | `athens-home-manager-setup.service` guard |
-| `/var/lib/athens/flatpak-install-done` | system | (pre-existing, unchanged) | `athens-flatpak-install.service` |
-| `~/.cache/athens/vscode-setup-done` | user | (pre-existing, unchanged) | `athens-vscode-setup.service` |
+| `/var/lib/sideral/nix-setup-done` | system, per-host | nix installer ran successfully | `sideral-nix-install.service` `ConditionPathExists!` guard |
+| `~/.cache/sideral/home-manager-setup-done` | user, per-user-per-host | home-manager bootstrap ran successfully | `sideral-home-manager-setup.service` guard |
+| `/var/lib/sideral/flatpak-install-done` | system | (pre-existing, unchanged) | `sideral-flatpak-install.service` |
+| `~/.cache/sideral/vscode-setup-done` | user | (pre-existing, unchanged) | `sideral-vscode-setup.service` |
 
 ### Filesystem topology after first boot + first login
 
@@ -371,10 +371,10 @@ The starter `home.nix` is both a config file and the data model users will edit.
         profile         → ad-hoc user installs (`nix profile install …`)
         home-manager    → home-manager generations
 /var/lib/nix/                          → real storage; survives rpm-ostree upgrade
-/var/lib/athens/nix-setup-done         → system marker
+/var/lib/sideral/nix-setup-done         → system marker
 ~/.nix-profile                         → symlink to per-user/<user>/home-manager
 ~/.config/home-manager/home.nix        → seeded from /etc/skel, user edits live
-~/.cache/athens/home-manager-setup-done → user marker
+~/.cache/sideral/home-manager-setup-done → user marker
 ~/.bashrc                              → symlink to /nix/store/...-bashrc
 ~/.config/{git,mise,atuin,starship.toml} → symlinks to /nix/store/...
 ```
@@ -385,12 +385,12 @@ The starter `home.nix` is both a config file and the data model users will edit.
 
 The feature introduces two new services; three ordering invariants must hold.
 
-**Invariant 1: `athens-nix-install` runs only after `/var` is writable and network is up.**
+**Invariant 1: `sideral-nix-install` runs only after `/var` is writable and network is up.**
 - Enforced by `After=network-online.target ostree-remount.service`, `Wants=network-online.target`.
 
-**Invariant 2: `athens-home-manager-setup` runs only after `/nix` exists and `nix` CLI works.**
+**Invariant 2: `sideral-home-manager-setup` runs only after `/nix` exists and `nix` CLI works.**
 - Enforced by `ConditionPathExists=/nix/var/nix/profiles/default/bin/nix` on the user unit.
-- If the user logs in on the very boot where `athens-nix-install` is still running or failed, the
+- If the user logs in on the very boot where `sideral-nix-install` is still running or failed, the
   condition is false → unit skipped this session → retries next login (marker never written).
 - Eventual consistency: after nix install succeeds and user logs in once more, bootstrap runs.
 
@@ -401,15 +401,15 @@ The feature introduces two new services; three ordering invariants must hold.
 ```mermaid
 sequenceDiagram
     participant Host as Host boot
-    participant NixSvc as athens-nix-install
+    participant NixSvc as sideral-nix-install
     participant User as User logs in
-    participant HMSvc as athens-home-manager-setup
+    participant HMSvc as sideral-home-manager-setup
     participant HMCli as home-manager
 
     Host->>NixSvc: network-online.target reached
     NixSvc->>NixSvc: /usr/libexec/nix-installer install ostree
     NixSvc->>NixSvc: restorecon -Rv /nix
-    NixSvc->>NixSvc: touch /var/lib/athens/nix-setup-done
+    NixSvc->>NixSvc: touch /var/lib/sideral/nix-setup-done
     NixSvc-->>Host: nix-daemon.service active
 
     User->>HMSvc: default.target (graphical login)
@@ -418,7 +418,7 @@ sequenceDiagram
     HMSvc->>HMCli: nix-shell '<home-manager>' -A install
     HMSvc->>HMCli: home-manager switch
     HMCli-->>User: ~/.bashrc, ~/.config/*, ~/.nix-profile/bin/*
-    HMSvc->>HMSvc: touch ~/.cache/athens/home-manager-setup-done
+    HMSvc->>HMSvc: touch ~/.cache/sideral/home-manager-setup-done
 ```
 
 ### Known race: user opens a terminal before `home-manager switch` finishes
@@ -439,8 +439,8 @@ sequenceDiagram
 | SELinux `default_t` on `/nix` after large `nix profile install` | User discovers "permission denied" | Run `sudo restorecon -Rv /nix`; README documents it | One-time friction per install batch until upstream issue #1383 closes |
 | `composefs` blocks `/nix` bind mount on silverblue-main:43 | `findmnt /nix` empty after install | README adds `rd.systemd.unit=root.transient` karg recipe; revisit in implementation | Possible manual karg add on existing hosts |
 | home-manager channel unreachable at first login | `nix-channel --update` fails → `set -e` aborts | Marker absent → retry next login | One-shot delay; re-login fixes it |
-| home-manager `switch` fails (eval error in `home.nix`) | Non-zero exit from `home-manager switch` | Marker absent; previous generation remains active (none on first switch); log in user journal | User inspects `journalctl --user -u athens-home-manager-setup`; typically a syntax error they just edited in |
-| User deletes `~/.cache/athens/home-manager-setup-done` | N/A (user action) | Next login re-runs the whole bootstrap; home-manager is idempotent, so this is safe recovery | Safe "redo everything" escape hatch |
+| home-manager `switch` fails (eval error in `home.nix`) | Non-zero exit from `home-manager switch` | Marker absent; previous generation remains active (none on first switch); log in user journal | User inspects `journalctl --user -u sideral-home-manager-setup`; typically a syntax error they just edited in |
+| User deletes `~/.cache/sideral/home-manager-setup-done` | N/A (user action) | Next login re-runs the whole bootstrap; home-manager is idempotent, so this is safe recovery | Safe "redo everything" escape hatch |
 | Unit succeeds but `~/.bashrc` not written | `cat ~/.bashrc` absent | Manual rescue: `home-manager switch` from terminal | Rare; implies home-manager module misconfig |
 | `rpm-ostree upgrade` replaces `/usr/libexec/nix-installer` with a newer pinned version | N/A (by design) | New installer only runs on hosts that haven't completed first-boot install (marker guards). Existing hosts ignore the bump. | None — Nix upgrades go through `nix upgrade-nix`, not the installer. |
 
@@ -475,10 +475,10 @@ design phase:
 
 ### Added
 
-- `system_files/etc/systemd/system/athens-nix-install.service`
-- `system_files/etc/systemd/system/multi-user.target.wants/athens-nix-install.service` (symlink → `../athens-nix-install.service`)
-- `system_files/usr/lib/systemd/user/athens-home-manager-setup.service`
-- `system_files/usr/lib/systemd/user/default.target.wants/athens-home-manager-setup.service` (symlink → `../athens-home-manager-setup.service`)
+- `system_files/etc/systemd/system/sideral-nix-install.service`
+- `system_files/etc/systemd/system/multi-user.target.wants/sideral-nix-install.service` (symlink → `../sideral-nix-install.service`)
+- `system_files/usr/lib/systemd/user/sideral-home-manager-setup.service`
+- `system_files/usr/lib/systemd/user/default.target.wants/sideral-home-manager-setup.service` (symlink → `../sideral-home-manager-setup.service`)
 - `home/.config/home-manager/home.nix`
 
 ### Modified
@@ -492,15 +492,15 @@ design phase:
 - `home/.bashrc`
 - `home/.config/mise/config.toml`
 - `home/.config/mise/` (directory, if empty after config.toml removal)
-- `system_files/usr/lib/systemd/user/athens-mise-install.service`
-- `system_files/usr/lib/systemd/user/default.target.wants/athens-mise-install.service` (symlink)
+- `system_files/usr/lib/systemd/user/sideral-mise-install.service`
+- `system_files/usr/lib/systemd/user/default.target.wants/sideral-mise-install.service` (symlink)
 
 ### Unchanged (called out for clarity)
 
 - `Containerfile` — the existing `COPY home /etc/skel` and `COPY system_files/usr /usr` already
   carry the new files through. No structural changes needed.
-- `system_files/etc/systemd/system/athens-flatpak-install.service` — parallel flow, unchanged.
-- `system_files/usr/lib/systemd/user/athens-vscode-setup.service` — parallel flow, unchanged.
+- `system_files/etc/systemd/system/sideral-flatpak-install.service` — parallel flow, unchanged.
+- `system_files/usr/lib/systemd/user/sideral-vscode-setup.service` — parallel flow, unchanged.
 
 ---
 

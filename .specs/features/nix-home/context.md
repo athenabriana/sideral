@@ -33,7 +33,7 @@ why this path was picked. Reference the decision ID in commits/PRs when revisiti
 
 **Why**:
 - User's stated preference: "nix CLI should behave like default NixOS."
-- Flakes are still technically experimental; enabling them globally puts athens-os ahead of upstream NixOS defaults.
+- Flakes are still technically experimental; enabling them globally puts sideral ahead of upstream NixOS defaults.
 - Users who want flakes add one line to `~/.config/nix/nix.conf` — reversible, discoverable, per-user.
 - Classic CLI (`nix-env`, `nix-shell`, `nix-channel`) works without any config.
 
@@ -71,12 +71,12 @@ why this path was picked. Reference the decision ID in commits/PRs when revisiti
 
 ## D-05 · First-boot failure mode: idempotent retry via marker file
 
-**Chose**: Marker file at `/var/lib/athens/nix-setup-done`; unit runs while the marker is absent.
+**Chose**: Marker file at `/var/lib/sideral/nix-setup-done`; unit runs while the marker is absent.
 
 **Considered**: Fail loudly once; require manual `systemctl start` to retry.
 
 **Why**:
-- Matches the existing `athens-flatpak-install` and former `athens-mise-install` patterns.
+- Matches the existing `sideral-flatpak-install` and former `sideral-mise-install` patterns.
 - Survives offline first boot, transient failures, VMs created without network.
 - User friendly: boot again tomorrow, problem fixes itself.
 

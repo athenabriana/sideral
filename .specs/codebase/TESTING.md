@@ -1,4 +1,4 @@
-# Testing — athens-os
+# Testing — sideral
 
 This project has no unit/e2e test suite. The gate checks are:
 
@@ -27,7 +27,7 @@ Only run when explicitly validating a full pass:
    - `mise ls` → 12 declared tools, all lazy (ATH-27 still valid; ATH-26 superseded — no eager-install service)
    - `which nix && which nix-shell` → both resolve (NXH-06)
    - `nix-shell -p hyperfine --run 'hyperfine --version'` → succeeds (NXH-27, validates daemon + store)
-   - `rpm-ostree status` → athens-os current, previous deployment preserved (ATH-08)
+   - `rpm-ostree status` → sideral current, previous deployment preserved (ATH-08)
    - **Distrobox check** (NXH+distrobox.conf): `distrobox create --image fedora:42 t && distrobox enter t -- nix --version` → succeeds, proves /nix is mounted and bashrc sources daemon profile
 
 ## Task-level gate matrix

@@ -22,19 +22,19 @@ Status progression: `Pending → Implementing → Verified`.
 - **Gate**: Quick (`just lint`).
 - **Satisfies**: NXH-01, NXH-15.
 
-## T02 — Ship `athens-nix-install.service` (system oneshot) + enablement symlink
+## T02 — Ship `sideral-nix-install.service` (system oneshot) + enablement symlink
 
-- **What**: New unit at `system_files/etc/systemd/system/athens-nix-install.service` that runs
+- **What**: New unit at `system_files/etc/systemd/system/sideral-nix-install.service` that runs
   `/usr/libexec/nix-installer install ostree --persistence /var/lib/nix --no-confirm`, then
-  `restorecon -Rv /nix`, then touches `/var/lib/athens/nix-setup-done`. Guarded by
-  `ConditionPathExists=!/var/lib/athens/nix-setup-done`. Symlink under
+  `restorecon -Rv /nix`, then touches `/var/lib/sideral/nix-setup-done`. Guarded by
+  `ConditionPathExists=!/var/lib/sideral/nix-setup-done`. Symlink under
   `multi-user.target.wants/`.
-- **Where**: `system_files/etc/systemd/system/athens-nix-install.service`,
-  `system_files/etc/systemd/system/multi-user.target.wants/athens-nix-install.service` (relative
+- **Where**: `system_files/etc/systemd/system/sideral-nix-install.service`,
+  `system_files/etc/systemd/system/multi-user.target.wants/sideral-nix-install.service` (relative
   symlink).
 - **Depends on**: T01 (unit expects `/usr/libexec/nix-installer`).
-- **Reuses**: Marker + `ConditionPathExists=!` pattern from `athens-flatpak-install.service`.
-- **Done when**: Both files present. Symlink target is `../athens-nix-install.service`. Unit parses
+- **Reuses**: Marker + `ConditionPathExists=!` pattern from `sideral-flatpak-install.service`.
+- **Done when**: Both files present. Symlink target is `../sideral-nix-install.service`. Unit parses
   (systemd-analyze verify if available; otherwise INI parse).
 - **Tests**: `just build` still succeeds (image builds with the new unit). No `bootc container lint`
   regression.
@@ -57,20 +57,20 @@ Status progression: `Pending → Implementing → Verified`.
 - **Gate**: Build (`just build`).
 - **Satisfies**: NXH-12..NXH-19, NXH-34..NXH-40.
 
-## T04 — Ship `athens-home-manager-setup.service` (user oneshot) + enablement symlink
+## T04 — Ship `sideral-home-manager-setup.service` (user oneshot) + enablement symlink
 
 - **What**: New user unit at
-  `system_files/usr/lib/systemd/user/athens-home-manager-setup.service` that: sources nix profile,
+  `system_files/usr/lib/systemd/user/sideral-home-manager-setup.service` that: sources nix profile,
   adds `release-24.11` home-manager channel, runs `nix-channel --update`, `nix-shell
   '<home-manager>' -A install`, `home-manager switch`, then touches
-  `%h/.cache/athens/home-manager-setup-done`. Dual `ConditionPathExists`: `!marker` and
+  `%h/.cache/sideral/home-manager-setup-done`. Dual `ConditionPathExists`: `!marker` and
   `/nix/var/nix/profiles/default/bin/nix`. Symlink under `default.target.wants/`.
-- **Where**: `system_files/usr/lib/systemd/user/athens-home-manager-setup.service`,
-  `system_files/usr/lib/systemd/user/default.target.wants/athens-home-manager-setup.service`.
+- **Where**: `system_files/usr/lib/systemd/user/sideral-home-manager-setup.service`,
+  `system_files/usr/lib/systemd/user/default.target.wants/sideral-home-manager-setup.service`.
 - **Depends on**: T02 (nix must install before this runs — enforced at runtime by the second
   `ConditionPathExists`), T03 (skel-seeded `home.nix` must exist on new user creation).
 - **Reuses**: Per-user marker + `WantedBy=default.target` pattern from
-  `athens-vscode-setup.service`.
+  `sideral-vscode-setup.service`.
 - **Done when**: Both files present. Unit parses. `TimeoutStartSec=900`. `set -e` wraps the
   ExecStart shell block.
 - **Tests**: `just build` succeeds.
@@ -90,14 +90,14 @@ Status progression: `Pending → Implementing → Verified`.
 - **Gate**: Build.
 - **Satisfies**: NXH-20, NXH-21, NXH-22, NXH-23.
 
-## T06 — Remove `athens-mise-install.service` and its symlink `[P]`
+## T06 — Remove `sideral-mise-install.service` and its symlink `[P]`
 
-- **What**: Delete `system_files/usr/lib/systemd/user/athens-mise-install.service` and
-  `system_files/usr/lib/systemd/user/default.target.wants/athens-mise-install.service`.
+- **What**: Delete `system_files/usr/lib/systemd/user/sideral-mise-install.service` and
+  `system_files/usr/lib/systemd/user/default.target.wants/sideral-mise-install.service`.
 - **Where**: repo.
 - **Depends on**: T04 (new user unit supersedes this one).
 - **Reuses**: —
-- **Done when**: Neither file exists. `grep -r 'athens-mise-install' system_files/ build_files/`
+- **Done when**: Neither file exists. `grep -r 'sideral-mise-install' system_files/ build_files/`
   returns nothing.
 - **Tests**: `just build` succeeds.
 - **Gate**: Build.
@@ -118,8 +118,8 @@ Status progression: `Pending → Implementing → Verified`.
 
 ## T08 — README: document nix-home first-boot + first-login flow
 
-- **What**: Add a section to `README.md` covering (a) the first-boot `athens-nix-install.service`
-  behavior and journalctl location, (b) first-login `athens-home-manager-setup.service`, (c)
+- **What**: Add a section to `README.md` covering (a) the first-boot `sideral-nix-install.service`
+  behavior and journalctl location, (b) first-login `sideral-home-manager-setup.service`, (c)
   editing `home.nix` + `just home-apply` workflow, (d) SELinux `restorecon -Rv /nix` note for
   post-install batches, (e) composefs karg note if confirmed as a blocker during implementation.
 - **Where**: `README.md`.

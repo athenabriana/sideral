@@ -8,12 +8,12 @@
 # disables, secureboot key enrollment, and branding clones we don't have.
 set -eoux pipefail
 
-IMAGE_REF="ghcr.io/athenabriana/athens-os"
+IMAGE_REF="ghcr.io/athenabriana/sideral"
 IMAGE_TAG="latest"
 
 # ── Live env: anaconda first in dock, suspend off ────────────────────
 mkdir -p /usr/share/glib-2.0/schemas
-tee /usr/share/glib-2.0/schemas/zz2-athens-os-installer.gschema.override <<'EOF'
+tee /usr/share/glib-2.0/schemas/zz2-sideral-installer.gschema.override <<'EOF'
 [org.gnome.shell]
 welcome-dialog-last-shown-version='4294967295'
 favorite-apps=['anaconda.desktop', 'org.gnome.Nautilus.desktop', 'org.mozilla.firefox.desktop']
@@ -33,14 +33,14 @@ glib-compile-schemas /usr/share/glib-2.0/schemas
 # These all assume rpm-ostree state, network metadata services, or
 # first-boot user setup — none of which apply to a squashfs-backed
 # liveuser session. `|| true` because not every service exists in
-# every athens-os build (e.g. flatpak-preinstall.service is from
-# athens-os-flatpaks but may be renamed in future).
+# every sideral build (e.g. flatpak-preinstall.service is from
+# sideral-flatpaks but may be renamed in future).
 for unit in \
     rpm-ostreed-automatic.timer \
     rpm-ostree-countme.service \
     bootloader-update.service \
     flatpak-preinstall.service \
-    athens-flatpak-install.service \
+    sideral-flatpak-install.service \
     fwupd-refresh.timer \
     ; do
     systemctl disable "$unit" 2>/dev/null || true
@@ -65,12 +65,12 @@ dnf install -y \
 
 # ── Anaconda profile ─────────────────────────────────────────────────
 mkdir -p /etc/anaconda/profile.d
-tee /etc/anaconda/profile.d/athens-os.conf <<'EOF'
+tee /etc/anaconda/profile.d/sideral.conf <<'EOF'
 [Profile]
-profile_id = athens-os
+profile_id = sideral
 
 [Profile Detection]
-os_id = athens-os
+os_id = sideral
 
 [Network]
 default_on_boot = FIRST_WIRED_WITH_LINK

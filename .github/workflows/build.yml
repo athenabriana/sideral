@@ -1,4 +1,4 @@
-name: build-athens-os
+name: build-sideral
 
 # Single workflow that:
 #   1. Builds the bootc OCI image with buildah
@@ -22,7 +22,7 @@ on:
     branches: [main]
 
 env:
-  IMAGE_NAME: athens-os
+  IMAGE_NAME: sideral
   IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks (Zen Browser + GUI apps), home-manager user layer (mise, vscode, CLI QoL), and a narrow RPM layer (docker-ce, dev + kernel-debug stack, fonts)."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
 
@@ -161,8 +161,8 @@ jobs:
         if: steps.dryrun.outputs.skip == 'false'
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
-          echo "image_ref=ghcr.io/${OWNER}/athens-os:latest" >> "$GITHUB_OUTPUT"
-          echo "iso_name=athens-os-v${{ steps.dryrun.outputs.next_version }}-x86_64.iso" >> "$GITHUB_OUTPUT"
+          echo "image_ref=ghcr.io/${OWNER}/sideral:latest" >> "$GITHUB_OUTPUT"
+          echo "iso_name=sideral-v${{ steps.dryrun.outputs.next_version }}-x86_64.iso" >> "$GITHUB_OUTPUT"
 
       # ── Phase 2: free disk + auth ────────────────────────────────────
       - name: Maximise disk space
@@ -206,7 +206,7 @@ jobs:
       # GitHub Releases caps each asset at 2 GiB and the ISO is ~5 GiB.
       # zstd only saved ~4% on the squashfs-heavy payload, so we skip
       # compression entirely and split the raw ISO into 1.8 GiB chunks.
-      # Reassemble: `cat athens-os-*.iso.part-* > athens-os.iso`
+      # Reassemble: `cat sideral-*.iso.part-* > sideral.iso`
       - name: Split ISO + checksum
         if: steps.dryrun.outputs.skip == 'false'
         run: |
@@ -242,7 +242,7 @@ jobs:
           cd ./output
           ls -lh
           gh release upload "v${{ steps.dryrun.outputs.next_version }}" \
-            athens-os-*.iso.part-* sha256sums.txt \
+            sideral-*.iso.part-* sha256sums.txt \
             --clobber --repo "${{ github.repository }}"
 
       - name: Append download instructions to release notes

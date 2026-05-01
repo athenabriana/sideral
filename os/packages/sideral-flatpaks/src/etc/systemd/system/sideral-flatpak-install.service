@@ -1,0 +1,38 @@
+[Unit]
+Description=Install Sideral OS curated flatpaks on first boot
+Documentation=https://github.com/
+Wants=network-online.target
+After=network-online.target
+# Once the sentinel is written, this unit never runs again.
+ConditionPathExists=!/var/lib/sideral/flatpak-install-done
+
+[Service]
+Type=oneshot
+# Never block boot on network hiccups — the user can re-trigger with `systemctl start sideral-flatpak-install`.
+TimeoutStartSec=600
+ExecStart=/usr/bin/bash -c '\
+    set -u; \
+    manifest=/etc/flatpak-manifest; \
+    [ -r "$manifest" ] || { echo "no manifest at $manifest"; exit 0; }; \
+    mkdir -p /var/lib/sideral; \
+    failed=0; \
+    while read -r remote ref; do \
+        case "$remote" in ""|\\#*) continue;; esac; \
+        if flatpak info "$ref" >/dev/null 2>&1; then \
+            echo "[skip] $ref already installed"; \
+            continue; \
+        fi; \
+        echo "[install] $remote $ref"; \
+        flatpak install -y --noninteractive "$remote" "$ref" || failed=1; \
+    done < "$manifest"; \
+    if [ "$failed" -eq 0 ]; then \
+        touch /var/lib/sideral/flatpak-install-done; \
+    else \
+        echo "one or more flatpak installs failed; will retry next boot"; \
+        exit 0; \
+    fi'
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

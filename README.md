@@ -1,39 +1,39 @@
-<h1 align="center">athens-os</h1>
+<h1 align="center">sideral</h1>
 
 <p align="center">
   <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Zen Browser, Nix + home-manager, mise toolchain.</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=Latest&style=for-the-badge&logo=fedora&logoColor=white&labelColor=294172&color=3584e4" alt="Latest release"></a>
-  <a href="https://github.com/athenabriana/athens-os/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/athenabriana/athens-os/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Build&labelColor=294172" alt="Build status"></a>
-  <a href="https://github.com/athenabriana/athens-os/blob/main/LICENSE"><img src="https://img.shields.io/github/license/athenabriana/athens-os?style=for-the-badge&logo=opensourceinitiative&logoColor=white&label=License&labelColor=294172&color=3584e4" alt="License"></a>
+  <a href="https://github.com/athenabriana/sideral/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/sideral?label=Latest&style=for-the-badge&logo=fedora&logoColor=white&labelColor=294172&color=3584e4" alt="Latest release"></a>
+  <a href="https://github.com/athenabriana/sideral/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/athenabriana/sideral/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Build&labelColor=294172" alt="Build status"></a>
+  <a href="https://github.com/athenabriana/sideral/blob/main/LICENSE"><img src="https://img.shields.io/github/license/athenabriana/sideral?style=for-the-badge&logo=opensourceinitiative&logoColor=white&label=License&labelColor=294172&color=3584e4" alt="License"></a>
 </p>
 
 ## Quick start
 
-Two ways to try athens-os.
+Two ways to try sideral.
 
 ### Boot from USB (try before installing)
 
 <p align="center">
-  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a&color=3584e4" alt="Download ISO" height="44"></a>
+  <a href="https://github.com/athenabriana/sideral/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/sideral?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a&color=3584e4" alt="Download ISO" height="44"></a>
 </p>
 
-The button takes you to the latest release page. The ISO is split into three ~1.8 GiB parts because GitHub Releases caps each asset at 2 GiB — download every `athens-os-*.iso.part-*` file plus `sha256sums.txt`, then reassemble:
+The button takes you to the latest release page. The ISO is split into three ~1.8 GiB parts because GitHub Releases caps each asset at 2 GiB — download every `sideral-*.iso.part-*` file plus `sha256sums.txt`, then reassemble:
 
 ```bash
-cat athens-os-*.iso.part-* > athens-os.iso
+cat sideral-*.iso.part-* > sideral.iso
 sha256sum -c sha256sums.txt
-sudo dd if=athens-os.iso of=/dev/sdX bs=4M status=progress oflag=sync
+sudo dd if=sideral.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-Or use Etcher / Impression / GNOME Disks once the ISO is reassembled. Boot the USB and the preloaded Anaconda installer walks you through writing athens-os to disk.
+Or use Etcher / Impression / GNOME Disks once the ISO is reassembled. Boot the USB and the preloaded Anaconda installer walks you through writing sideral to disk.
 
 ### Rebase an existing Fedora atomic install
 
 ```bash
-sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/athens-os:latest
+sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral:latest
 systemctl reboot
 ```
 
@@ -49,7 +49,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 | --- | --- |
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
 | **Desktop** | GNOME Shell (default from base) + 5 extensions: appindicator, dash-to-panel, bazaar-integration, tilingshell, rounded-window-corners |
-| **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `athens-flatpak-install.service`) |
+| **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `sideral-flatpak-install.service`) |
 | **Editor** | `vscode` via `programs.vscode` in home.nix (includes `ms-vscode-remote.remote-ssh` + `remote-containers`; user can remove with a one-line edit) |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
 | **Dev tooling** | All in home.nix: `gh`, `starship`, `gcc`/`make`/`cmake`, `git` (with `lfs.enable` + `credential.helper = libsecret`). |
@@ -62,7 +62,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 ## Repo layout
 
 ```
-athens-os/
+sideral/
 ├── Justfile                         # build / rebase / home-edit / home-apply / home-diff
 ├── os/                              # everything that lands in the OCI image
 │   ├── Containerfile                # image recipe (FROM silverblue-main:43)
@@ -72,7 +72,7 @@ athens-os/
 │   │   ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
 │   │   ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
 │   │   └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
-│   └── packages/                    # athens-os-* RPM sources (built inline by build-rpms.sh)
+│   └── packages/                    # sideral-* RPM sources (built inline by build-rpms.sh)
 ├── iso/                             # live-installer assets consumed by titanoboa
 │   ├── anaconda-hook.sh             # post-rootfs hook: install Anaconda + brand the live env
 │   └── flatpaks.txt                 # flatpaks preinstalled in the live ISO
@@ -80,13 +80,13 @@ athens-os/
 │   ├── etc/
 │   │   ├── dconf/
 │   │   │   ├── profile/user                    → points GNOME at the system dconf DB
-│   │   │   └── db/local.d/{00-athens-focus, 00-athens-gnome-shell, 10-athens-keybinds}
+│   │   │   └── db/local.d/{00-sideral-focus, 00-sideral-gnome-shell, 10-sideral-keybinds}
 │   │   ├── flatpak-manifest                    → 8 refs (Zen Browser + 7 GUI apps)
-│   │   ├── systemd/system/athens-flatpak-install.service (+ multi-user.target.wants symlink)
-│   │   ├── systemd/system/athens-nix-install.service   (+ multi-user.target.wants symlink)  → first-boot: install Nix with ostree planner
+│   │   ├── systemd/system/sideral-flatpak-install.service (+ multi-user.target.wants symlink)
+│   │   ├── systemd/system/sideral-nix-install.service   (+ multi-user.target.wants symlink)  → first-boot: install Nix with ostree planner
 │   │   └── yum.repos.d/docker-ce.repo                   → enabled so rpm-ostree upgrade pulls updates
 │   └── usr/lib/systemd/user/
-│       ├── athens-home-manager-setup.service   → first-login: install home-manager + home-manager switch
+│       ├── sideral-home-manager-setup.service   → first-login: install home-manager + home-manager switch
 │       └── default.target.wants/ (symlinks)
 ├── home/                                      → shipped to /etc/skel/
 │   └── .config/home-manager/home.nix          → single source of truth for user env (bash, starship, atuin, git, mise, CLI QoL)
@@ -99,17 +99,17 @@ Want to run your own variant?
 
 1. Fork or copy the repo, push to your own GitHub:
    ```bash
-   gh repo create athens-os --public --source . --remote origin --push
+   gh repo create sideral --public --source . --remote origin --push
    ```
-2. Wait ~25 min for the `build-athens-os` workflow. It builds the bootc OCI image, runs semantic-release (which cuts a GitHub Release with changelog), builds the installer ISO with titanoboa, and pushes it to `ghcr.io/<you>/athens-os-iso:latest` as an OCI artifact.
+2. Wait ~25 min for the `build-sideral` workflow. It builds the bootc OCI image, runs semantic-release (which cuts a GitHub Release with changelog), builds the installer ISO with titanoboa, and pushes it to `ghcr.io/<you>/sideral-iso:latest` as an OCI artifact.
 3. From then on, every push to `main` cuts a new versioned release; every night the workflow rebases on the latest Silverblue base and republishes if anything changed.
 
 What lands in CI:
 
 | Artifact | Where | Tags |
 | --- | --- | --- |
-| Bootc image (rebase target) | `ghcr.io/<you>/athens-os` | `:latest`, `:YYYYMMDD`, `:sha-<short>` |
-| Installer ISO (live + Anaconda) | `ghcr.io/<you>/athens-os-iso` | `:latest`, `:v<semver>` |
+| Bootc image (rebase target) | `ghcr.io/<you>/sideral` | `:latest`, `:YYYYMMDD`, `:sha-<short>` |
+| Installer ISO (live + Anaconda) | `ghcr.io/<you>/sideral-iso` | `:latest`, `:v<semver>` |
 | Changelog + version tag | GitHub Releases | `v<semver>` |
 
 ## Local build
@@ -124,7 +124,7 @@ just rollback   # back to the previous deployment
 
 ## User environment — home.nix
 
-`home/.config/home-manager/home.nix` is the single source of truth for bash, prompt, shell history, git, mise, and CLI quality-of-life tools. It ships via `/etc/skel` on every fresh user and is applied on first login by `athens-home-manager-setup.service` (which calls `home-manager switch` under the hood).
+`home/.config/home-manager/home.nix` is the single source of truth for bash, prompt, shell history, git, mise, and CLI quality-of-life tools. It ships via `/etc/skel` on every fresh user and is applied on first login by `sideral-home-manager-setup.service` (which calls `home-manager switch` under the hood).
 
 Edit / apply workflow:
 
@@ -136,7 +136,7 @@ just home-diff      # build the generation so you can inspect what would change
 
 Roll back: `home-manager generations` then `home-manager switch <path-from-list>`. home-manager keeps every prior generation as a symlink under `/nix/var/nix/profiles/per-user/$USER/`.
 
-**First-shell UX**: on the very first login, opening a terminal before `athens-home-manager-setup.service` finishes would normally leave you with a bare Fedora default shell. `/etc/profile.d/athens-hm-status.sh` handles this by polling the setup marker for up to 5 minutes, then sourcing `hm-session-vars.sh` + `~/.bashrc` into your current shell — no reopen needed. Times out gracefully into a usable Fedora shell if setup stalls; run `journalctl --user -u athens-home-manager-setup -f` to see why.
+**First-shell UX**: on the very first login, opening a terminal before `sideral-home-manager-setup.service` finishes would normally leave you with a bare Fedora default shell. `/etc/profile.d/sideral-hm-status.sh` handles this by polling the setup marker for up to 5 minutes, then sourcing `hm-session-vars.sh` + `~/.bashrc` into your current shell — no reopen needed. Times out gracefully into a usable Fedora shell if setup stalls; run `journalctl --user -u sideral-home-manager-setup -f` to see why.
 
 Fresh account: skel is copied into `~/` on user creation, first login runs the setup service, no further action.
 
@@ -150,14 +150,14 @@ Tools install lazily on first use (`not_found_auto_install = true`); `mise insta
 
 ## Nix first-boot notes
 
-- **SELinux**: Fedora's stock policy has no rules for `/nix` (not FHS-standard), so files land `default_t` and fail to execute (upstream [nix-installer#1383](https://github.com/NixOS/nix-installer/issues/1383)). athens-os root-fixes this by shipping `/etc/selinux/targeted/contexts/files/file_contexts.local` mapping `/nix` → `usr_t`, `/nix/store/*/bin` → `bin_t`, etc. `athens-nix-relabel.path` watches `/nix/store` and triggers `athens-nix-relabel.service` (`restorecon -RF /nix`) whenever `nix profile install` adds store paths, so labels stay correct automatically. Manual recovery if ever needed: `sudo systemctl start athens-nix-relabel.service`.
+- **SELinux**: Fedora's stock policy has no rules for `/nix` (not FHS-standard), so files land `default_t` and fail to execute (upstream [nix-installer#1383](https://github.com/NixOS/nix-installer/issues/1383)). sideral root-fixes this by shipping `/etc/selinux/targeted/contexts/files/file_contexts.local` mapping `/nix` → `usr_t`, `/nix/store/*/bin` → `bin_t`, etc. `sideral-nix-relabel.path` watches `/nix/store` and triggers `sideral-nix-relabel.service` (`restorecon -RF /nix`) whenever `nix profile install` adds store paths, so labels stay correct automatically. Manual recovery if ever needed: `sudo systemctl start sideral-nix-relabel.service`.
 - **composefs (silverblue-main F42+)**: if `findmnt /nix` shows no mount after the install service completes, the active composefs-backed root may be blocking the bind mount. Workaround: add `rd.systemd.unit=root.transient` as a kernel argument (`sudo rpm-ostree kargs --append=rd.systemd.unit=root.transient`) and reboot.
-- **Channel default**: `/etc/nix/nix.conf` is whatever the installer writes — no athens-os override. Flakes are off by default (classic CppNix behavior). Enable per-user by writing `experimental-features = nix-command flakes` into `~/.config/nix/nix.conf`.
+- **Channel default**: `/etc/nix/nix.conf` is whatever the installer writes — no sideral override. Flakes are off by default (classic CppNix behavior). Enable per-user by writing `experimental-features = nix-command flakes` into `~/.config/nix/nix.conf`.
 - **nix-installer version**: pinned via `NIX_INSTALLER_VERSION` at the top of `os/build.sh`. The baked binary lives at `/usr/libexec/nix-installer`; bump via PR to the URL scheme in `build.sh`.
 
 ## Distrobox + nix integration
 
-Every distrobox container created on athens-os auto-mounts the host's nix store. Configured via `system_files/etc/distrobox/distrobox.conf`:
+Every distrobox container created on sideral auto-mounts the host's nix store. Configured via `system_files/etc/distrobox/distrobox.conf`:
 
 ```
 container_additional_volumes="/nix /var/lib/nix /etc/nix"

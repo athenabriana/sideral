@@ -1,14 +1,14 @@
-# athens-os — a personal Fedora atomic desktop derived directly from
+# sideral — a personal Fedora atomic desktop derived directly from
 # ublue-os/silverblue-main. Ships GNOME + tiling-shell, a curated flatpak set
 # (Zen Browser + GUI apps), home-manager-driven user layer (mise, vscode, CLI QoL),
 # and a narrow RPM layer (docker-ce + compose, gnome extensions + bazaar, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
-# CI build:       push to main → GH Actions → ghcr.io/<user>/athens-os:latest
-# Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/athens-os:latest
+# CI build:       push to main → GH Actions → ghcr.io/<user>/sideral:latest
+# Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/sideral:latest
 #
-# RPM layer (athens-rpms feature, 2026-04-29): athens-os customizations live
+# RPM layer (sideral-rpms feature, 2026-04-29): sideral customizations live
 # under packages/<owner-package>/src/<absolute-image-path> and are built into
 # real RPMs inline during this image build. rpmbuild + rpm -Uvh + rpm -e of
 # the toolchain happen in one RUN layer so no rpmbuild artifacts bloat the
@@ -28,9 +28,9 @@ COPY packages /packages
 FROM ${BASE_IMAGE}
 
 # Inherits build-time arg used by packages/build-rpms.sh to stamp version.
-# CI overrides via --build-arg ATHENS_VERSION=YYYYMMDD.<run>; local builds
+# CI overrides via --build-arg SIDERAL_VERSION=YYYYMMDD.<run>; local builds
 # default to 0.0.0.dev (sentinel for "this didn't come from CI").
-ARG ATHENS_VERSION=0.0.0.dev
+ARG SIDERAL_VERSION=0.0.0.dev
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
@@ -39,18 +39,18 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     /ctx/build.sh && \
     ostree container commit
 
-# Build athens-os-* RPMs inline, install them, remove the build toolchain.
+# Build sideral-* RPMs inline, install them, remove the build toolchain.
 # Single RUN layer = no rpmbuild scratch in the final image. RPMs exist only
 # inside this image.
 #
-# Several athens-os files conflict with base-image packages on file
+# Several sideral files conflict with base-image packages on file
 # ownership (/etc/os-release vs fedora-release-common, /etc/containers/policy.json
 # vs containers-common, /etc/yum.repos.d/docker-ce.repo vs docker-ce). rpm
 # -Uvh --replacefiles transfers ownership cleanly — the standard
 # derivative-distro pattern. dnf install rejects file conflicts.
 #
 # `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:43 ships
-# ublue-os-signing pre-installed, and athens-os-signing declares Conflicts:
+# ublue-os-signing pre-installed, and sideral-signing declares Conflicts:
 # against it (different sigstore policy targets). rpm -Uvh refuses package-
 # level Conflicts even with --replacefiles, so we remove the predecessor
 # explicitly. --nodeps is safe here because nothing else in the base image
@@ -70,15 +70,15 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=tmpfs,dst=/tmp \
     dnf5 install -y rpm-build rpmdevtools && \
-    /ctx/packages/build-rpms.sh /ctx/packages /tmp/rpmbuild "${ATHENS_VERSION}" && \
+    /ctx/packages/build-rpms.sh /ctx/packages /tmp/rpmbuild "${SIDERAL_VERSION}" && \
     rpm -e --nodeps ublue-os-signing && \
-    rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/athens-os-*.rpm && \
+    rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/sideral-*.rpm && \
     rpm -e rpm-build rpmdevtools && \
     rm -rf /tmp/rpmbuild && \
     ostree container commit
 
 # Compile dconf local DB from /etc/dconf/db/local.d snippets so GNOME reads them.
-# Runs after the RPM install above so athens-os-dconf's snippets are present.
+# Runs after the RPM install above so sideral-dconf's snippets are present.
 RUN dconf update && \
     ostree container commit
 

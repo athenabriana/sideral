@@ -1,0 +1,33 @@
+# sideral — SELinux file_contexts for /nix
+#
+# Fedora's stock selinux-policy-targeted has no rules for /nix because it's
+# not an FHS-standard path; without these mappings, restorecon falls through
+# to default_t and users hit "Permission denied" running ~/.nix-profile/bin/*.
+#
+# This overlay reuses existing, policy-allowed types (usr_t, bin_t, lib_t,
+# var_t) so we don't need a custom policy module. semanage(8) reads and
+# writes this file directly; shipping it here is equivalent to running
+# `semanage fcontext -a` at image build time.
+#
+# Effective after restorecon -R /nix (run by sideral-nix-install.service's
+# ExecStartPost, and by sideral-nix-relabel.{service,path} on subsequent
+# /nix/store changes).
+#
+# Format: pathname-regex  [file-type]  context
+# More-specific rules override more-general ones at restorecon time.
+
+# ── /nix itself and everything under it — fallback to usr_t ──
+/nix(/.*)?                              system_u:object_r:usr_t:s0
+
+# ── executables: bin/ sbin/ libexec/ subdirs under store paths → bin_t ──
+/nix/store/[^/]+/bin(/.*)?              system_u:object_r:bin_t:s0
+/nix/store/[^/]+/sbin(/.*)?             system_u:object_r:bin_t:s0
+/nix/store/[^/]+/libexec(/.*)?          system_u:object_r:bin_t:s0
+
+# ── shared libraries ──
+/nix/store/[^/]+/lib(/.*)?              system_u:object_r:lib_t:s0
+/nix/store/[^/]+/lib64(/.*)?            system_u:object_r:lib_t:s0
+
+# ── mutable nix daemon / profile state under /nix/var ──
+/nix/var(/.*)?                          system_u:object_r:var_t:s0
+/nix/var/nix/daemon-socket(/.*)?        system_u:object_r:var_run_t:s0

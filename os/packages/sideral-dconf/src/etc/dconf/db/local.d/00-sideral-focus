@@ -1,0 +1,8 @@
+# Sideral OS — window focus behaviour.
+# Sloppy focus (follows mouse) with no auto-raise. Appropriate for tiled
+# workflows where windows don't overlap, and avoids the click-to-focus
+# friction of the GNOME default.
+
+[org/gnome/desktop/wm/preferences]
+focus-mode='sloppy'
+auto-raise=false

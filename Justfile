@@ -1,9 +1,9 @@
-# Athens OS — local build + dotfile recipes.
+# Sideral OS — local build + dotfile recipes.
 #   list:    `just`
 #   build:   `just build`
 #   rebase:  `just rebase`
 
-image_name := "athens-os"
+image_name := "sideral"
 image_tag  := "dev"
 registry   := env_var_or_default("REGISTRY", "localhost")
 
@@ -41,8 +41,8 @@ clean:
 diff:
     sudo rpm-ostree db diff
 
-# home.nix lives under athens-os-user's src tree (athens-copr feature).
-home_nix := "os/packages/athens-os-user/src/etc/skel/.config/home-manager/home.nix"
+# home.nix lives under sideral-user's src tree (sideral-copr feature).
+home_nix := "os/packages/sideral-user/src/etc/skel/.config/home-manager/home.nix"
 
 # Edit the repo's home.nix in $EDITOR (falls back to vi)
 home-edit:
