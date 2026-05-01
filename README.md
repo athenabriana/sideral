@@ -17,13 +17,14 @@ Two ways to try sideral.
 ### Boot from USB (try before installing)
 
 <p align="center">
-  <a href="https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com/sideral/sideral.iso"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20ISO-latest-3584e4?style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a" alt="Download ISO" height="44"></a>
+  <a href="https://sideral.athenabriana.com/sideral.iso"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20ISO-latest-3584e4?style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a" alt="Download ISO" height="44"></a>
 </p>
 
 The button starts the download immediately — single ~5 GiB ISO, hosted on Cloudflare R2. Verify the checksum and flash:
 
 ```bash
-curl -LO https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com/sideral/sideral.iso.sha256
+curl -LO https://sideral.athenabriana.com/sideral.iso
+curl -LO https://sideral.athenabriana.com/sideral.iso.sha256
 sha256sum -c sideral.iso.sha256
 sudo dd if=sideral.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```

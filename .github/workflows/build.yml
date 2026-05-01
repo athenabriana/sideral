@@ -15,7 +15,7 @@ env:
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
   R2_BUCKET: sideral
-  R2_PUBLIC_BASE: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com/sideral
+  R2_PUBLIC_BASE: https://sideral.athenabriana.com
   ISO_KEY: sideral.iso
 
 concurrency:
