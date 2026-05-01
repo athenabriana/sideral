@@ -6,3 +6,4 @@ cosign.key
 
 # Local artifacts from scripts/build-srpm.sh
 _build/
+.env
