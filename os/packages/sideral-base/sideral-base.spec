@@ -42,12 +42,10 @@ Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
 (kept enabled so `rpm-ostree upgrade` pulls Docker, mise, and VS Code
 updates between image rebuilds). starship is not in any of these repos
 — it's baked into /usr/bin from the latest upstream binary at image
-build (see os/build.sh). Helium browser ships as a Flatpak via the
-community `helium` remote (MarioGK/helium-flatpak, GH Pages ostree
-archive-z2; GPGVerify=false, single-maintainer trust). Preinstalled
-at image build alongside the rest of the curated flatpak set; updates
-flow via standard `flatpak update`. Remotes + manifest live in
-sideral-flatpaks.
+build (see os/build.sh). Zen Browser ships as a Flathub flatpak
+(app.zen_browser.zen), preinstalled at image build alongside the rest
+of the curated flatpak set; updates flow via standard `flatpak update`.
+Remotes + manifest live in sideral-flatpaks.
 
 %prep
 %setup -q
@@ -69,11 +67,10 @@ cp -a etc %{buildroot}/
   was tried twice as the source for the default browser and broke both
   times on the same /opt cpio conflict (RPM packages /opt/ itself,
   conflicting with the existing directory under buildah/dnf5). Browser
-  is now Helium via the community `helium` Flatpak remote (MarioGK/
-  helium-flatpak, GH Pages ostree archive-z2). Preinstalled at image
-  build by os/build.sh alongside the rest of the curated flatpak set;
-  updates via standard `flatpak update`. Remote config + manifest live
-  in sideral-flatpaks.
+  is now Zen Browser (app.zen_browser.zen from Flathub). Preinstalled
+  at image build by os/build.sh alongside the rest of the curated
+  flatpak set; updates via standard `flatpak update`. Remote config +
+  manifest live in sideral-flatpaks.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
 - Drop /etc/yum.repos.d/_copr_atim-starship.repo. Sourcing starship from
   a third-party COPR added a packager hop with no real upside on an

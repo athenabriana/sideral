@@ -5,11 +5,7 @@
 # Lines starting with # and blank lines are ignored.
 
 # ── Browser ──
-# Helium is installed separately by os/build.sh from MarioGK's release
-# bundle (.flatpak file from GitHub Releases). The MarioGK ostree remote
-# at mariogk.github.io currently serves an empty repo, so the bundle is
-# the only working install path. Image rebuilds refresh helium; other
-# curated flatpaks below update via standard `flatpak update`.
+flathub app.zen_browser.zen
 
 # ── GNOME quality-of-life ──
 flathub com.github.tchx84.Flatseal

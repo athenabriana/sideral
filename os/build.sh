@@ -29,28 +29,15 @@
 #     on first boot):
 #       - flathub                 (https://dl.flathub.org/repo/)
 #       - fedora                  (oci+https://registry.fedoraproject.org)
-#   • The full curated set (7 GNOME quality-of-life apps from flathub +
-#     Helium browser) is installed at image build into /var/lib/flatpak.
+#   • The full curated set (Zen Browser + 7 GNOME quality-of-life apps,
+#     all from flathub) is installed at image build into /var/lib/flatpak.
 #     ISO ships with everything present — no first-boot download wait,
 #     works offline. Updates flow via inherited ublue-os-update-services
-#     nightly `flatpak update` (Helium is the exception — see below).
-#   • Helium has no remote: the MarioGK community ostree remote at
-#     mariogk.github.io advertises archive-z2 content but its GH Pages
-#     site only serves the .flatpakrepo descriptor and an empty summary
-#     (no objects/refs deployed, so `flatpak install` against the remote
-#     fails). MarioGK does publish working `.flatpak` release bundles, so
-#     this script downloads the latest bundle from /releases/latest and
-#     installs it into /var/lib/flatpak directly. Trade-off: bundles have
-#     no working remote → `flatpak update` can't refresh helium. On an
-#     atomic image this is fine — image rebuilds are the update cadence,
-#     and each rebuild fetches the freshest bundle.
+#     nightly `flatpak update`.
 #   • sideral-flatpak-install.service still ships as an idempotent every-
 #     boot self-heal: when a future image rebase adds new manifest
 #     entries, deployed systems whose /var/lib/flatpak was seeded at an
 #     older image pick up the additions on next boot.
-#   • The imput/helium COPR was tried twice and broke both times on the
-#     same /opt cpio conflict (RPM packages /opt/ itself). Flatpak side-
-#     steps RPM packaging entirely.
 
 set -euo pipefail
 
@@ -144,27 +131,6 @@ while read -r remote ref; do
     flatpak install --system -y --noninteractive "$remote" "$ref"
 done < "$manifest_file"
 
-# ── Helium browser (MarioGK release bundle) ─────────────────────────────
-# Resolved dynamically from /releases/latest (MarioGK embeds version in
-# the asset filename, so /releases/latest/download/helium-x86_64.flatpak
-# 404s — the API gives us the exact versioned URL). Bundle install is
-# the only working path: the advertised ostree remote at
-# mariogk.github.io has an empty Pages deployment despite the workflow
-# reporting success. See header comment for trade-off.
-log "Installing Helium from MarioGK release bundle"
-helium_tmp=$(mktemp -d)
-trap 'rm -rf "$helium_tmp"' EXIT
-helium_url=$(curl -fsSL https://api.github.com/repos/MarioGK/helium-flatpak/releases/latest \
-    | grep -oE '"browser_download_url":[[:space:]]*"[^"]*x86_64\.flatpak"' \
-    | head -n1 \
-    | sed -E 's/.*"(https:[^"]+)".*/\1/')
-[ -n "$helium_url" ] || { echo "could not resolve helium bundle URL"; exit 1; }
-log "  $helium_url"
-curl -fsSL -o "$helium_tmp/helium.flatpak" "$helium_url"
-flatpak install --system -y --noninteractive "$helium_tmp/helium.flatpak"
-rm -rf "$helium_tmp"
-trap - EXIT
-
 # /etc/os-release is now owned by sideral-base (sideral-rpms feature).
 # Lives at packages/sideral-base/src/etc/os-release; the Containerfile's
 # inline rpmbuild step builds the RPM after this script runs and installs
@@ -172,8 +138,9 @@ trap - EXIT
 # fedora-release-common.
 
 # ── Cleanup ─────────────────────────────────────────────────────────────
-log "Cleaning dnf caches"
+log "Cleaning dnf caches and logs"
 dnf5 clean all
 rm -rf /var/cache/dnf/* /var/cache/libdnf5/* /var/lib/dnf/*
+rm -f /var/log/dnf5.log /var/log/dnf5.librepo.log /var/log/dnf5.rpm.log
 
 log "Done."

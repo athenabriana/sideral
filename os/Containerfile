@@ -1,11 +1,10 @@
 # sideral — a personal Fedora atomic desktop derived directly from
-# ublue-os/silverblue-main. Ships GNOME + tiling-shell, Helium browser
-# (preinstalled Flatpak via the community MarioGK/helium-flatpak
-# remote), a curated flatpak set (GNOME quality-of-life apps,
-# preinstalled at image build), chezmoi-driven user dotfile layer +
-# sideral-cli-tools (mise, code, starship, atuin, fzf, etc.), and a
-# narrow RPM layer (docker-ce + compose, gnome extensions +
-# gnome-software, fonts).
+# ublue-os/silverblue-main. Ships GNOME + tiling-shell, Zen Browser
+# (preinstalled Flatpak from Flathub), a curated flatpak set (GNOME
+# quality-of-life apps, preinstalled at image build), chezmoi-driven
+# user dotfile layer + sideral-cli-tools (mise, code, starship, atuin,
+# fzf, etc.), and a narrow RPM layer (docker-ce + compose, gnome
+# extensions + gnome-software, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
@@ -72,6 +71,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # packages were already present.
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
+    --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
     dnf5 install -y rpm-build rpmdevtools && \
     /ctx/packages/build-rpms.sh /ctx/packages /tmp/rpmbuild "${SIDERAL_VERSION}" && \

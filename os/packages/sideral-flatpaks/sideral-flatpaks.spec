@@ -23,21 +23,19 @@ Requires:       systemd
 
 %description
 Ships:
-  /etc/sideral-flatpak-remotes                       — 3 curated remotes
-                                                        (flathub, fedora, helium)
+  /etc/sideral-flatpak-remotes                       — 2 curated remotes
+                                                        (flathub, fedora)
   /etc/flatpak-manifest                              — 8 entries
   /etc/systemd/system/sideral-flatpak-install.service — every-boot self-heal,
                                                         per-line idempotent
   multi-user.target.wants/ enablement symlink
 
 Curated remotes: flathub (Flathub), fedora (Fedora Flatpak registry,
-oci+https://registry.fedoraproject.org), helium (community-packaged
-Helium browser from MarioGK/helium-flatpak — GPGVerify=false, single-
-maintainer trust).
+oci+https://registry.fedoraproject.org).
 
-Curated apps (8): Helium browser (helium remote, net.imput.helium) +
+Curated apps (8, all from flathub): Zen Browser (app.zen_browser.zen) +
 Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf,
-Resources, Smile (all from flathub).
+Resources, Smile.
 
 The primary install runs at image build (os/build.sh) — flatpaks land
 in /var/lib/flatpak before the image ships, factory-seeded to deployed
@@ -63,23 +61,25 @@ cp -a etc %{buildroot}/
 
 %changelog
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
-- Browser is now Helium via the community `helium` Flatpak remote
-  (MarioGK/helium-flatpak, ostree archive-z2 served from GitHub Pages).
-  Replaces the imput/helium COPR which broke the build twice on the same
-  /opt cpio conflict (RPM packages /opt/ itself).
-- New file: /etc/sideral-flatpak-remotes — curated remote set (flathub,
-  fedora oci+registry, helium). Read by os/build.sh at image build and
-  by sideral-flatpak-install.service for forward-compat re-add.
+- Browser is now Zen Browser (app.zen_browser.zen from Flathub).
+  Replaces the imput/helium COPR (broke twice on the same /opt cpio
+  conflict — RPM packages /opt/ itself) and a brief detour through
+  community Helium flatpak packagings (MarioGK ostree remote ships an
+  empty Pages deployment; ShyVortex ships only release bundles).
+  Flathub-listed app — standard `flatpak update` flow, no special
+  remote, no bundle gymnastics.
+- New file: /etc/sideral-flatpak-remotes — curated remote set
+  (flathub, fedora oci+registry). Read by os/build.sh at image build
+  and by sideral-flatpak-install.service for forward-compat re-add.
 - Curated flatpaks are now preinstalled at image build (os/build.sh
   registers remotes + installs the full manifest into /var/lib/flatpak).
   ISO ships with everything present — no first-boot download wait,
   works offline. `flatpak update` (run nightly by inherited
-  ublue-os-update-services) refreshes both Flathub and helium remotes.
+  ublue-os-update-services) refreshes everything.
 - sideral-flatpak-install.service repurposed as forward-compat self-heal:
   every boot it re-applies remotes + manifest. New entries added in
   future image rebases install on existing user systems whose
-  /var/lib/flatpak was seeded at an older image. Drops the bundle line
-  type (manifest format reverts to `<remote> <ref>` only) and the
+  /var/lib/flatpak was seeded at an older image. Drops the
   `/var/lib/sideral/flatpak-install-done` sentinel that previously
   gated once-only runs.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
