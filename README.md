@@ -20,7 +20,15 @@ Two ways to try athens-os.
   <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a&color=3584e4" alt="Download ISO" height="44"></a>
 </p>
 
-The release page has the one-line install command and SHA-256 checksum. Flash with `dd`, Etcher, Impression, or GNOME Disks — reboot from the USB and the preloaded Anaconda installer walks you through writing athens-os to disk.
+The button takes you to the latest release page. The ISO is split into three ~1.8 GiB parts because GitHub Releases caps each asset at 2 GiB — download every `athens-os-*.iso.part-*` file plus `sha256sums.txt`, then reassemble:
+
+```bash
+cat athens-os-*.iso.part-* > athens-os.iso
+sha256sum -c sha256sums.txt
+sudo dd if=athens-os.iso of=/dev/sdX bs=4M status=progress oflag=sync
+```
+
+Or use Etcher / Impression / GNOME Disks once the ISO is reassembled. Boot the USB and the preloaded Anaconda installer walks you through writing athens-os to disk.
 
 ### Rebase an existing Fedora atomic install
 

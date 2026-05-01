@@ -25,10 +25,6 @@ env:
   IMAGE_NAME: athens-os
   IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks (Zen Browser + GUI apps), home-manager user layer (mise, vscode, CLI QoL), and a narrow RPM layer (docker-ce, dev + kernel-debug stack, fonts)."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
-  # OCI artifact (separate from the bootc image) where each ISO release
-  # is published. ghcr.io has no per-blob size cap, unlike GitHub
-  # Releases (2 GiB), so the ~5 GiB ISO lives here as a single object.
-  ISO_PACKAGE: athens-os-iso
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -121,7 +117,7 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     permissions:
       contents: write   # tag + release creation
-      packages: write   # push ISO OCI artifact to ghcr.io
+      packages: read    # ghcr.io image pull
       issues: write     # semantic-release opens issues on failure
       pull-requests: write
     steps:
@@ -207,77 +203,70 @@ jobs:
           mkdir -p ${{ github.workspace }}/output
           mv ${{ steps.build-iso.outputs.iso-dest }} ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
 
-      - name: Checksum ISO
+      # GitHub Releases caps each asset at 2 GiB and the ISO is ~5 GiB.
+      # zstd only saved ~4% on the squashfs-heavy payload, so we skip
+      # compression entirely and split the raw ISO into 1.8 GiB chunks.
+      # Reassemble: `cat athens-os-*.iso.part-* > athens-os.iso`
+      - name: Split ISO + checksum
         if: steps.dryrun.outputs.skip == 'false'
         run: |
           set -euo pipefail
           cd ./output
+          ls -lh
           sha256sum "${{ steps.tags.outputs.iso_name }}" > sha256sums.txt
+          split -b 1800M -d -a 2 \
+            "${{ steps.tags.outputs.iso_name }}" \
+            "${{ steps.tags.outputs.iso_name }}.part-"
+          rm "${{ steps.tags.outputs.iso_name }}"
+          sha256sum *.part-* >> sha256sums.txt
           ls -lh
 
-      # ── Phase 4: cut GH release, push ISO as OCI artifact to ghcr.io ─
-      # semantic-release creates the tag + changelog + release shell on
-      # GitHub. The ISO itself is pushed to ghcr.io as a separate OCI
-      # artifact (athens-os-iso, distinct from the athens-os bootc image)
-      # because GitHub Releases caps each asset at 2 GiB. ORAS streams
-      # blobs over HTTP — no Node Buffer, no runner OOM. Users pull with
-      # `oras pull ghcr.io/<owner>/athens-os-iso:<tag>`.
+      # ── Phase 4: cut GH release, attach ISO parts via gh CLI ─────────
+      # semantic-release creates the tag + changelog + release shell.
+      # @semantic-release/github reads each asset into a Node Buffer and
+      # uploads in parallel, OOM-killing the runner on multi-GiB parts,
+      # so we drop assets from .releaserc.json and use `gh release
+      # upload` instead — it streams via curl, memory stays flat.
       - name: semantic-release (real)
         if: steps.dryrun.outputs.skip == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      - name: Install oras
-        if: steps.dryrun.outputs.skip == 'false'
-        uses: oras-project/setup-oras@v1
-
-      - name: Push ISO to ghcr.io as OCI artifact
-        if: steps.dryrun.outputs.skip == 'false'
-        run: |
-          set -euo pipefail
-          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
-          VERSION="v${{ steps.dryrun.outputs.next_version }}"
-          ISO="${{ steps.tags.outputs.iso_name }}"
-          REF="ghcr.io/${OWNER}/${ISO_PACKAGE}"
-          echo "${{ secrets.GITHUB_TOKEN }}" \
-            | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
-          cd ./output
-          # Push under both :<version> and :latest in a single round-trip
-          # by passing comma-separated tags.
-          oras push \
-            "${REF}:${VERSION},latest" \
-            --artifact-type application/vnd.athens-os.iso.v1 \
-            "${ISO}:application/x-iso9660-image" \
-            "sha256sums.txt:text/plain"
-
-      - name: Append download links to release notes
+      - name: Attach ISO parts to release
         if: steps.dryrun.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          cd ./output
+          ls -lh
+          gh release upload "v${{ steps.dryrun.outputs.next_version }}" \
+            athens-os-*.iso.part-* sha256sums.txt \
+            --clobber --repo "${{ github.repository }}"
+
+      - name: Append download instructions to release notes
+        if: steps.dryrun.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
           VERSION="v${{ steps.dryrun.outputs.next_version }}"
           ISO="${{ steps.tags.outputs.iso_name }}"
-          REF="ghcr.io/${OWNER}/${ISO_PACKAGE}:${VERSION}"
           gh release view "${VERSION}" --repo "${{ github.repository }}" --json body -q .body > /tmp/notes.md
           {
             echo
             echo "## Download"
             echo
-            echo "The installer ISO is published as an OCI artifact on ghcr.io."
-            echo "Pull with [\`oras\`](https://oras.land/) (single Go binary,"
-            echo "in most distros: \`brew install oras\`, \`apt install oras\`,"
-            echo "\`dnf install oras\`):"
+            echo "The installer ISO is split into 1.8 GiB parts because GitHub Releases caps each asset at 2 GiB. Download every \`*.iso.part-*\` file plus \`sha256sums.txt\` from the assets list below, then reassemble:"
             echo
             echo '```bash'
-            echo "oras pull ${REF}"
+            echo "cat ${ISO}.part-* > ${ISO}"
             echo "sha256sum -c sha256sums.txt"
             echo "# flash with: sudo dd if=${ISO} of=/dev/sdX bs=4M status=progress oflag=sync"
             echo '```'
             echo
-            echo "Or pull \`:latest\` for the most recent release: \`oras pull ghcr.io/${OWNER}/${ISO_PACKAGE}:latest\`"
+            echo "On Windows, use \`copy /b\` to concatenate (\`copy /b part-00 + part-01 + part-02 ${ISO}\`)."
           } >> /tmp/notes.md
           gh release edit "${VERSION}" \
             --repo "${{ github.repository }}" \
