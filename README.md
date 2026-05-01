@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&color=294172" alt="Download latest ISO"></a>
-  <a href="https://github.com/athenabriana/athens-os/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/athenabriana/athens-os/build.yml?branch=main&style=for-the-badge&label=build&logo=github" alt="Build status"></a>
-  <a href="https://github.com/athenabriana/athens-os/blob/main/LICENSE"><img src="https://img.shields.io/github/license/athenabriana/athens-os?style=for-the-badge" alt="License"></a>
+  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=Latest&style=for-the-badge&logo=fedora&logoColor=white&labelColor=294172&color=3584e4" alt="Latest release"></a>
+  <a href="https://github.com/athenabriana/athens-os/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/athenabriana/athens-os/build.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=Build&labelColor=294172" alt="Build status"></a>
+  <a href="https://github.com/athenabriana/athens-os/blob/main/LICENSE"><img src="https://img.shields.io/github/license/athenabriana/athens-os?style=for-the-badge&logo=opensourceinitiative&logoColor=white&label=License&labelColor=294172&color=3584e4" alt="License"></a>
 </p>
 
 ## Quick start
@@ -17,7 +17,7 @@ Two ways to try athens-os.
 ### Boot from USB (try before installing)
 
 <p align="center">
-  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=294172&color=4d7eb8" alt="Download ISO" height="40"></a>
+  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a&color=3584e4" alt="Download ISO" height="44"></a>
 </p>
 
 The release page has the one-line install command and SHA-256 checksum. Flash with `dd`, Etcher, Impression, or GNOME Disks — reboot from the USB and the preloaded Anaconda installer walks you through writing athens-os to disk.
