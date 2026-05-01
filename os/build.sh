@@ -24,19 +24,26 @@
 #     release; no version pinning to maintain.
 #
 # Flatpak strategy:
-#   • Three curated remotes are registered system-wide and persist into
-#     the image via /var/lib/flatpak/repo/config (ostree factory-seeds
-#     /var on first boot):
+#   • Two curated remotes are registered system-wide and persist into the
+#     image via /var/lib/flatpak/repo/config (ostree factory-seeds /var
+#     on first boot):
 #       - flathub                 (https://dl.flathub.org/repo/)
 #       - fedora                  (oci+https://registry.fedoraproject.org)
-#       - helium                  (https://mariogk.github.io/helium-flatpak/,
-#                                  community-packaged Helium browser;
-#                                  GPGVerify=false, single-maintainer trust)
-#   • The full curated set (Helium + 7 GNOME quality-of-life apps from
-#     flathub) is installed at image build into /var/lib/flatpak. ISO
-#     ships with everything present — no first-boot download wait, works
-#     offline. Updates flow via inherited ublue-os-update-services nightly
-#     `flatpak update`.
+#   • The full curated set (7 GNOME quality-of-life apps from flathub +
+#     Helium browser) is installed at image build into /var/lib/flatpak.
+#     ISO ships with everything present — no first-boot download wait,
+#     works offline. Updates flow via inherited ublue-os-update-services
+#     nightly `flatpak update` (Helium is the exception — see below).
+#   • Helium has no remote: the MarioGK community ostree remote at
+#     mariogk.github.io advertises archive-z2 content but its GH Pages
+#     site only serves the .flatpakrepo descriptor and an empty summary
+#     (no objects/refs deployed, so `flatpak install` against the remote
+#     fails). MarioGK does publish working `.flatpak` release bundles, so
+#     this script downloads the latest bundle from /releases/latest and
+#     installs it into /var/lib/flatpak directly. Trade-off: bundles have
+#     no working remote → `flatpak update` can't refresh helium. On an
+#     atomic image this is fine — image rebuilds are the update cadence,
+#     and each rebuild fetches the freshest bundle.
 #   • sideral-flatpak-install.service still ships as an idempotent every-
 #     boot self-heal: when a future image rebase adds new manifest
 #     entries, deployed systems whose /var/lib/flatpak was seeded at an
@@ -119,12 +126,6 @@ trap - EXIT
 # and is consumed by sideral-flatpak-install.service for forward-compat).
 # Manifest is read from the sideral-flatpaks src tree directly — no need
 # to wait for the inline-RPM step (which runs in a later RUN layer).
-#
-# Trust posture for the `helium` remote: GPGVerify=false (MarioGK GH
-# Pages doesn't publish a signing key). Trust chain is TLS to
-# mariogk.github.io + the maintainer (single-person community repo).
-# Same posture applies at runtime when `flatpak update` pulls newer
-# Helium builds.
 log "Registering flatpak remotes"
 remotes_file="/ctx/packages/sideral-flatpaks/src/etc/sideral-flatpak-remotes"
 [ -r "$remotes_file" ] || { echo "remotes file not found at $remotes_file"; exit 1; }
@@ -142,6 +143,27 @@ while read -r remote ref; do
     log "  $remote $ref"
     flatpak install --system -y --noninteractive "$remote" "$ref"
 done < "$manifest_file"
+
+# ── Helium browser (MarioGK release bundle) ─────────────────────────────
+# Resolved dynamically from /releases/latest (MarioGK embeds version in
+# the asset filename, so /releases/latest/download/helium-x86_64.flatpak
+# 404s — the API gives us the exact versioned URL). Bundle install is
+# the only working path: the advertised ostree remote at
+# mariogk.github.io has an empty Pages deployment despite the workflow
+# reporting success. See header comment for trade-off.
+log "Installing Helium from MarioGK release bundle"
+helium_tmp=$(mktemp -d)
+trap 'rm -rf "$helium_tmp"' EXIT
+helium_url=$(curl -fsSL https://api.github.com/repos/MarioGK/helium-flatpak/releases/latest \
+    | grep -oE '"browser_download_url":[[:space:]]*"[^"]*x86_64\.flatpak"' \
+    | head -n1 \
+    | sed -E 's/.*"(https:[^"]+)".*/\1/')
+[ -n "$helium_url" ] || { echo "could not resolve helium bundle URL"; exit 1; }
+log "  $helium_url"
+curl -fsSL -o "$helium_tmp/helium.flatpak" "$helium_url"
+flatpak install --system -y --noninteractive "$helium_tmp/helium.flatpak"
+rm -rf "$helium_tmp"
+trap - EXIT
 
 # /etc/os-release is now owned by sideral-base (sideral-rpms feature).
 # Lives at packages/sideral-base/src/etc/os-release; the Containerfile's

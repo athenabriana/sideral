@@ -5,10 +5,11 @@
 # Lines starting with # and blank lines are ignored.
 
 # ── Browser ──
-# Helium is community-packaged via MarioGK/helium-flatpak (no Flathub
-# listing, no upstream flatpak). The `helium` remote is registered by
-# os/build.sh from https://mariogk.github.io/helium-flatpak/.
-helium net.imput.helium
+# Helium is installed separately by os/build.sh from MarioGK's release
+# bundle (.flatpak file from GitHub Releases). The MarioGK ostree remote
+# at mariogk.github.io currently serves an empty repo, so the bundle is
+# the only working install path. Image rebuilds refresh helium; other
+# curated flatpaks below update via standard `flatpak update`.
 
 # ── GNOME quality-of-life ──
 flathub com.github.tchx84.Flatseal

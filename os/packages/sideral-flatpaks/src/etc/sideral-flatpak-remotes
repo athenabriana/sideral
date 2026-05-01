@@ -12,9 +12,13 @@ flathub  https://dl.flathub.org/repo/flathub.flatpakrepo
 # Fedora Flatpak registry (Fedora-built, signed flatpaks).
 fedora   oci+https://registry.fedoraproject.org
 
-# Helium browser — community-packaged Helium (MarioGK/helium-flatpak).
-# Real ostree archive-z2 remote served from GitHub Pages with a CI-driven
-# build pipeline. GPGVerify=false; trust = TLS + single-maintainer
-# community repo. (ShyVortex/helium-flatpak ships .flatpak bundles via
-# Releases only; no ostree remote.)
-helium   https://mariogk.github.io/helium-flatpak/helium.flatpakrepo
+# Helium has no remote here on purpose. The community community-packaged
+# Helium project (MarioGK/helium-flatpak) advertises an ostree archive-z2
+# remote at https://mariogk.github.io/helium-flatpak/, but the deployed
+# GH Pages site only serves the .flatpakrepo descriptor and an empty
+# summary — no objects/refs are actually published, so `flatpak install`
+# from that remote fails ("Nothing matches net.imput.helium"). MarioGK
+# ships working `.flatpak` release bundles instead, and os/build.sh
+# installs the latest bundle at image build (no remote → image rebuilds
+# are the helium update cadence; the other curated flatpaks still update
+# via standard `flatpak update`).
