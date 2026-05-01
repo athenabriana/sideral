@@ -32,7 +32,7 @@ Ships:
 
 Curated remotes: flathub (Flathub), fedora (Fedora Flatpak registry,
 oci+https://registry.fedoraproject.org), helium (community-packaged
-Helium browser from ShyVortex/helium-flatpak — GPGVerify=false, single-
+Helium browser from MarioGK/helium-flatpak — GPGVerify=false, single-
 maintainer trust).
 
 Curated apps (8): Helium browser (helium remote, net.imput.helium) +
@@ -64,7 +64,7 @@ cp -a etc %{buildroot}/
 %changelog
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
 - Browser is now Helium via the community `helium` Flatpak remote
-  (ShyVortex/helium-flatpak, ostree archive-z2 served from GitHub Pages).
+  (MarioGK/helium-flatpak, ostree archive-z2 served from GitHub Pages).
   Replaces the imput/helium COPR which broke the build twice on the same
   /opt cpio conflict (RPM packages /opt/ itself).
 - New file: /etc/sideral-flatpak-remotes — curated remote set (flathub,

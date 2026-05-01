@@ -1,6 +1,6 @@
 # sideral — a personal Fedora atomic desktop derived directly from
 # ublue-os/silverblue-main. Ships GNOME + tiling-shell, Helium browser
-# (preinstalled Flatpak via the community ShyVortex/helium-flatpak
+# (preinstalled Flatpak via the community MarioGK/helium-flatpak
 # remote), a curated flatpak set (GNOME quality-of-life apps,
 # preinstalled at image build), chezmoi-driven user dotfile layer +
 # sideral-cli-tools (mise, code, starship, atuin, fzf, etc.), and a

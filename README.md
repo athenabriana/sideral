@@ -42,7 +42,7 @@ After reboot the image is fully wired — Helium browser, starship prompt, mise,
 
 ---
 
-Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set (preinstalled at image build), a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Helium as the default browser (Flatpak from the community `ShyVortex/helium-flatpak` remote), and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
+Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set (preinstalled at image build), a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Helium as the default browser (Flatpak from the community `MarioGK/helium-flatpak` remote), and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
 
 ## What's in the image
 
@@ -51,7 +51,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
 | **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
 | **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
-| **Browser** | [Helium](https://helium.computer) via the community [`ShyVortex/helium-flatpak`](https://github.com/ShyVortex/helium-flatpak) Flatpak remote (ostree archive-z2 hosted on GitHub Pages). Preinstalled at image build; new releases pulled by the standard `flatpak update` cadence. |
+| **Browser** | [Helium](https://helium.computer) via the community [`MarioGK/helium-flatpak`](https://github.com/MarioGK/helium-flatpak) Flatpak remote (ostree archive-z2 hosted on GitHub Pages). Preinstalled at image build; new releases pulled by the standard `flatpak update` cadence. |
 | **Editor** | `code` (VS Code) via Microsoft RPM repo at `packages.microsoft.com/yumrepos/vscode` — Remote-SSH and Remote-Containers extensions install from the marketplace on first launch |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
 | **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. `starship` is baked into `/usr/bin` from the latest upstream release at image build (no Fedora RPM). All present at `$PATH` after rebase. |

@@ -43,7 +43,7 @@ Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
 updates between image rebuilds). starship is not in any of these repos
 — it's baked into /usr/bin from the latest upstream binary at image
 build (see os/build.sh). Helium browser ships as a Flatpak via the
-community `helium` remote (ShyVortex/helium-flatpak, GH Pages ostree
+community `helium` remote (MarioGK/helium-flatpak, GH Pages ostree
 archive-z2; GPGVerify=false, single-maintainer trust). Preinstalled
 at image build alongside the rest of the curated flatpak set; updates
 flow via standard `flatpak update`. Remotes + manifest live in
@@ -69,7 +69,7 @@ cp -a etc %{buildroot}/
   was tried twice as the source for the default browser and broke both
   times on the same /opt cpio conflict (RPM packages /opt/ itself,
   conflicting with the existing directory under buildah/dnf5). Browser
-  is now Helium via the community `helium` Flatpak remote (ShyVortex/
+  is now Helium via the community `helium` Flatpak remote (MarioGK/
   helium-flatpak, GH Pages ostree archive-z2). Preinstalled at image
   build by os/build.sh alongside the rest of the curated flatpak set;
   updates via standard `flatpak update`. Remote config + manifest live

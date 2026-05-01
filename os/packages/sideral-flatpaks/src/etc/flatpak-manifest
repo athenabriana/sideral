@@ -5,9 +5,9 @@
 # Lines starting with # and blank lines are ignored.
 
 # ── Browser ──
-# Helium is community-packaged via ShyVortex/helium-flatpak (no Flathub
+# Helium is community-packaged via MarioGK/helium-flatpak (no Flathub
 # listing, no upstream flatpak). The `helium` remote is registered by
-# os/build.sh from https://shyvortex.github.io/helium-flatpak/.
+# os/build.sh from https://mariogk.github.io/helium-flatpak/.
 helium net.imput.helium
 
 # ── GNOME quality-of-life ──

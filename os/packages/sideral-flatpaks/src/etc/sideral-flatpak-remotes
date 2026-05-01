@@ -12,6 +12,9 @@ flathub  https://dl.flathub.org/repo/flathub.flatpakrepo
 # Fedora Flatpak registry (Fedora-built, signed flatpaks).
 fedora   oci+https://registry.fedoraproject.org
 
-# Helium browser — community-packaged Helium (ShyVortex/helium-flatpak).
-# GPGVerify=false; trust = TLS + single-maintainer community repo.
-helium   https://shyvortex.github.io/helium-flatpak/helium.flatpakrepo
+# Helium browser — community-packaged Helium (MarioGK/helium-flatpak).
+# Real ostree archive-z2 remote served from GitHub Pages with a CI-driven
+# build pipeline. GPGVerify=false; trust = TLS + single-maintainer
+# community repo. (ShyVortex/helium-flatpak ships .flatpak bundles via
+# Releases only; no ostree remote.)
+helium   https://mariogk.github.io/helium-flatpak/helium.flatpakrepo

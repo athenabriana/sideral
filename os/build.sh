@@ -29,7 +29,7 @@
 #     /var on first boot):
 #       - flathub                 (https://dl.flathub.org/repo/)
 #       - fedora                  (oci+https://registry.fedoraproject.org)
-#       - helium                  (https://shyvortex.github.io/helium-flatpak/,
+#       - helium                  (https://mariogk.github.io/helium-flatpak/,
 #                                  community-packaged Helium browser;
 #                                  GPGVerify=false, single-maintainer trust)
 #   • The full curated set (Helium + 7 GNOME quality-of-life apps from
@@ -120,9 +120,9 @@ trap - EXIT
 # Manifest is read from the sideral-flatpaks src tree directly — no need
 # to wait for the inline-RPM step (which runs in a later RUN layer).
 #
-# Trust posture for the `helium` remote: GPGVerify=false (ShyVortex GH
+# Trust posture for the `helium` remote: GPGVerify=false (MarioGK GH
 # Pages doesn't publish a signing key). Trust chain is TLS to
-# shyvortex.github.io + the maintainer (single-person community repo).
+# mariogk.github.io + the maintainer (single-person community repo).
 # Same posture applies at runtime when `flatpak update` pulls newer
 # Helium builds.
 log "Registering flatpak remotes"
