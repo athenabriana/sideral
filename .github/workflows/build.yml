@@ -180,26 +180,28 @@ jobs:
       # Anaconda into the live env so the ISO has a working "Install to
       # disk" flow — without it titanoboa produces a live-only ISO.
       #
-      # titanoboa's iso-dest move logic runs `realpath` (no -m) twice on the
-      # destination *before* the mv — so both the parent dir AND the file
-      # itself must exist when the action starts. Touch a placeholder; the
-      # mv will overwrite it.
-      - name: Pre-create iso-dest placeholder
-        if: steps.dryrun.outputs.skip == 'false'
-        run: |
-          mkdir -p ${{ github.workspace }}/output
-          touch ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
-
+      # iso-dest must live *outside* github.workspace. titanoboa's move
+      # logic does `cd ACTION_PATH` then `realpath --relative-base=WORKSPACE`,
+      # which strips workspace-internal paths to relative form, then runs
+      # plain `realpath` against ACTION_PATH (wrong CWD, no output/ dir).
+      # An out-of-workspace path bypasses the strip; we move it back into
+      # output/ in a follow-up step.
       - name: Build live ISO with titanoboa
         id: build-iso
         if: steps.dryrun.outputs.skip == 'false'
         uses: ublue-os/titanoboa@840217d97bd0bc9a52466508c54d8dda5c5ba2fd
         with:
           image-ref: ${{ steps.tags.outputs.image_ref }}
-          iso-dest: ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
+          iso-dest: ${{ runner.temp }}/${{ steps.tags.outputs.iso_name }}
           compression: squashfs
           hook-post-rootfs: ${{ github.workspace }}/iso/anaconda-hook.sh
           flatpaks-list: ${{ github.workspace }}/iso/flatpaks.txt
+
+      - name: Stage ISO under output/
+        if: steps.dryrun.outputs.skip == 'false'
+        run: |
+          mkdir -p ${{ github.workspace }}/output
+          mv ${{ steps.build-iso.outputs.iso-dest }} ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
 
       - name: Compress + checksum
         if: steps.dryrun.outputs.skip == 'false'
