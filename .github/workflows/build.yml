@@ -203,17 +203,23 @@ jobs:
           mkdir -p ${{ github.workspace }}/output
           mv ${{ steps.build-iso.outputs.iso-dest }} ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
 
-      - name: Compress + checksum
+      # GitHub Releases caps each asset at 2 GiB and @semantic-release/github
+      # reads files into a Node Buffer (also ~2 GiB). The ISO is ~5 GiB and
+      # zstd only shaved ~4% off the squashfs-heavy payload, so we skip
+      # compression entirely and split the raw ISO into 1.8 GiB chunks.
+      # Reassemble: `cat athens-os-*.iso.part-* > athens-os.iso`
+      - name: Split ISO + checksum
         if: steps.dryrun.outputs.skip == 'false'
         run: |
           set -euo pipefail
           cd ./output
           ls -lh
-          zstd -19 --long=27 -T0 \
+          sha256sum "${{ steps.tags.outputs.iso_name }}" > sha256sums.txt
+          split -b 1800M -d -a 2 \
             "${{ steps.tags.outputs.iso_name }}" \
-            -o "${{ steps.tags.outputs.iso_name }}.zst"
+            "${{ steps.tags.outputs.iso_name }}.part-"
           rm "${{ steps.tags.outputs.iso_name }}"
-          sha256sum "${{ steps.tags.outputs.iso_name }}.zst" > sha256sums.txt
+          sha256sum *.part-* >> sha256sums.txt
           ls -lh
 
       # ── Phase 4: cut release with the ISO attached ───────────────────
