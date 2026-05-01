@@ -29,9 +29,8 @@ Discussion outcomes for ambiguities flagged in `spec.md`. Each row is the canoni
 
 **Decision:** Mirror bluefin — Flathub remote enabled (inherited from silverblue-main) + systemd one-shot service auto-installs a curated list on first boot.
 **Why:** User asked for "same bluefin behaviour for flatpaks". Keeps images reproducible while honoring "no hand-install after rebase".
-**Curated list — current (post 2026-04-23 cleanup, 8 flatpaks):**
+**Curated list — current (post 2026-05-01 browser restore, 7 flatpaks):**
 ```
-flathub/app.zen_browser.zen          ← added 2026-04-23, replaces helium-bin RPM
 flathub/com.github.tchx84.Flatseal
 flathub/io.github.flattool.Warehouse
 flathub/com.mattjakeman.ExtensionManager
@@ -40,8 +39,12 @@ flathub/com.ranfdev.DistroShelf
 flathub/net.nokyan.Resources
 flathub/it.mijorus.smile
 ```
-**Originally specified (7 flatpaks):** the list above without `app.zen_browser.zen`. Browser was Helium via RPM (decision #8). Replaced by Zen flatpak when the imput/helium COPR's `helium-bin` package hit a `/opt/helium` cpio unpack conflict on Silverblue's tmpfiles-managed `/opt`.
-**Explicitly excluded:** Discord, Slack (comms), Pinta (creative), Stremio (media), DevToolbox, Ignition, Clapgrep, Impression, embellish, Evolution, Obsidian, Chrome, Chromium — all dropped on user request. Also tried-and-rejected: Mozilla Firefox (briefly considered as helium replacement before Zen).
+**Browser:** Helium via the `imput/helium` Fedora COPR (`helium-bin` RPM, baked into the OCI image at build time). NOT a flatpak — see decision #8 history below.
+**History (7 → 8 → 7):**
+- Originally 7: list above without a browser; browser was helium-bin RPM (decision #8 below).
+- 2026-04-23: added `app.zen_browser.zen` flatpak when the COPR's `helium-bin` hit a `/opt/helium` cpio conflict on a live Silverblue host (8 flatpaks).
+- 2026-05-01: dropped `app.zen_browser.zen` and restored helium-bin as the browser RPM. The conflict was specific to `rpm-ostree install` against an already-booted system; the OCI Containerfile build path treats `/opt` as a normal directory at install time, so the same package installs cleanly. Back to 7 flatpaks.
+**Explicitly excluded:** Discord, Slack (comms), Pinta (creative), Stremio (media), DevToolbox, Ignition, Clapgrep, Impression, embellish, Evolution, Obsidian, Chrome, Chromium — all dropped on user request. Also tried-and-rejected: Zen Browser flatpak (used 2026-04-23 → 2026-05-01 only), Mozilla Firefox (briefly considered as helium replacement before Zen).
 
 ## 6. GNOME Shell extensions
 
@@ -90,7 +93,7 @@ Rationale vs the other options considered:
 > - **Wave 1 (nix-home, NXH-01..40, ~2026-04 mid):** mise moved from RPM to nix; `sideral-mise-install.service` removed; `act`, `atuin`, `direnv` dropped from mise toolchain or moved to home-manager; `/etc/skel/.bashrc` replaced by home-manager-generated `~/.bashrc`.
 > - **Wave 2 (RPM cleanup, 2026-04-23):** every plain-CLI moved to home.nix or removed:
 >   - **→ home.nix**: `gh`, `starship`, `gcc`/`make`/`cmake`, `git-lfs`/`subtree`/`credential-libsecret`, `code` (VS Code).
->   - **→ flatpak**: `helium-bin` replaced by `app.zen_browser.zen` (Silverblue `/opt` cpio conflict).
+>   - **→ flatpak (briefly)**: `helium-bin` replaced by `app.zen_browser.zen` (Silverblue `/opt` cpio conflict on a live host). **Reverted 2026-05-01:** `helium-bin` is the browser again, installed via the same `imput/helium` COPR but inside the OCI Containerfile build where `/opt` is a regular directory at install time. Zen flatpak dropped.
 >   - **Removed entirely**: `nix-software-center` (snowfall fetch, never used), `android-tools` (use `nix shell` ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload didn't need).
 >   - **Feature dirs deleted**: `build_files/features/devtools/`, `build_files/features/browser/`.
 > - **Net result:** RPM layer now contains GNOME shell extensions + bazaar + docker-ce stack + fonts only. Everything user-facing is home.nix or flatpak.
@@ -122,8 +125,8 @@ Rationale vs the other options considered:
 **CLI (mise doesn't package it):** ⚠ moved to home.nix
 - ~~`gh` — GitHub CLI~~ — now via `programs.gh.enable`
 
-**Browser:** ⚠ replaced 2026-04-23
-- ~~`helium-bin` from `imput/helium` COPR~~ — RPM hit `/opt/helium` cpio unpack conflict on Silverblue's tmpfiles-managed `/opt`. Replaced with **`app.zen_browser.zen` flatpak**.
+**Browser:** ✓ Helium RPM (post 2026-05-01 restore)
+- `helium-bin` from `imput/helium` COPR — RPM is back. The 2026-04-23 retreat to `app.zen_browser.zen` flatpak was driven by a `/opt/helium` cpio unpack conflict against a live Silverblue host (`rpm-ostree install`). The OCI Containerfile build path treats `/opt` as a regular directory at install time, so `dnf5 install -y helium-bin` succeeds; the resulting bytes ship inside the image. `rpm-ostree upgrade` continues to pick up new helium releases between image rebuilds via the persistent `_copr_imput-helium.repo` shipped under sideral-base.
 
 **GNOME quality-of-life (adopted from bluefin's strong-recs):** ✓ still RPM-layered
 - `gnome-tweaks`, `adw-gtk3-theme`, `fastfetch`

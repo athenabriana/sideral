@@ -17,7 +17,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 ## Previous feature
 - `sideral` — fork from `fedora-sideral`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 27 requirements across 5 user stories. See `.specs/features/sideral/spec.md`.
   - Superseded by `nix-home` then partially restored by `chezmoi-home`: ATH-14, ATH-15 (vscode.repo + RPM install) restored via chezmoi-home CHM-09. ATH-17 restored as image-build-time RPM (no first-login service). ATH-23, ATH-24, ATH-26 stay superseded (mise config + bashrc activation now user-managed via chezmoi).
-  - Superseded by 2026-04-23 cleanup: ATH-12 (helium → Zen flatpak), ATH-18 (now superseded again — VS Code is back as RPM), ATH-13 count (7 → 8 flatpaks).
+  - Superseded by 2026-04-23 cleanup: ATH-12 (helium → Zen flatpak — itself reverted 2026-05-01, see below), ATH-18 (now superseded again — VS Code is back as RPM), ATH-13 count (7 → 8 → 7 flatpaks).
   - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, mise lazy-install behavior).
 
 ## Pending decisions
@@ -26,7 +26,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 ## Locked decisions
 See `.specs/features/sideral/context.md` (9 decisions, some now superseded), `.specs/features/nix-home/context.md` (15 decisions, **all superseded — feature retired**), `.specs/features/sideral-rpms/context.md` (15 decisions, 4 superseded by D-15 inline-rpm), and `.specs/features/chezmoi-home/context.md` (9 decisions). Highlights:
 - Desktop: GNOME + tiling-shell, Hyprland dropped entirely.
-- Browser: Zen Browser via flatpak (`app.zen_browser.zen`). helium-bin dropped 2026-04-23 due to imput/helium COPR's `/opt/helium` unpack conflict with Silverblue's tmpfiles-managed `/opt`; supersedes earlier "helium via COPR" decision.
+- Browser: **Helium** via the `imput/helium` Fedora COPR (`helium-bin` RPM, baked into the OCI image at build time; `rpm-ostree upgrade` pulls new releases between rebuilds). Re-attempted 2026-05-01 after a 2026-04-23 detour through `app.zen_browser.zen` flatpak — the original `/opt/helium` unpack conflict was specific to `rpm-ostree install` on a live Silverblue host; the OCI Containerfile build path treats `/opt` as a regular directory at install time, so the conflict does not arise. User-driven preference.
 - Editor: VS Code via Microsoft RPM repo (chezmoi-home D-06). Restores ATH-14/15. Was briefly `programs.vscode` in home.nix during nix-home (2026-04-23 → 2026-05-01).
 - Container: `docker-ce` + `containerd.io` from docker-ce-stable repo.
 - **User layer (2026-05-01):** chezmoi (Fedora-packaged Go binary) for user-driven dotfile management. User runs `chezmoi init --apply <repo>` once after rebase. CLI integrations (starship/atuin/zoxide/mise/fzf) wired centrally via `/etc/profile.d/sideral-cli-init.sh` shipped by `sideral-shell-ux`. **Nix and home-manager dropped** — see chezmoi-home D-01 (composefs/SELinux/post-upgrade frictions on Fedora atomic 42+).
@@ -34,14 +34,14 @@ See `.specs/features/sideral/context.md` (9 decisions, some now superseded), `.s
 - **2026-04-23 cleanup — RPM layer narrowed to system-integration only.** Single sweep removed every plain CLI from the RPM layer with the intent of putting everything user-facing in nix or flatpak. **NOTE 2026-05-01:** with `nix-home` retired in favor of `chezmoi-home`, the moves to `home.nix` are being reversed — those tools come back as RPMs via the new `sideral-cli-tools` sub-package. Original cleanup details:
   - **Removed RPMs** (originally moved to home.nix; restored via `sideral-cli-tools` 2026-05-01): `gh`, `starship`, `gcc`, `make`, `cmake`, `git-lfs`, `code` (VS Code). `git-subtree` is bundled in core `git`, no separate package needed; `git-credential-libsecret` ships with Fedora's `git` package.
   - **Removed RPMs** (no replacement, niche/unused — still removed): `nix-software-center` (snowfallorg fetch, n/a now), `android-tools` (use distrobox ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload never needed).
-  - **Removed RPM** (replaced by flatpak — still): `helium-bin` (tmpfiles `/opt` conflict on Silverblue) → Zen Browser via flatpak.
+  - **Browser RPM history:** `helium-bin` was removed 2026-04-23 → replaced by `app.zen_browser.zen` flatpak (tmpfiles `/opt` conflict on a live Silverblue host). Re-restored 2026-05-01 as `helium-bin` via the same `imput/helium` COPR — installed in the OCI Containerfile build, where `/opt` behaves as a normal directory; Zen flatpak dropped from the curated set.
   - **Removed feature dirs**: `build_files/features/devtools/` and `build_files/features/browser/` deleted entirely. Remaining feature dirs: gnome, container, fonts, gnome-extensions only.
   - **`/etc/distrobox/distrobox.conf`** — kept, but **`/nix` mount lines removed 2026-05-01** with chezmoi-home (D-01). Distrobox containers no longer share a host nix store (there is none).
 - **mise (2026-05-01):** restored as RPM via persistent `mise.jdx.dev/rpm/` repo (same pattern as docker-ce.repo). User-side config (`~/.config/mise/config.toml`) is chezmoi-managed; sideral does not ship a default. Brief earlier history: moved from RPM to nix `home.packages` during nix-home (2026-04-23), reverted with chezmoi-home.
 - **Dropped from mise toolchain** (still applies): `direnv` (user declined), `act` (rare use, distrobox covers). `atuin` is RPM-installed and shell-init wired via `/etc/profile.d/sideral-cli-init.sh` (was: `programs.atuin.enable` in home.nix). User picks their own toolchain in their chezmoi'd `~/.config/mise/config.toml`.
 - Shell: bash only. `~/.bashrc` is user-managed (via chezmoi or hand). System integrations (starship/atuin/zoxide/mise/fzf init lines) live in `/etc/profile.d/sideral-cli-init.sh` per chezmoi-home D-05.
 - Fonts: Source Serif 4 + Source Sans 3 built from Adobe GitHub at image time; cascadia-code, jetbrains-mono, adwaita, opendyslexic from Fedora.
-- Flatpaks: **8 curated refs** via systemd oneshot on first boot — Zen Browser + Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile.
+- Flatpaks: **7 curated refs** via systemd oneshot on first boot — Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile. (Browser is the `helium-bin` RPM, not a flatpak.)
 - No distrobox pre-bake (DistroShelf flatpak available on demand).
 - **Host-only:** mise and chezmoi run on the host. Distrobox containers install their own tooling if needed (no shared `/nix`, no shared user profile).
 - No brew, no nix (user declined both; ad-hoc CLI tooling via distrobox or RPM, language runtimes via mise).

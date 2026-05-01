@@ -6,12 +6,13 @@
 #   post-install.sh    — optional script, run after packages install
 #
 # Repo strategy:
-#   • Three "persistent" repos are registered here AND shipped under
+#   • Four "persistent" repos are registered here AND shipped under
 #     /etc/yum.repos.d/ (via sideral-base) so `rpm-ostree upgrade` can pull
 #     new releases between image rebuilds:
 #       - docker-ce-stable       (docker-ce + containerd.io)
 #       - mise.jdx.dev/rpm       (mise)
 #       - packages.microsoft.com (code / VS Code)
+#       - copr imput/helium      (helium-bin — the default browser)
 #   • The shipped /etc/yum.repos.d/ copies aren't yet on disk during this
 #     RUN step (sideral-base is built later inline), so we register each
 #     repo from upstream URL here and rely on the shipped copy taking over
@@ -40,6 +41,9 @@ dnf5 -y config-manager addrepo --from-repofile=https://mise.jdx.dev/rpm/mise.rep
 log "Registering Microsoft VS Code repo"
 dnf5 -y config-manager addrepo --from-repofile=https://packages.microsoft.com/yumrepos/vscode/config.repo
 
+log "Registering imput/helium COPR (default browser)"
+dnf5 -y config-manager addrepo --from-repofile=https://copr.fedorainfracloud.org/coprs/imput/helium/repo/fedora-43/imput-helium-fedora-43.repo
+
 # ── Per-feature install loop ────────────────────────────────────────────
 for feature in "${FEATURES[@]}"; do
     feature_dir="$FEATURES_DIR/$feature"
@@ -61,13 +65,14 @@ for feature in "${FEATURES[@]}"; do
     fi
 done
 
-# ── mise + code from non-Fedora persistent repos ────────────────────────
+# ── mise + code + helium from non-Fedora persistent repos ──────────────
 # Listed separately because they don't live in any features/*/packages.txt
 # (those are reserved for Fedora-main packages that share the standard install
-# path). Together with the cli feature's 12 RPMs, this satisfies all 14
-# Requires: of sideral-cli-tools when its inline-built RPM lands later.
-log "Installing mise + code from persistent repos"
-dnf5 install -y --setopt=install_weak_deps=False mise code
+# path). mise + code satisfy two of the 14 Requires: of sideral-cli-tools.
+# helium-bin is the default browser — installed at /opt/helium with a
+# /usr/bin/helium symlink (managed by the COPR's RPM scripts).
+log "Installing mise + code + helium-bin from persistent repos"
+dnf5 install -y --setopt=install_weak_deps=False mise code helium-bin
 
 # ── starship binary (not in Fedora main, no COPR) ───────────────────────
 # Always-latest: GitHub's /releases/latest/download/<file> redirect resolves

@@ -25,7 +25,7 @@ The feature is scoped narrowly: **we package what we author, we install it local
 | Cosign-signing individual RPMs | If RPMs aren't published, signing them is theater. Image-level signing (ACR-27..29) gives the meaningful trust boundary. |
 | GHA `copr.yml` workflow + `COPR_API_TOKEN` secret | Both deleted. Image build pipeline does the rpmbuild inline. |
 | Rebuilding docker-ce | Unchanged from `sideral-copr`: Docker Inc maintains it. We consume from `docker-ce-stable` at build time. *(Bazaar removed entirely 2026-05-01; replaced by `gnome-software` from Fedora main.)* |
-| Re-adding a browser to the RPM layer | Browser ships via flatpak (`app.zen_browser.zen`); RPM layer stays browser-free. |
+| Browser packaging | Browser is **`helium-bin`** from the `imput/helium` COPR (RPM, baked into the OCI image at build time). The 2026-04-23 retreat to a flatpak browser is reversed as of 2026-05-01 — see ATH-12 in `.specs/features/sideral/spec.md`. |
 | Multi-arch builds (aarch64) | x86_64 only, same as image itself. |
 | Fedora versions other than 43 | Build runs against the live silverblue-main:43 base; F44 happens when we rebase the image. |
 | Pulling `ublue-os-signing` directly | We ship our own `sideral-signing` so the Sigstore policy targets *our* registry/identity rather than ublue's. The file-ownership conflict on `/etc/containers/policy.json` (vs `containers-common`) still exists either way and is resolved via `rpm -Uvh --replacefiles` (ACR-02). |
@@ -78,9 +78,9 @@ The feature is scoped narrowly: **we package what we author, we install it local
 1. **ACR-20** — `sideral-flatpaks` owns `/etc/flatpak-manifest`, `/etc/systemd/system/sideral-flatpak-install.service`, and the `multi-user.target.wants/sideral-flatpak-install.service` enablement symlink. All three coupled files live in one package — no cross-package dependency between manifest and reader.
 2. **ACR-21** — `rpm-ostree override remove sideral-flatpaks` cleanly removes the curated flatpak set's auto-install path: next boot the service is absent and `/etc/flatpak-manifest` is gone. Flatpaks already installed at `/var/lib/flatpak` are NOT removed.
 3. **ACR-22** — `sideral-base` declares `Requires: sideral-flatpaks`; a user wanting to opt out replaces base's dependency closure via `rpm-ostree override remove sideral-flatpaks` after install.
-4. **ACR-23** — The current 8-ref manifest (Zen Browser + 7 GUI apps) ships in this package; future additions/removals are made by editing `packages/sideral-flatpaks/src/etc/flatpak-manifest` and the next image build picks it up automatically.
+4. **ACR-23** — The current 7-ref manifest (GNOME quality-of-life apps; browser is the `helium-bin` RPM, not a flatpak) ships in this package; future additions/removals are made by editing `packages/sideral-flatpaks/src/etc/flatpak-manifest` and the next image build picks it up automatically.
 
-**Test**: Fresh image with sideral-base installed → reboot → `flatpak list --app` shows 8 refs. `rpm-ostree override remove sideral-flatpaks` → next reboot → `/etc/flatpak-manifest` absent, but already-installed flatpaks remain.
+**Test**: Fresh image with sideral-base installed → reboot → `flatpak list --app` shows 7 refs. `rpm-ostree override remove sideral-flatpaks` → next reboot → `/etc/flatpak-manifest` absent, but already-installed flatpaks remain.
 
 ---
 

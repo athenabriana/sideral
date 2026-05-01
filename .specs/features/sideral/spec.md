@@ -15,8 +15,8 @@ This spec describes the **original sideral feature** as conceived. Substantial p
 ### Superseded by 2026-04-23 RPM cleanup
 | Original ATH-* | What changed |
 |---|---|
-| **ATH-12** | Browser is now **`app.zen_browser.zen` flatpak** (was: `helium-bin` RPM via `imput/helium` COPR — dropped due to `/opt/helium` cpio conflict on Silverblue's tmpfiles-managed `/opt`) |
-| **ATH-13** | Flatpak count is now **8** (was: 7 — Zen added when helium dropped) |
+| **ATH-12** | Browser is **`helium-bin` RPM** via `imput/helium` COPR (baked into the OCI image at build time). 2026-04-23 → 2026-05-01: briefly replaced with `app.zen_browser.zen` flatpak after a `/opt/helium` cpio conflict on a live Silverblue host; restored as RPM 2026-05-01 because the OCI Containerfile build path treats `/opt` as a normal directory, sidestepping the conflict. |
+| **ATH-13** | Flatpak count is now **7** (was: 7 → 8 → 7 — Zen added when helium dropped 2026-04-23, removed when helium restored 2026-05-01) |
 | **ATH-14** | `/etc/yum.repos.d/vscode.repo` deleted; VS Code now via `programs.vscode` in home.nix |
 | **ATH-15** | `sideral-vscode-setup.service` deleted; extensions installed declaratively via home.nix |
 | **ATH-18** | `rpm-ostree upgrade` no longer pulls VS Code; `home-manager switch` does (faster updates, less coupling) |

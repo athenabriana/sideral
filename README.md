@@ -1,7 +1,7 @@
 <h1 align="center">sideral</h1>
 
 <p align="center">
-  <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Zen Browser, chezmoi-driven dotfiles, mise toolchain.</em>
+  <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Helium browser, chezmoi-driven dotfiles, mise toolchain.</em>
 </p>
 
 <p align="center">
@@ -38,11 +38,11 @@ sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral:l
 systemctl reboot
 ```
 
-After reboot the image is fully wired — starship prompt, mise, atuin, zoxide, fzf, gh, VS Code are all on `$PATH`. First boot also installs the curated flatpak set in the background. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
+After reboot the image is fully wired — Helium browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code are all on `$PATH`. First boot also installs the curated flatpak set in the background. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
 
 ---
 
-Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set, a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Zen Browser as the default, and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
+Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set, a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Helium as the default browser (RPM from `imput/helium` COPR), and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
 
 ## What's in the image
 
@@ -51,14 +51,14 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
 | **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
 | **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
-| **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `sideral-flatpak-install.service`) |
+| **Browser** | [Helium](https://helium.computer) via the `imput/helium` Fedora COPR (`helium-bin` RPM, baked into the image at build time — `rpm-ostree upgrade` pulls new releases between rebuilds) |
 | **Editor** | `code` (VS Code) via Microsoft RPM repo at `packages.microsoft.com/yumrepos/vscode` — Remote-SSH and Remote-Containers extensions install from the marketplace on first launch |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
 | **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. `starship` is baked into `/usr/bin` from the latest upstream release at image build (no Fedora RPM). All present at `$PATH` after rebase. |
 | **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh` (shipped by `sideral-shell-ux`) sources starship, atuin, zoxide, mise, and fzf integrations into every interactive bash shell. Each line is `command -v`-guarded. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
 | **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
-| **Flatpaks (auto-install on first boot)** | Zen Browser, Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile |
+| **Flatpaks (auto-install on first boot)** | Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile (browser is RPM, see above) |
 
 ## Repo layout
 

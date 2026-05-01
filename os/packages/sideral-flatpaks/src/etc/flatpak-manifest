@@ -2,8 +2,8 @@
 # Format: <remote> <ref>
 # Lines starting with # and blank lines are ignored.
 
-# ── Browser ──
-flathub app.zen_browser.zen
+# Browser is helium-bin RPM (imput/helium COPR), not a flatpak.
+# See os/build.sh + os/packages/sideral-base.
 
 # ── GNOME quality-of-life ──
 flathub com.github.tchx84.Flatseal

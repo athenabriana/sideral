@@ -11,7 +11,7 @@ on:
 
 env:
   IMAGE_NAME: sideral
-  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks (Zen Browser + GUI apps), chezmoi-driven user dotfiles, sideral-cli-tools meta-RPM (mise, code, starship, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, chezmoi), and docker-ce."
+  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with Helium browser (imput/helium COPR), curated flatpaks (GNOME quality-of-life apps), chezmoi-driven user dotfiles, sideral-cli-tools meta-RPM (mise, code, starship, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, chezmoi), and docker-ce."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
   R2_BUCKET: sideral

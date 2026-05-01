@@ -20,12 +20,13 @@ Requires:       systemd
 
 %description
 Ships:
-  /etc/flatpak-manifest                              — 8 curated refs
+  /etc/flatpak-manifest                              — 7 curated refs
   /etc/systemd/system/sideral-flatpak-install.service — first-boot oneshot
   multi-user.target.wants/ enablement symlink
 
-Refs: app.zen_browser.zen + Flatseal, Warehouse, Extension Manager,
-Podman Desktop, DistroShelf, Resources, Smile.
+Refs: Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf,
+Resources, Smile. Browser is shipped separately as the helium-bin RPM
+from the imput/helium COPR (see os/packages/sideral-base + os/build.sh).
 
 %prep
 %setup -q
@@ -40,5 +41,9 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/multi-user.target.wants/sideral-flatpak-install.service
 
 %changelog
+* Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
+- Drop app.zen_browser.zen from the manifest (8 → 7 refs). Browser is
+  now helium-bin from the imput/helium COPR (RPM, baked into the
+  image), not a flatpak. Reverses the 2026-04-23 helium → Zen swap.
 * Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial: 8-ref manifest (Zen Browser + 7 GUI apps) + flatpak-install service

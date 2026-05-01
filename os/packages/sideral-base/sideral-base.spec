@@ -1,7 +1,7 @@
 # sideral-base — meta-package + core system identity files
 #
 # Owns: /etc/os-release, /etc/distrobox/distrobox.conf,
-#       /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
+#       /etc/yum.repos.d/{docker-ce,mise,vscode,_copr_imput-helium}.repo
 # Requires: all sideral-* sub-packages + transitive third-party deps
 
 Name:           sideral-base
@@ -38,11 +38,12 @@ layer plus the curated docker-ce stack and the chezmoi-driven CLI
 toolset (sideral-cli-tools).
 
 Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
-(distrobox defaults), and /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
-(kept enabled so `rpm-ostree upgrade` pulls Docker, mise, and VS Code
-updates between image rebuilds). starship is not in any of these repos
-— it's baked into /usr/bin from a pinned upstream binary at image build
-(see os/build.sh).
+(distrobox defaults), and four persistent repo files under
+/etc/yum.repos.d/ — docker-ce, mise, vscode, and _copr_imput-helium
+(kept enabled so `rpm-ostree upgrade` pulls Docker, mise, VS Code, and
+Helium-browser updates between image rebuilds). starship is not in any
+of these repos — it's baked into /usr/bin from the latest upstream
+binary at image build (see os/build.sh).
 
 %prep
 %setup -q
@@ -57,8 +58,16 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/docker-ce.repo
 /etc/yum.repos.d/mise.repo
 /etc/yum.repos.d/vscode.repo
+/etc/yum.repos.d/_copr_imput-helium.repo
 
 %changelog
+* Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
+- Ship /etc/yum.repos.d/_copr_imput-helium.repo. Browser swap: Zen
+  Browser flatpak → helium-bin RPM (imput/helium COPR). User-driven
+  preference; the earlier 2026-04-23 retreat to Zen flatpak was
+  motivated by a Silverblue /opt unpack issue — re-attempting via
+  the OCI Containerfile build path, where /opt is a regular
+  directory at install time.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
 - Drop /etc/yum.repos.d/_copr_atim-starship.repo. Sourcing starship from
   a third-party COPR added a packager hop with no real upside on an

@@ -4,8 +4,7 @@
 # manifest at packages/sideral-flatpaks/src/etc/flatpak-manifest.
 # Format: bare ref per line (titanoboa adds the flathub remote).
 
-# ── Browser ──
-app.zen_browser.zen
+# Browser is helium-bin RPM (imput/helium COPR), not a flatpak.
 
 # ── GNOME quality-of-life ──
 com.github.tchx84.Flatseal

@@ -20,7 +20,8 @@ Only run when explicitly validating a full pass:
 2. `systemctl reboot`.
 3. Log in, wait for first-shell bootstrap UX banner to disappear, then check:
    - `gnome-extensions list --enabled` → 5 UUIDs (ATH-04)
-   - `flatpak list --app` → 8 refs incl. `app.zen_browser.zen` (ATH-13, post-2026-04-23 count)
+   - `flatpak list --app` → 7 refs (ATH-13, post-2026-05-01 count; browser is RPM)
+   - `which helium` → `/usr/bin/helium` (Helium browser via imput/helium COPR)
    - `home-manager generations | head -1` → at least one generation present (NXH-12)
    - `which code` → `~/.nix-profile/bin/code` (VS Code via home.nix, supersedes ATH-17)
    - `code --list-extensions` → `ms-vscode-remote.remote-ssh` + `ms-vscode-remote.remote-containers` (declarative via `programs.vscode.extensions`; user can add more via UI)
