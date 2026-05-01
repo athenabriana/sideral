@@ -54,7 +54,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 | **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `sideral-flatpak-install.service`) |
 | **Editor** | `code` (VS Code) via Microsoft RPM repo at `packages.microsoft.com/yumrepos/vscode` — Remote-SSH and Remote-Containers extensions install from the marketplace on first launch |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
-| **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `starship`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. All present at `$PATH` after rebase. |
+| **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. `starship` is baked into `/usr/bin` from the latest upstream release at image build (no Fedora RPM). All present at `$PATH` after rebase. |
 | **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh` (shipped by `sideral-shell-ux`) sources starship, atuin, zoxide, mise, and fzf integrations into every interactive bash shell. Each line is `command -v`-guarded. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
 | **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
@@ -69,14 +69,14 @@ sideral/
 │   ├── Containerfile                # image recipe (FROM silverblue-main:43)
 │   ├── build.sh                     # orchestrator: register persistent repos + per-feature install loop
 │   ├── features/
-│   │   ├── cli/              packages.txt → 13 Fedora-main CLI tools (chezmoi, starship, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake)
+│   │   ├── cli/              packages.txt → 12 Fedora-main CLI tools (chezmoi, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake); starship is fetched as a binary in build.sh
 │   │   ├── gnome/            packages.txt → gnome-software + extensions + adw-gtk3-theme + fastfetch
 │   │   ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
 │   │   ├── container/        packages.txt → docker-ce + containerd.io + buildx + compose
 │   │   └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
 │   └── packages/                    # sideral-* RPM sources (built inline by build-rpms.sh)
 │       ├── sideral-base       → /etc/os-release, distrobox.conf, yum.repos.d/{docker-ce,mise,vscode}.repo
-│       ├── sideral-cli-tools  → meta-RPM: Requires: 14 CLI tools + code
+│       ├── sideral-cli-tools  → meta-RPM: Requires: 13 RPM-packaged CLI tools + code (starship binary baked separately)
 │       ├── sideral-dconf      → /etc/dconf/db/local.d/* + profile/user
 │       ├── sideral-flatpaks   → flatpak first-boot install service + manifest
 │       ├── sideral-services   → placeholder for future systemd units
@@ -137,16 +137,17 @@ Why chezmoi? Static Go binary, no daemon, plays well with rpm-ostree (no `/nix` 
 
 ## CLI toolset — sideral-cli-tools
 
-The `sideral-cli-tools` meta-RPM declares `Requires:` on 14 CLI tools + VS Code:
+The `sideral-cli-tools` meta-RPM declares `Requires:` on 13 CLI tools + VS Code, with `starship` shipped alongside as a baked-in binary:
 
 | Tool | Source |
 | --- | --- |
 | `chezmoi` | Fedora main |
 | `mise` | mise.jdx.dev/rpm (persistent repo, `rpm-ostree upgrade` pulls updates) |
-| `starship`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake` | Fedora main |
+| `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake` | Fedora main |
 | `code` (VS Code) | packages.microsoft.com (persistent repo) |
+| `starship` | Latest upstream binary fetched from `github.com/starship/starship/releases/latest` and sha256-verified at image build. No Fedora RPM exists for starship; the third-party `atim/starship` COPR was evaluated and skipped — on an atomic image, "always-latest at rebuild" is simpler than tracking a packager hop. Not RPM-tracked, so it's not in `Requires:`. |
 
-All present after `rpm-ostree rebase`. To opt out (slimmer derivative): `sudo rpm-ostree override remove sideral-cli-tools`. Individual tools can also be removed: `sudo rpm-ostree override remove zoxide`. The shell-init script in `sideral-shell-ux` `command -v`-guards each integration so removing any single tool is safe.
+All present after `rpm-ostree rebase`. To opt out (slimmer derivative): `sudo rpm-ostree override remove sideral-cli-tools`. Individual tools can also be removed: `sudo rpm-ostree override remove zoxide`. (starship can't be `override remove`'d since it has no RPM owner; remove it from `os/build.sh` and rebuild instead.) The shell-init script in `sideral-shell-ux` `command -v`-guards each integration so removing any single tool is safe.
 
 mise toolchains (node, bun, python, go, etc.) are *user-level* — declare them in your chezmoi'd `~/.config/mise/config.toml`. sideral doesn't ship a default; pick what you use.
 

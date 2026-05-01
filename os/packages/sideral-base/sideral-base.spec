@@ -1,7 +1,7 @@
 # sideral-base — meta-package + core system identity files
 #
 # Owns: /etc/os-release, /etc/distrobox/distrobox.conf,
-#       /etc/yum.repos.d/{docker-ce,mise,vscode,_copr_atim-starship}.repo
+#       /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
 # Requires: all sideral-* sub-packages + transitive third-party deps
 
 Name:           sideral-base
@@ -38,10 +38,11 @@ layer plus the curated docker-ce stack and the chezmoi-driven CLI
 toolset (sideral-cli-tools).
 
 Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
-(distrobox defaults), /etc/yum.repos.d/docker-ce.repo, mise.repo,
-vscode.repo, and _copr_atim-starship.repo (kept enabled so
-`rpm-ostree upgrade` pulls Docker, mise, VS Code, and starship updates
-between image rebuilds).
+(distrobox defaults), and /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
+(kept enabled so `rpm-ostree upgrade` pulls Docker, mise, and VS Code
+updates between image rebuilds). starship is not in any of these repos
+— it's baked into /usr/bin from a pinned upstream binary at image build
+(see os/build.sh).
 
 %prep
 %setup -q
@@ -56,9 +57,17 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/docker-ce.repo
 /etc/yum.repos.d/mise.repo
 /etc/yum.repos.d/vscode.repo
-/etc/yum.repos.d/_copr_atim-starship.repo
 
 %changelog
+* Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
+- Drop /etc/yum.repos.d/_copr_atim-starship.repo. Sourcing starship from
+  a third-party COPR added a packager hop with no real upside on an
+  atomic image: starship updates only matter at image-rebuild cadence,
+  and the upstream project ships signed musl binaries directly. starship
+  is now fetched from /releases/latest/download (always-latest, no
+  version pinning) + sha256-verified against the upstream-published sum
+  and baked into /usr/bin by os/build.sh. New starship releases land
+  automatically on the next image rebuild.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
 - Ship /etc/yum.repos.d/_copr_atim-starship.repo. starship isn't in Fedora
   main; the atim/starship COPR is the maintained source. Fixes CI build
