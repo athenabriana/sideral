@@ -17,18 +17,18 @@ Two ways to try sideral.
 ### Boot from USB (try before installing)
 
 <p align="center">
-  <a href="https://github.com/athenabriana/sideral/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/sideral?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a&color=3584e4" alt="Download ISO" height="44"></a>
+  <a href="https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com/sideral/sideral.iso"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20ISO-latest-3584e4?style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a" alt="Download ISO" height="44"></a>
 </p>
 
-The button takes you to the latest release page. The ISO is split into three ~1.8 GiB parts because GitHub Releases caps each asset at 2 GiB — download every `sideral-*.iso.part-*` file plus `sha256sums.txt`, then reassemble:
+The button starts the download immediately — single ~5 GiB ISO, hosted on Cloudflare R2. Verify the checksum and flash:
 
 ```bash
-cat sideral-*.iso.part-* > sideral.iso
-sha256sum -c sha256sums.txt
+curl -LO https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com/sideral/sideral.iso.sha256
+sha256sum -c sideral.iso.sha256
 sudo dd if=sideral.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-Or use Etcher / Impression / GNOME Disks once the ISO is reassembled. Boot the USB and the preloaded Anaconda installer walks you through writing sideral to disk.
+Or use Etcher / Impression / GNOME Disks. Boot the USB and the preloaded Anaconda installer walks you through writing sideral to disk.
 
 ### Rebase an existing Fedora atomic install
 
@@ -101,7 +101,7 @@ Want to run your own variant?
    ```bash
    gh repo create sideral --public --source . --remote origin --push
    ```
-2. Wait ~25 min for the `build-sideral` workflow. It builds the bootc OCI image, runs semantic-release (which cuts a GitHub Release with changelog), builds the installer ISO with titanoboa, and pushes it to `ghcr.io/<you>/sideral-iso:latest` as an OCI artifact.
+2. Wait ~25 min for the `build-sideral` workflow. It builds the bootc OCI image, runs semantic-release (which cuts a GitHub Release with changelog), builds the installer ISO with titanoboa, and uploads it to your Cloudflare R2 bucket under a constant `sideral.iso` key.
 3. From then on, every push to `main` cuts a new versioned release; every night the workflow rebases on the latest Silverblue base and republishes if anything changed.
 
 What lands in CI:
@@ -109,8 +109,10 @@ What lands in CI:
 | Artifact | Where | Tags |
 | --- | --- | --- |
 | Bootc image (rebase target) | `ghcr.io/<you>/sideral` | `:latest`, `:YYYYMMDD`, `:sha-<short>` |
-| Installer ISO (live + Anaconda) | `ghcr.io/<you>/sideral-iso` | `:latest`, `:v<semver>` |
+| Installer ISO (latest only, single file) | Cloudflare R2 (`s3://<bucket>/sideral.iso`) | constant key — overwrites |
 | Changelog + version tag | GitHub Releases | `v<semver>` |
+
+R2 secrets needed in repo settings: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`. Update `R2_ENDPOINT`, `R2_BUCKET`, and `R2_PUBLIC_BASE` in `.github/workflows/build.yml` to match your account.
 
 ## Local build
 
