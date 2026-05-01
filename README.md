@@ -1,9 +1,44 @@
-# athens-os
+<h1 align="center">athens-os</h1>
 
-Personal Fedora atomic desktop built directly on `ghcr.io/ublue-os/silverblue-main:43`.
-Ships GNOME + tiling-shell with a curated flatpak set, Nix + home-manager for
-the user layer (12-tool mise toolchain declared in `home.nix`), Helium as the
-default browser, and VS Code + docker-ce for day-to-day dev.
+<p align="center">
+  <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Zen Browser, Nix + home-manager, mise toolchain.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&color=294172" alt="Download latest ISO"></a>
+  <a href="https://github.com/athenabriana/athens-os/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/athenabriana/athens-os/build.yml?branch=main&style=for-the-badge&label=build&logo=github" alt="Build status"></a>
+  <a href="https://github.com/athenabriana/athens-os/blob/main/LICENSE"><img src="https://img.shields.io/github/license/athenabriana/athens-os?style=for-the-badge" alt="License"></a>
+</p>
+
+## Quick start
+
+Two ways to try athens-os.
+
+### Boot from USB (try before installing)
+
+```bash
+oras pull ghcr.io/athenabriana/athens-os-iso:latest
+sha256sum -c sha256sums.txt
+sudo dd if=athens-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+# reboot, pick the USB at boot — Anaconda installer is preloaded
+```
+
+The ISO ships with GNOME, the full flatpak set, and the Anaconda installer ready to write athens-os to disk.
+
+> Don't have `oras`? It's a single Go binary — `dnf install oras`, `apt install oras`, or `brew install oras`.
+
+### Rebase an existing Fedora atomic install
+
+```bash
+sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/athens-os:latest
+systemctl reboot
+```
+
+First boot installs Nix and the flatpak set; first graphical login runs `home-manager switch` to set up the shell, prompt, mise, and VS Code. ~5 minutes total.
+
+---
+
+Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set, Nix + home-manager for the user layer (12-tool mise toolchain declared in `home.nix`), Zen Browser as the default, and VS Code + docker-ce for day-to-day dev.
 
 ## What's in the image
 
@@ -55,32 +90,24 @@ athens-os/
 └── .github/workflows/build.yml                → CI: build, tag (latest/YYYYMMDD/sha-<short>), push to ghcr.io, cosign keyless
 ```
 
-## First-time setup
+## Forking this repo
 
-1. Create the GitHub repo and push:
+Want to run your own variant?
+
+1. Fork or copy the repo, push to your own GitHub:
    ```bash
    gh repo create athens-os --public --source . --remote origin --push
    ```
-2. Wait ~25 min for the `build-athens-os` workflow to (a) push `ghcr.io/<you>/athens-os:latest` (the bootc image) and (b) cut a GitHub Release that links to the installer ISO published as a separate OCI artifact at `ghcr.io/<you>/athens-os-iso:<tag>`.
-3. Rebase your host (existing Fedora atomic install):
-   ```bash
-   sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/<you>/athens-os:latest
-   systemctl reboot
-   ```
-4. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
-5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, and the rest of `home.nix`).
+2. Wait ~25 min for the `build-athens-os` workflow. It builds the bootc OCI image, runs semantic-release (which cuts a GitHub Release with changelog), builds the installer ISO with titanoboa, and pushes it to `ghcr.io/<you>/athens-os-iso:latest` as an OCI artifact.
+3. From then on, every push to `main` cuts a new versioned release; every night the workflow rebases on the latest Silverblue base and republishes if anything changed.
 
-## Installer ISO
+What lands in CI:
 
-The installer ISO is published as an OCI artifact at `ghcr.io/<you>/athens-os-iso` — same place as the bootc image, no GitHub size cap, single-file pull. Use [`oras`](https://oras.land/) (single Go binary, packaged in most distros: `brew install oras`, `dnf install oras`, `apt install oras`):
-
-```bash
-oras pull ghcr.io/<you>/athens-os-iso:latest      # or :v1.0.1 for a specific release
-sha256sum -c sha256sums.txt
-sudo dd if=athens-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
-```
-
-Or any GUI ISO writer (Etcher, Impression, GNOME Disks) once the ISO is on disk.
+| Artifact | Where | Tags |
+| --- | --- | --- |
+| Bootc image (rebase target) | `ghcr.io/<you>/athens-os` | `:latest`, `:YYYYMMDD`, `:sha-<short>` |
+| Installer ISO (live + Anaconda) | `ghcr.io/<you>/athens-os-iso` | `:latest`, `:v<semver>` |
+| Changelog + version tag | GitHub Releases | `v<semver>` |
 
 ## Local build
 
