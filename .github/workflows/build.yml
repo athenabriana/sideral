@@ -25,10 +25,10 @@ env:
   IMAGE_NAME: athens-os
   IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks (Zen Browser + GUI apps), home-manager user layer (mise, vscode, CLI QoL), and a narrow RPM layer (docker-ce, dev + kernel-debug stack, fonts)."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
-  # Hugging Face dataset where ISO artifacts are published. The ISO
-  # exceeds GitHub Releases' 2 GiB per-asset cap, so binaries live on
-  # HF and GitHub Releases hold only the changelog + download links.
-  HF_REPO: athenabriana/athens-os
+  # OCI artifact (separate from the bootc image) where each ISO release
+  # is published. ghcr.io has no per-blob size cap, unlike GitHub
+  # Releases (2 GiB), so the ~5 GiB ISO lives here as a single object.
+  ISO_PACKAGE: athens-os-iso
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -121,7 +121,7 @@ jobs:
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     permissions:
       contents: write   # tag + release creation
-      packages: read    # ghcr.io image pull
+      packages: write   # push ISO OCI artifact to ghcr.io
       issues: write     # semantic-release opens issues on failure
       pull-requests: write
     steps:
@@ -215,43 +215,41 @@ jobs:
           sha256sum "${{ steps.tags.outputs.iso_name }}" > sha256sums.txt
           ls -lh
 
-      # ── Phase 4: cut release on GitHub, ship ISO to Hugging Face ─────
+      # ── Phase 4: cut GH release, push ISO as OCI artifact to ghcr.io ─
       # semantic-release creates the tag + changelog + release shell on
-      # GitHub. The ISO itself goes to a Hugging Face dataset because
-      # GitHub Releases caps each asset at 2 GiB and the ISO is ~5 GiB.
-      # huggingface-cli streams uploads (no Node Buffer, no OOM) and
-      # the dataset gives users a single-file download via plain HTTPS:
-      #   https://huggingface.co/datasets/<HF_REPO>/resolve/main/<file>
+      # GitHub. The ISO itself is pushed to ghcr.io as a separate OCI
+      # artifact (athens-os-iso, distinct from the athens-os bootc image)
+      # because GitHub Releases caps each asset at 2 GiB. ORAS streams
+      # blobs over HTTP — no Node Buffer, no runner OOM. Users pull with
+      # `oras pull ghcr.io/<owner>/athens-os-iso:<tag>`.
       - name: semantic-release (real)
         if: steps.dryrun.outputs.skip == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      - name: Upload ISO to Hugging Face
+      - name: Install oras
         if: steps.dryrun.outputs.skip == 'false'
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: oras-project/setup-oras@v1
+
+      - name: Push ISO to ghcr.io as OCI artifact
+        if: steps.dryrun.outputs.skip == 'false'
         run: |
           set -euo pipefail
-          pip install --quiet --upgrade huggingface_hub
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
           VERSION="v${{ steps.dryrun.outputs.next_version }}"
           ISO="${{ steps.tags.outputs.iso_name }}"
-          # Upload raw ISO + checksum into a per-version directory so
-          # old releases stay browsable. --commit-message tags each
-          # upload with the GitHub release version for traceability.
-          huggingface-cli upload \
-            --repo-type dataset \
-            --commit-message "athens-os ${VERSION}" \
-            "${HF_REPO}" \
-            "./output/${ISO}" \
-            "${VERSION}/${ISO}"
-          huggingface-cli upload \
-            --repo-type dataset \
-            --commit-message "athens-os ${VERSION} checksum" \
-            "${HF_REPO}" \
-            "./output/sha256sums.txt" \
-            "${VERSION}/sha256sums.txt"
+          REF="ghcr.io/${OWNER}/${ISO_PACKAGE}"
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+          cd ./output
+          # Push under both :<version> and :latest in a single round-trip
+          # by passing comma-separated tags.
+          oras push \
+            "${REF}:${VERSION},latest" \
+            --artifact-type application/vnd.athens-os.iso.v1 \
+            "${ISO}:application/x-iso9660-image" \
+            "sha256sums.txt:text/plain"
 
       - name: Append download links to release notes
         if: steps.dryrun.outputs.skip == 'false'
@@ -259,18 +257,27 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          OWNER="${GITHUB_REPOSITORY_OWNER,,}"
           VERSION="v${{ steps.dryrun.outputs.next_version }}"
           ISO="${{ steps.tags.outputs.iso_name }}"
-          BASE="https://huggingface.co/datasets/${HF_REPO}/resolve/main/${VERSION}"
+          REF="ghcr.io/${OWNER}/${ISO_PACKAGE}:${VERSION}"
           gh release view "${VERSION}" --repo "${{ github.repository }}" --json body -q .body > /tmp/notes.md
           {
             echo
-            echo "## Downloads"
+            echo "## Download"
             echo
-            echo "- [\`${ISO}\`](${BASE}/${ISO}) — installer ISO (~5 GiB)"
-            echo "- [\`sha256sums.txt\`](${BASE}/sha256sums.txt) — checksum"
+            echo "The installer ISO is published as an OCI artifact on ghcr.io."
+            echo "Pull with [\`oras\`](https://oras.land/) (single Go binary,"
+            echo "in most distros: \`brew install oras\`, \`apt install oras\`,"
+            echo "\`dnf install oras\`):"
             echo
-            echo "Verify: \`sha256sum -c sha256sums.txt\`"
+            echo '```bash'
+            echo "oras pull ${REF}"
+            echo "sha256sum -c sha256sums.txt"
+            echo "# flash with: sudo dd if=${ISO} of=/dev/sdX bs=4M status=progress oflag=sync"
+            echo '```'
+            echo
+            echo "Or pull \`:latest\` for the most recent release: \`oras pull ghcr.io/${OWNER}/${ISO_PACKAGE}:latest\`"
           } >> /tmp/notes.md
           gh release edit "${VERSION}" \
             --repo "${{ github.repository }}" \

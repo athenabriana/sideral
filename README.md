@@ -61,32 +61,26 @@ athens-os/
    ```bash
    gh repo create athens-os --public --source . --remote origin --push
    ```
-2. **One-time release-publishing setup** (only needed if you want CI to ship installer ISOs):
-   - Create a [Hugging Face](https://huggingface.co/) account and a public dataset at `huggingface.co/datasets/<you>/athens-os` (the ISO lives here because GitHub Releases caps each asset at 2 GiB).
-   - Mint a write-scoped access token (Settings → Access Tokens → "Write").
-   - Add it to the GitHub repo as the secret `HF_TOKEN` (Settings → Secrets and variables → Actions).
-   - Update `HF_REPO` at the top of `.github/workflows/build.yml` if your HF username differs from `athenabriana`.
-3. Wait ~10 min for the `build-athens-os` workflow to push `ghcr.io/<you>/athens-os:latest`. The first commit also cuts a GitHub Release with a Hugging Face download link to the ISO.
-4. Rebase your host:
+2. Wait ~25 min for the `build-athens-os` workflow to (a) push `ghcr.io/<you>/athens-os:latest` (the bootc image) and (b) cut a GitHub Release that links to the installer ISO published as a separate OCI artifact at `ghcr.io/<you>/athens-os-iso:<tag>`.
+3. Rebase your host (existing Fedora atomic install):
    ```bash
    sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/<you>/athens-os:latest
    systemctl reboot
    ```
-5. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
-6. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, and the rest of `home.nix`).
+4. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
+5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, and the rest of `home.nix`).
 
 ## Installer ISO
 
-Each tagged release links to a single-file ISO hosted on Hugging Face. Browse releases on GitHub for the link, or pull directly:
+The installer ISO is published as an OCI artifact at `ghcr.io/<you>/athens-os-iso` — same place as the bootc image, no GitHub size cap, single-file pull. Use [`oras`](https://oras.land/) (single Go binary, packaged in most distros: `brew install oras`, `dnf install oras`, `apt install oras`):
 
 ```bash
-VERSION=v1.0.1
-curl -LO "https://huggingface.co/datasets/<you>/athens-os/resolve/main/${VERSION}/athens-os-${VERSION}-x86_64.iso"
-curl -LO "https://huggingface.co/datasets/<you>/athens-os/resolve/main/${VERSION}/sha256sums.txt"
+oras pull ghcr.io/<you>/athens-os-iso:latest      # or :v1.0.1 for a specific release
 sha256sum -c sha256sums.txt
+sudo dd if=athens-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-Flash with `dd if=athens-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync` or any GUI ISO writer (Etcher, Impression, etc).
+Or any GUI ISO writer (Etcher, Impression, GNOME Disks) once the ISO is on disk.
 
 ## Local build
 
