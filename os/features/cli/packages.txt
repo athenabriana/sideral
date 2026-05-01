@@ -1,0 +1,23 @@
+# CLI tools layer — Fedora-main RPMs that satisfy sideral-cli-tools' Requires.
+#
+# Installed at image build time so the inline rpmbuild + `rpm -Uvh
+# sideral-cli-tools.rpm` step (run later in Containerfile) finds all 13
+# packages already present in the rpmdb.
+#
+# `mise` and `code` are NOT listed here — they come from non-Fedora
+# repos (mise.jdx.dev, packages.microsoft.com) and are dnf-installed
+# separately in build.sh after the FEATURES loop.
+
+chezmoi
+starship
+atuin
+fzf
+bat
+eza
+ripgrep
+zoxide
+gh
+git-lfs
+gcc
+make
+cmake

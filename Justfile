@@ -1,4 +1,4 @@
-# Sideral OS — local build + dotfile recipes.
+# Sideral OS — local build + rebase recipes.
 #   list:    `just`
 #   build:   `just build`
 #   rebase:  `just rebase`
@@ -40,22 +40,6 @@ clean:
 # Show RPM-level diff vs the current deployment
 diff:
     sudo rpm-ostree db diff
-
-# home.nix lives under sideral-user's src tree (sideral-copr feature).
-home_nix := "os/packages/sideral-user/src/etc/skel/.config/home-manager/home.nix"
-
-# Edit the repo's home.nix in $EDITOR (falls back to vi)
-home-edit:
-    ${EDITOR:-vi} {{home_nix}}
-
-# Apply the repo's home.nix to live $HOME via home-manager switch
-home-apply:
-    home-manager switch -f {{home_nix}}
-
-# Preview what `home-apply` would change vs the currently-active generation
-home-diff:
-    home-manager build -f {{home_nix}}
-    @echo "Built generation above; compare via: home-manager generations"
 
 # Rollback to the previous deployment
 rollback:

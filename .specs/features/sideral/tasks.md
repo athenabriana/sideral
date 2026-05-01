@@ -50,7 +50,7 @@ Traceability: each task lists the ATH-XX requirement IDs it satisfies.
 - **Where (final layout):**
   ```
   build_files/features/
-  ├── gnome/                  # appindicator, dash-to-panel, bazaar, gnome-tweaks, adw-gtk3-theme
+  ├── gnome/                  # appindicator, dash-to-panel, gnome-software (+rpm-ostree plugin), gnome-tweaks, adw-gtk3-theme   # bazaar→gnome-software swap 2026-05-01
   ├── gnome-extensions/       # tilingshell + rounded-window-corners (post-install only)
   ├── devtools/               # gh, starship, gcc, make, cmake, git-*, android-tools, code, kernel-debug stack
   ├── browser/                # helium-bin (COPR stays enabled)

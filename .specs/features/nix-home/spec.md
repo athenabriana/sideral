@@ -1,5 +1,17 @@
 # nix-home Specification
 
+## Retired
+
+**Status: dropped pre-VM-verification on 2026-05-01.** Replaced by `chezmoi-home`.
+
+This feature was implemented locally (40 requirements, 15 locked decisions, 9 of 9 tasks complete) but never verified on a real VM. Three documented frictions on Fedora atomic 42+ — composefs vs the nix-installer ostree planner ([nix-installer#1445](https://github.com/DeterminateSystems/nix-installer/issues/1445)), SELinux mislabel of `/nix` store paths ([#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383), open since 2023), and `/nix` + nix-daemon disappearing after `rpm-ostree upgrade` — made the production-cost trajectory worse than pivoting before shipping. silverblue-main:43 is in the impact zone for all three.
+
+See `.specs/features/chezmoi-home/context.md` D-01 for the full rationale, and `.specs/features/chezmoi-home/spec.md` for the replacement design (drops nix entirely; user-config layer is chezmoi + RPM-layered CLI tools).
+
+The remainder of this file is preserved as historical reference. Do not implement against it.
+
+---
+
 ## Problem Statement
 
 User-level configuration on sideral is currently split across four independent systems: `/etc/skel`

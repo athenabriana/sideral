@@ -5,9 +5,12 @@
 gnome-shell-extension-appindicator
 gnome-shell-extension-dash-to-panel
 
-# ── Bazaar app store (ublue-os/packages COPR, already enabled in silverblue-main base) ──
-# Bundles the Bazaar GUI + bazaar-integration@kolunmi.github.io shell extension + GNOME search provider.
-bazaar
+# ── App store: GNOME Software with rpm-ostree + flatpak plugins ──
+# gnome-software ships with silverblue-main:43; declaring it explicitly makes the
+# intent traceable and survives any future base swap. The flatpak plugin is built
+# into gnome-software itself on F43 (no separate sub-package).
+gnome-software
+gnome-software-rpm-ostree
 
 # ── Quality-of-life ──
 gnome-tweaks

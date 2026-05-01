@@ -1,0 +1,10 @@
+# Sideral OS — GNOME Software defaults.
+#
+# packaging-format-preference: when an app is available in multiple
+# formats, gnome-software offers them in this order. Prefer flatpaks
+# (Flathub first, then any flatpak remote) over RPM-layered packages.
+# Aligned with sideral's "user-facing apps via flatpak, system layer
+# via RPM" split.
+
+[org/gnome/software]
+packaging-format-preference=['flatpak:flathub', 'flatpak', 'rpm']

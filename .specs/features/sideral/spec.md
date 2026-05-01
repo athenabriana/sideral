@@ -72,14 +72,15 @@ Personal Fedora atomic desktop built directly on `ghcr.io/ublue-os/silverblue-ma
 1. **ATH-01** — A push to `main` triggers CI that builds, signs, and pushes `:latest`, `:YYYYMMDD`, and `:sha-<short>` tags.
 2. **ATH-02** — `rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/sideral:latest` succeeds and stages the new deployment.
 3. **ATH-03** — After reboot, GDM presents a GNOME session (Wayland).
-4. **ATH-04** — At first login, exactly these 5 extensions are enabled without manual action:
-   `appindicatorsupport@rgcjonas.gmail.com`, `dash-to-panel@jderose9.github.com`, `bazaar-integration@kolunmi.github.io`, `tilingshell@ferrarodomenico.com`, `rounded-window-corners@fxgn`.
+4. **ATH-04** — At first login, exactly these 4 extensions are enabled without manual action:
+   `appindicatorsupport@rgcjonas.gmail.com`, `dash-to-panel@jderose9.github.com`, `tilingshell@ferrarodomenico.com`, `rounded-window-corners@fxgn`.
+   *(Updated 2026-05-01: bazaar-integration removed alongside the Bazaar→GNOME-Software swap.)*
 5. **ATH-05** — Captured dconf defaults apply: dash-to-panel icons/position, tiling-shell layouts+autotiling+snap-assist, rounded-corners radius 12px+skip-libadwaita.
 6. **ATH-06** — Window focus follows mouse without click (sloppy focus, `auto-raise=false`).
 7. **ATH-07** — Custom keybinds work: `Ctrl+Alt+T` / `Super+T` → Ptyxis; `Ctrl+Shift+Esc` → Resources; `Ctrl+Alt+Space` / `Super+.` → Smile; `Super+Down` → minimize.
 8. **ATH-08** — `rpm-ostree status` shows sideral as current with the previous deployment preserved as rollback target.
 
-**Test**: Fresh VM, rebase, reboot, log in. `gnome-extensions list --enabled` outputs the 5 UUIDs.
+**Test**: Fresh VM, rebase, reboot, log in. `gnome-extensions list --enabled` outputs the 4 UUIDs.
 
 ---
 

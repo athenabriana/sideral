@@ -1,7 +1,8 @@
 # sideral — a personal Fedora atomic desktop derived directly from
 # ublue-os/silverblue-main. Ships GNOME + tiling-shell, a curated flatpak set
-# (Zen Browser + GUI apps), home-manager-driven user layer (mise, vscode, CLI QoL),
-# and a narrow RPM layer (docker-ce + compose, gnome extensions + bazaar, fonts).
+# (Zen Browser + GUI apps), chezmoi-driven user dotfile layer + sideral-cli-tools
+# (mise, code, starship, atuin, fzf, etc.), and a narrow RPM layer (docker-ce +
+# compose, gnome extensions + gnome-software, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
@@ -56,9 +57,9 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # explicitly. --nodeps is safe here because nothing else in the base image
 # Requires ublue-os-signing.
 #
-# Requires: bazaar/docker-ce/containerd.io must already be installed
-# (build.sh above did that via the gnome and container features);
-# rpm -Uvh verifies presence but won't fetch.
+# Requires: docker-ce/containerd.io must already be installed (build.sh
+# above did that via the container feature); rpm -Uvh verifies presence
+# but won't fetch.
 #
 # `rpm -e` (not `dnf remove`) for the toolchain teardown: dnf would
 # auto-remove ~73 transitively-pulled packages (cpio, diffutils, elfutils,

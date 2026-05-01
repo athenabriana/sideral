@@ -1,7 +1,7 @@
 <h1 align="center">sideral</h1>
 
 <p align="center">
-  <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Zen Browser, Nix + home-manager, mise toolchain.</em>
+  <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Zen Browser, chezmoi-driven dotfiles, mise toolchain.</em>
 </p>
 
 <p align="center">
@@ -38,60 +38,52 @@ sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral:l
 systemctl reboot
 ```
 
-First boot installs Nix and the flatpak set; first graphical login runs `home-manager switch` to set up the shell, prompt, mise, and VS Code. ~5 minutes total.
+After reboot the image is fully wired — starship prompt, mise, atuin, zoxide, fzf, gh, VS Code are all on `$PATH`. First boot also installs the curated flatpak set in the background. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
 
 ---
 
-Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set, Nix + home-manager for the user layer (12-tool mise toolchain declared in `home.nix`), Zen Browser as the default, and VS Code + docker-ce for day-to-day dev.
+Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set, a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Zen Browser as the default, and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
 
 ## What's in the image
 
 | Layer | Contents |
 | --- | --- |
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
-| **Desktop** | GNOME Shell (default from base) + 5 extensions: appindicator, dash-to-panel, bazaar-integration, tilingshell, rounded-window-corners |
+| **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
+| **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
 | **Browser** | Zen Browser via flatpak (`app.zen_browser.zen`, auto-installed on first boot by `sideral-flatpak-install.service`) |
-| **Editor** | `vscode` via `programs.vscode` in home.nix (includes `ms-vscode-remote.remote-ssh` + `remote-containers`; user can remove with a one-line edit) |
+| **Editor** | `code` (VS Code) via Microsoft RPM repo at `packages.microsoft.com/yumrepos/vscode` — Remote-SSH and Remote-Containers extensions install from the marketplace on first launch |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
-| **Dev tooling** | All in home.nix: `gh`, `starship`, `gcc`/`make`/`cmake`, `git` (with `lfs.enable` + `credential.helper = libsecret`). |
+| **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `starship`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. All present at `$PATH` after rebase. |
+| **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh` (shipped by `sideral-shell-ux`) sources starship, atuin, zoxide, mise, and fzf integrations into every interactive bash shell. Each line is `command -v`-guarded. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
-| **Nix** | Upstream CppNix installed via `nix-installer` (ostree planner) on first boot; `/nix` persisted via bind mount from `/var/lib/nix` |
-| **User environment** | home-manager (channels, `release-24.11`) bootstraps on first login from `~/.config/home-manager/home.nix`; owns bash, starship, atuin, git, mise, and CLI QoL (zoxide/fzf/bat/eza/ripgrep/nix-index/gh) |
-| **User runtime toolchain** | `mise` via `home.packages`; 12 runtimes (node/bun/pnpm, python/uv, java/kotlin/gradle, go/rust/zig, android-sdk) declared inline in `home.nix` |
+| **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
 | **Flatpaks (auto-install on first boot)** | Zen Browser, Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile |
 
 ## Repo layout
 
 ```
 sideral/
-├── Justfile                         # build / rebase / home-edit / home-apply / home-diff
+├── Justfile                         # build / rebase
 ├── os/                              # everything that lands in the OCI image
 │   ├── Containerfile                # image recipe (FROM silverblue-main:43)
-│   ├── build.sh                     # orchestrator: stage nix-installer → upstream COPRs → features loop
+│   ├── build.sh                     # orchestrator: register persistent repos + per-feature install loop
 │   ├── features/
-│   │   ├── gnome/           packages.txt  → appindicator + dash-to-panel + bazaar + tweaks + adw-gtk3-theme + fastfetch
+│   │   ├── cli/              packages.txt → 13 Fedora-main CLI tools (chezmoi, starship, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake)
+│   │   ├── gnome/            packages.txt → gnome-software + extensions + adw-gtk3-theme + fastfetch
 │   │   ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
-│   │   ├── container/        packages.txt  → docker-ce + containerd.io + buildx + compose
+│   │   ├── container/        packages.txt → docker-ce + containerd.io + buildx + compose
 │   │   └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
 │   └── packages/                    # sideral-* RPM sources (built inline by build-rpms.sh)
+│       ├── sideral-base       → /etc/os-release, distrobox.conf, yum.repos.d/{docker-ce,mise,vscode}.repo
+│       ├── sideral-cli-tools  → meta-RPM: Requires: 14 CLI tools + code
+│       ├── sideral-dconf      → /etc/dconf/db/local.d/* + profile/user
+│       ├── sideral-flatpaks   → flatpak first-boot install service + manifest
+│       ├── sideral-services   → placeholder for future systemd units
+│       ├── sideral-shell-ux   → /etc/profile.d/sideral-cli-init.sh + sideral-onboarding.sh
+│       └── sideral-signing    → /etc/containers/policy.json
 ├── iso/                             # live-installer assets consumed by titanoboa
-│   ├── anaconda-hook.sh             # post-rootfs hook: install Anaconda + brand the live env
-│   └── flatpaks.txt                 # flatpaks preinstalled in the live ISO
-├── system_files/
-│   ├── etc/
-│   │   ├── dconf/
-│   │   │   ├── profile/user                    → points GNOME at the system dconf DB
-│   │   │   └── db/local.d/{00-sideral-focus, 00-sideral-gnome-shell, 10-sideral-keybinds}
-│   │   ├── flatpak-manifest                    → 8 refs (Zen Browser + 7 GUI apps)
-│   │   ├── systemd/system/sideral-flatpak-install.service (+ multi-user.target.wants symlink)
-│   │   ├── systemd/system/sideral-nix-install.service   (+ multi-user.target.wants symlink)  → first-boot: install Nix with ostree planner
-│   │   └── yum.repos.d/docker-ce.repo                   → enabled so rpm-ostree upgrade pulls updates
-│   └── usr/lib/systemd/user/
-│       ├── sideral-home-manager-setup.service   → first-login: install home-manager + home-manager switch
-│       └── default.target.wants/ (symlinks)
-├── home/                                      → shipped to /etc/skel/
-│   └── .config/home-manager/home.nix          → single source of truth for user env (bash, starship, atuin, git, mise, CLI QoL)
-└── .github/workflows/build.yml                → CI: build, tag (latest/YYYYMMDD/sha-<short>), push to ghcr.io, cosign keyless
+└── .github/workflows/build.yml      # CI: build, tag, push to ghcr.io, cosign keyless
 ```
 
 ## Forking this repo
@@ -125,66 +117,49 @@ just rebase     # rebase host to the local dev image
 just rollback   # back to the previous deployment
 ```
 
-## User environment — home.nix
+## Set up dotfiles
 
-`home/.config/home-manager/home.nix` is the single source of truth for bash, prompt, shell history, git, mise, and CLI quality-of-life tools. It ships via `/etc/skel` on every fresh user and is applied on first login by `sideral-home-manager-setup.service` (which calls `home-manager switch` under the hood).
-
-Edit / apply workflow:
+sideral ships [chezmoi](https://chezmoi.io) but no default dotfiles tree — you bring your own. After your first login, point chezmoi at your dotfiles repo:
 
 ```bash
-just home-edit      # open the repo copy in $EDITOR
-just home-apply     # run: home-manager switch -f home/.config/home-manager/home.nix
-just home-diff      # build the generation so you can inspect what would change
+chezmoi init --apply https://github.com/<you>/dotfiles
 ```
 
-Roll back: `home-manager generations` then `home-manager switch <path-from-list>`. home-manager keeps every prior generation as a symlink under `/nix/var/nix/profiles/per-user/$USER/`.
-
-**First-shell UX**: on the very first login, opening a terminal before `sideral-home-manager-setup.service` finishes would normally leave you with a bare Fedora default shell. `/etc/profile.d/sideral-hm-status.sh` handles this by polling the setup marker for up to 5 minutes, then sourcing `hm-session-vars.sh` + `~/.bashrc` into your current shell — no reopen needed. Times out gracefully into a usable Fedora shell if setup stalls; run `journalctl --user -u sideral-home-manager-setup -f` to see why.
-
-Fresh account: skel is copied into `~/` on user creation, first login runs the setup service, no further action.
-
-Existing account: edit `~/.config/home-manager/home.nix` directly and run `home-manager switch`, or iterate in the repo copy and use `just home-apply`.
-
-## mise toolchain
-
-`mise` is installed as a nix package via `home.packages`; `which mise` should resolve to `~/.nix-profile/bin/mise` after the first home-manager switch. The 12-tool toolchain (node/bun/pnpm, python/uv, java/kotlin/gradle, go/rust/zig, android-sdk) is declared inline inside `home.nix` via `home.file.".config/mise/config.toml".text`.
-
-Tools install lazily on first use (`not_found_auto_install = true`); `mise install` in any directory pulls everything declared.
-
-## Nix first-boot notes
-
-- **SELinux**: Fedora's stock policy has no rules for `/nix` (not FHS-standard), so files land `default_t` and fail to execute (upstream [nix-installer#1383](https://github.com/NixOS/nix-installer/issues/1383)). sideral root-fixes this by shipping `/etc/selinux/targeted/contexts/files/file_contexts.local` mapping `/nix` → `usr_t`, `/nix/store/*/bin` → `bin_t`, etc. `sideral-nix-relabel.path` watches `/nix/store` and triggers `sideral-nix-relabel.service` (`restorecon -RF /nix`) whenever `nix profile install` adds store paths, so labels stay correct automatically. Manual recovery if ever needed: `sudo systemctl start sideral-nix-relabel.service`.
-- **composefs (silverblue-main F42+)**: if `findmnt /nix` shows no mount after the install service completes, the active composefs-backed root may be blocking the bind mount. Workaround: add `rd.systemd.unit=root.transient` as a kernel argument (`sudo rpm-ostree kargs --append=rd.systemd.unit=root.transient`) and reboot.
-- **Channel default**: `/etc/nix/nix.conf` is whatever the installer writes — no sideral override. Flakes are off by default (classic CppNix behavior). Enable per-user by writing `experimental-features = nix-command flakes` into `~/.config/nix/nix.conf`.
-- **nix-installer version**: pinned via `NIX_INSTALLER_VERSION` at the top of `os/build.sh`. The baked binary lives at `/usr/libexec/nix-installer`; bump via PR to the URL scheme in `build.sh`.
-
-## Distrobox + nix integration
-
-Every distrobox container created on sideral auto-mounts the host's nix store. Configured via `system_files/etc/distrobox/distrobox.conf`:
-
-```
-container_additional_volumes="/nix /var/lib/nix /etc/nix"
-```
-
-Combined with the bashrc snippet in `home.nix` that sources `/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh` if `/nix` is present, every interactive shell — host or any distrobox container — gets `nix`, `nix-shell`, `nix-build`, `NIX_PATH`, and `NIX_REMOTE=daemon` wired automatically. Inside any container:
+That clones the repo to `~/.local/share/chezmoi/` and renders every templated file into your `$HOME`. Edit-loop afterward:
 
 ```bash
-distrobox create --image fedora:42 dev
-distrobox enter dev
-$ nix --version                # works
-$ nix-shell -p hyperfine        # talks to host's nix-daemon over /nix socket
-$ nix profile install nixpkgs#act
-$ mise --version                # already on PATH from ~/.nix-profile/bin
+chezmoi edit ~/.bashrc        # opens the source file in $EDITOR
+chezmoi diff                  # show pending changes
+chezmoi apply                 # write them to $HOME
 ```
 
-Read-write by default so containers can install packages into the shared store. To make it read-only, append `:ro` to each path in `distrobox.conf`.
+Why chezmoi? Static Go binary, no daemon, plays well with rpm-ostree (no `/nix` store, no daemon, no SELinux dance), templating + per-host conditionals via `.chezmoi.osRelease.variantId`, and 17 first-class secret backends (age, gpg, libsecret, 1Password, Bitwarden, sops, …) — all surfaced as Go template funcs. See `.specs/features/chezmoi-home/` for sideral's full reasoning.
+
+## CLI toolset — sideral-cli-tools
+
+The `sideral-cli-tools` meta-RPM declares `Requires:` on 14 CLI tools + VS Code:
+
+| Tool | Source |
+| --- | --- |
+| `chezmoi` | Fedora main |
+| `mise` | mise.jdx.dev/rpm (persistent repo, `rpm-ostree upgrade` pulls updates) |
+| `starship`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake` | Fedora main |
+| `code` (VS Code) | packages.microsoft.com (persistent repo) |
+
+All present after `rpm-ostree rebase`. To opt out (slimmer derivative): `sudo rpm-ostree override remove sideral-cli-tools`. Individual tools can also be removed: `sudo rpm-ostree override remove zoxide`. The shell-init script in `sideral-shell-ux` `command -v`-guards each integration so removing any single tool is safe.
+
+mise toolchains (node, bun, python, go, etc.) are *user-level* — declare them in your chezmoi'd `~/.config/mise/config.toml`. sideral doesn't ship a default; pick what you use.
 
 ## Iterating on dotfiles
 
 Layer choice:
 
-- **System-wide** (dconf keybinds, repo files, systemd units, os-release) → `system_files/etc/` or `system_files/usr/`. Rebuild image + rebase.
-- **User-level** (shell, prompt, git, mise, per-program configs) → `home/.config/home-manager/home.nix`. Re-run `just home-apply` (no reboot).
+- **System-wide** (dconf keybinds, repo files, systemd units, os-release, GNOME extensions) → `os/packages/sideral-*/src/etc/` or `os/features/<feature>/`. Rebuild image + rebase.
+- **User-level** (shell, prompt, git, mise toolchains, per-program configs) → your chezmoi'd dotfiles repo. Run `chezmoi apply` to materialize without rebooting.
+
+## Why not nix?
+
+sideral *did* have a nix + home-manager user layer in flight — see `.specs/features/nix-home/spec.md`. It was implemented locally then retired before VM verification on 2026-05-01. Three documented frictions specifically affect Fedora atomic 42+: composefs vs the nix-installer ostree planner ([nix-installer#1445](https://github.com/DeterminateSystems/nix-installer/issues/1445)), SELinux mislabel of `/nix` store paths ([#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383), open since 2023), and `/nix` + nix-daemon disappearing after `rpm-ostree upgrade` on F42+ (Universal Blue forum reports). silverblue-main:43 is in the impact zone for all three. The chezmoi-home pivot gets the declarative-on-first-boot UX without the nix-shaped failure modes. See `.specs/features/chezmoi-home/context.md` D-01 for the full rationale.
 
 ## Rollback
 

@@ -6,12 +6,12 @@ sideral currently ships its system customizations as loose files under `packages
 
 Goal: get the benefits of real RPM packaging (rpmdb tracking, clean removal, conflict detection, granular sub-package opt-out) **without** publishing RPMs anywhere. Build the RPMs *inline* during the image build — `rpmbuild -bb` runs inside a Containerfile RUN step, the resulting `.rpm` files are immediately installed via `dnf5 install`, and the build-tools (`rpm-build`, `rpmdevtools`) are removed in the same RUN layer so they don't bloat the final image. The RPMs exist only inside the image; the rebuild is the upgrade mechanism.
 
-The feature is scoped narrowly: **we package what we author, we install it locally**. We do not publish RPMs, we do not run a Copr project, we do not need API tokens. Third-party deps (`docker-ce`, `containerd.io`, `bazaar`) come from their existing dnf repos as today (docker-ce-stable + ublue-os/packages COPR enabled at build time).
+The feature is scoped narrowly: **we package what we author, we install it locally**. We do not publish RPMs, we do not run a Copr project, we do not need API tokens. Third-party deps (`docker-ce`, `containerd.io`) come from their existing dnf repos at build time (docker-ce-stable). *(Pre-2026-05-01 also listed `bazaar` from `ublue-os/packages` COPR; that COPR was retired alongside the Bazaar→GNOME-Software swap — see `.specs/features/sideral/context.md` decision #6 banner.)*
 
 ## Goals
 
 - [ ] Eight sub-packages built from `packages/<name>/<name>.spec` specs in our repo: `sideral-base`, `sideral-services`, `sideral-flatpaks`, `sideral-dconf`, `sideral-selinux`, `sideral-shell-ux`, `sideral-user`, `sideral-signing`
-- [ ] `sideral-base` is a meta-package with `Requires:` on every other `sideral-*` sub-package plus the third-party deps already present (`docker-ce`, `containerd.io`, `bazaar`)
+- [ ] `sideral-base` is a meta-package with `Requires:` on every other `sideral-*` sub-package plus the third-party deps already present (`docker-ce`, `containerd.io`). *(Bazaar Requires removed 2026-05-01.)*
 - [ ] Containerfile builds all 8 RPMs inline via `rpmbuild -bb`, installs them with `dnf5 install`, and removes the build toolchain — all in one RUN layer so the final image carries zero rpmbuild artifacts
 - [ ] **Per-package `src/` is the authoring source** (already in place). Each `packages/<name>/` is genuinely self-contained: `.spec` + `src/` tree is everything the package needs to build.
 - [ ] **OCI image** signed via cosign keyless OIDC; `sideral-signing` ships `/etc/containers/policy.json` so users can rebase with `ostree-image-signed:` and the rebase fails on signature mismatch (independent of RPM publishing — image signing was always the actually-useful trust boundary)
@@ -24,7 +24,7 @@ The feature is scoped narrowly: **we package what we author, we install it local
 | Publishing RPMs to Copr or any external repo | This is the whole point of the rewrite — no token, no external service, no maintenance. RPMs exist only inside the image. |
 | Cosign-signing individual RPMs | If RPMs aren't published, signing them is theater. Image-level signing (ACR-27..29) gives the meaningful trust boundary. |
 | GHA `copr.yml` workflow + `COPR_API_TOKEN` secret | Both deleted. Image build pipeline does the rpmbuild inline. |
-| Rebuilding docker-ce or bazaar | Unchanged from `sideral-copr`: Docker Inc + ublue-os/packages maintain them. We consume from their existing dnf repos at build time. |
+| Rebuilding docker-ce | Unchanged from `sideral-copr`: Docker Inc maintains it. We consume from `docker-ce-stable` at build time. *(Bazaar removed entirely 2026-05-01; replaced by `gnome-software` from Fedora main.)* |
 | Re-adding a browser to the RPM layer | Browser ships via flatpak (`app.zen_browser.zen`); RPM layer stays browser-free. |
 | Multi-arch builds (aarch64) | x86_64 only, same as image itself. |
 | Fedora versions other than 43 | Build runs against the live silverblue-main:43 base; F44 happens when we rebase the image. |
@@ -131,7 +131,7 @@ The feature is scoped narrowly: **we package what we author, we install it local
 - **User modifies a file owned by `sideral-shell-ux`** (or any sub-package): `rpm-ostree upgrade` treats this as a conflict; `.rpmnew` file is created. Standard RPM behavior.
 - **Sigstore is down during signed rebase**: `rpm-ostree rebase ostree-image-signed:...` fails because the policy.json check can't reach Rekor/Fulcio. User can fall back to `ostree-unverified-registry:` for a one-time emergency install (documented in README, but discouraged). Sigstore status: https://status.sigstore.dev.
 - **OIDC identity changes** (e.g., we rename `build.yml` or move to a different branch): existing signatures fail verification on user machines. Mitigation: ship a transition release with the new identity in policy.json BEFORE pushing the next signed image.
-- **External repo outage (docker-ce.repo / ublue-os/packages)**: Image build fails on the affected dnf install step. Same failure mode as today; no regression.
+- **External repo outage (docker-ce.repo)**: Image build fails on the affected dnf install step. Same failure mode as today; no regression. *(Pre-2026-05-01 also covered `ublue-os/packages` COPR for bazaar; that repo was retired with the Bazaar→GNOME-Software swap.)*
 
 ---
 

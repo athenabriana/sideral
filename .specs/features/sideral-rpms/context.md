@@ -18,25 +18,23 @@ This feature was renamed from `sideral-copr` on 2026-04-29 when the Copr-publish
 
 ---
 
-## D-02 — Two external repos aggregated: ublue-os/packages + docker-ce-stable (SUPERSEDED 2026-04-29)
+## D-02 — Two external repos aggregated: ublue-os/packages + docker-ce-stable (SUPERSEDED 2026-04-29; PARTIALLY RETIRED 2026-05-01)
 
 **Original choice**: Our Copr project lists exactly two external repos so a single `dnf5 copr enable` resolves bazaar + docker-ce + containerd.io transitively.
 
-**Status**: Superseded by D-15. With no Copr project, "external repos aggregated by Copr" is moot. The two upstream repos (`ublue-os/packages` COPR + `docker-ce-stable`) are still consumed at build time — but they're enabled directly in `build.sh` (already the case today: `PERSISTENT_COPRS=(ublue-os/packages)` + `dnf5 config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo`). No change to the actual repo set; only the aggregation layer is removed.
+**Status**: Superseded by D-15 (Copr aggregation layer removed). **Further updated 2026-05-01**: `ublue-os/packages` COPR retired entirely from `build.sh` `PERSISTENT_COPRS` alongside the Bazaar→GNOME-Software swap. Only `docker-ce-stable` remains as a build-time third-party repo.
 
-**Historical context preserved**: The original deliberation about which third-party repos to consume vs. fork (helium dropped, bazaar not forked, docker-ce consumed upstream) is independent of Copr and still stands.
+**Historical context preserved**: The original deliberation about which third-party repos to consume vs. fork (helium dropped, bazaar not forked, docker-ce consumed upstream) is independent of Copr and still stands. Bazaar itself is now out of scope for the image entirely.
 
 ---
 
-## D-03 — bazaar NOT forked: consume from ublue-os/packages directly
+## D-03 — bazaar NOT forked: consume from ublue-os/packages directly (RETIRED 2026-05-01)
 
-**Choice**: `sideral-base.spec` declares `Requires: bazaar` and dnf resolves it from the `ublue-os/packages` COPR enabled in `build.sh`. We don't host or maintain bazaar.
+**Status**: Retired 2026-05-01. Bazaar removed from the image entirely; replaced by `gnome-software` + `gnome-software-rpm-ostree` from Fedora main. The `ublue-os/packages` COPR is no longer enabled in `build.sh`. Reasoning for the swap captured in `.specs/features/sideral/context.md` decision #6 banner: portability (gnome-software has no DE-specific shell extension dependency, easing future non-GNOME variants), unified rpm-ostree-image-update + flatpak GUI surface, simpler repo set. Flatpak preferred over RPM via dconf default `org.gnome.software.packaging-format-preference=['flatpak:flathub','flatpak','rpm']`.
 
-**Reasoning**: `ublue-os/packages` is the de-facto canonical bazaar packaging on Fedora — used by Bluefin, Bazzite, Aurora. Active F43 chroot, fresh builds, broad community trust. We have zero patches to carry. Forking would be load-bearing maintenance for the same RPM ublue ships.
+**Original choice (preserved for posterity)**: `sideral-base.spec` declared `Requires: bazaar` and dnf resolved it from the `ublue-os/packages` COPR enabled in `build.sh`. We didn't host or maintain bazaar.
 
-**Trade accepted**: We ride ublue's release cadence. If bazaar lands a bad release upstream, we wait or pin. Acceptable for a personal image.
-
-**Why this survives the Copr → inline-RPM switch unchanged**: The decision is "consume bazaar from upstream rather than fork it" — independent of whether we publish our own RPMs through Copr or build them inline. `sideral-base.spec` still declares `Requires: bazaar`; the inline-build path's `dnf5 install /tmp/rpmbuild/RPMS/noarch/sideral-*.rpm` still resolves that requirement against the build-time-enabled upstream COPR exactly the same way the published-Copr path would have.
+**Original reasoning**: `ublue-os/packages` is the de-facto canonical bazaar packaging on Fedora — used by Bluefin, Bazzite, Aurora. Active F43 chroot, fresh builds, broad community trust. Zero patches to carry. Forking would have been load-bearing maintenance for the same RPM ublue ships. Decision was correct for the bazaar-era; the swap to gnome-software is a separate concern (DE-portability, not "should we fork bazaar").
 
 ---
 

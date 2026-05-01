@@ -10,7 +10,7 @@ Discussion outcomes for ambiguities flagged in `spec.md`. Each row is the canoni
 
 ## 2. Desktop session
 
-**Decision:** **Drop Hyprland entirely.** Desktop = GNOME Shell + tiling-shell (tiled-window management) + peer extensions (appindicator, dash-to-panel, bazaar-integration, rounded-window-corners).
+**Decision:** **Drop Hyprland entirely.** Desktop = GNOME Shell + tiling-shell (tiled-window management) + peer extensions (appindicator, dash-to-panel, rounded-window-corners). *(2026-05-01: bazaar-integration removed alongside the Bazaar→GNOME-Software swap; see decision #6 banner.)*
 **Why:** User chose tiling-shell for simplicity over pop-shell / forge. GNOME is already the primary session in silverblue-main; tiling-shell layers a Windows-11-like snap-assist flow on top. Hyprland is redundant.
 **Implementation:**
 - Remove from `packages.txt`: hyprland, hyprpaper, hyprlock, hypridle, hyprpolkitagent, hyprcursor, hyprshot, xdg-desktop-portal-hyprland, rofi-wayland, wlogout, SwayNotificationCenter, astal*, aylurs-gtk-shell2, brightnessctl, playerctl, cliphist, grim, slurp, swappy
@@ -45,12 +45,14 @@ flathub/it.mijorus.smile
 
 ## 6. GNOME Shell extensions
 
+> ⚠ **Bazaar→GNOME-Software swap, 2026-05-01.** App store moved from `bazaar` (ublue-os/packages COPR, GNOME-Shell-extension bundled) to `gnome-software` + `gnome-software-rpm-ostree` (Fedora main, ships in silverblue-main:43 base). Reasons: portability (gnome-software has no DE-specific shell extension dependency, so future non-GNOME variants would have an easier path), unified rpm-ostree-image-update + flatpak GUI surface, drops the `ublue-os/packages` COPR entirely from the image. `packaging-format-preference` dconf default makes flatpak the preferred format when an app is available in both. Bazaar flatpak (`io.github.kolunmi.Bazaar`) NOT re-added — clean break. The historical content below is preserved unchanged for posterity; live state is the post-swap layout.
+
 **Decision:** Layer 3 via RPM + install 2 at image-build time + drop many others.
 
 **Layer via RPM (Fedora main + ublue-os/packages COPR already enabled in silverblue-main):**
 - `gnome-shell-extension-appindicator` (Fedora main — system tray)
 - `gnome-shell-extension-dash-to-panel` (Fedora main — taskbar)
-- `bazaar` (ublue-os/packages COPR — bundles the Bazaar app + Shell extension + GNOME search provider)
+- ~~`bazaar` (ublue-os/packages COPR — bundles the Bazaar app + Shell extension + GNOME search provider)~~ **— removed 2026-05-01.** Replaced by `gnome-software` + `gnome-software-rpm-ostree` (Fedora main).
 
 **Install at image-build time** from extensions.gnome.org (bluefin-style, option B): a script in `build_files/features/gnome-extensions/post-install.sh` that queries `extensions.gnome.org/extension-info/?uuid=<uuid>&shell_version=<N>` at build to resolve the latest compatible `.v<pk>.shell-extension.zip`, downloads it into `/usr/share/gnome-shell/extensions/<uuid>/`, compiles schemas with `glib-compile-schemas --strict`, and merges into the system schema cache. Build deps (`glib2-devel`) installed then removed in the same script.
 
@@ -70,9 +72,9 @@ Rationale vs the other options considered:
 - `user-theme` — not needed by user
 - `caffeine`, `dash-to-dock`, `gsconnect`, `logomenu`, `search-light`, `background-logo` — bluefin enables these; we skip
 
-**Note on Bazaar duplication:** since `bazaar` RPM includes the app GUI, we **drop `io.github.kolunmi.Bazaar` from the flatpak manifest** to avoid duplicate installations. Final flatpak list: **8 apps** post 2026-04-23 cleanup (see decision #5).
+**Note on Bazaar duplication (historical, pre-2026-05-01):** since `bazaar` RPM included the app GUI, we dropped `io.github.kolunmi.Bazaar` from the flatpak manifest. After the 2026-05-01 swap, Bazaar is gone from the image entirely; the flatpak was NOT re-added (clean break). Final flatpak list remains **8 apps**.
 
-**Pre-configured defaults:** Ship captured dconf settings as `/etc/dconf/db/local.d/00-sideral-gnome-shell` (dash-to-panel icon/position, appindicator layout, rounded-corners radius, tiling-shell tiles config, bazaar search-provider toggle). Every user gets these defaults; they can override per-user.
+**Pre-configured defaults:** Ship captured dconf settings as `/etc/dconf/db/local.d/00-sideral-gnome-shell` (dash-to-panel icon/position, appindicator layout, rounded-corners radius, tiling-shell tiles config) plus `/etc/dconf/db/local.d/20-sideral-gnome-software` (`packaging-format-preference=['flatpak:flathub','flatpak','rpm']`, added 2026-05-01). Every user gets these defaults; they can override per-user.
 
 ## 7. Tailscale (deferred)
 
@@ -92,6 +94,7 @@ Rationale vs the other options considered:
 >   - **Removed entirely**: `nix-software-center` (snowfall fetch, never used), `android-tools` (use `nix shell` ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload didn't need).
 >   - **Feature dirs deleted**: `build_files/features/devtools/`, `build_files/features/browser/`.
 > - **Net result:** RPM layer now contains GNOME shell extensions + bazaar + docker-ce stack + fonts only. Everything user-facing is home.nix or flatpak.
+>   *(2026-05-01 update: bazaar replaced by gnome-software + gnome-software-rpm-ostree; net RPM count unchanged.)*
 
 ### RPMs to layer on top of silverblue-main *(historical — see banner above)*
 
@@ -99,8 +102,10 @@ Rationale vs the other options considered:
 - `gnome-shell-extension-appindicator`
 - `gnome-shell-extension-dash-to-panel`
 
-**Bazaar app store (from `ublue-os/packages` COPR, already enabled in base):**
-- `bazaar` — bundles the Bazaar app GUI + `bazaar-integration@kolunmi.github.io` Shell extension + GNOME search provider
+**App store (post-2026-05-01 swap, from Fedora main):**
+- `gnome-software` — GTK4 app store, supports rpm-ostree image upgrades + flatpak install/update
+- `gnome-software-rpm-ostree` — rpm-ostree backend plugin
+- *(Was `bazaar` from `ublue-os/packages` COPR pre-2026-05-01; the COPR is no longer enabled in the shipped image.)*
 
 **Dev tooling (user-approved surgical list):** ⚠ all moved to home.nix in 2026-04-23 cleanup
 - ~~`gcc`, `make`, `cmake`~~ — now via `pkgs.gcc/gnumake/cmake` in `home.packages`
@@ -190,7 +195,7 @@ Rationale vs the other options considered:
 
 ### Size reality check (post-cleanup)
 
-Even **leaner** than the original surgical estimate. RPM additions to silverblue-main:43 are now: 5 GNOME extension/QoL RPMs + bazaar + 4 docker-ce-stack + ~6 font RPMs + nix-installer binary stage = ~16 RPMs and ~150 MB delta over the base. Most user-facing software lives in nix profiles (~/.nix-profile) which add weight on first `home-manager switch` rather than to the image.
+Even **leaner** than the original surgical estimate. RPM additions to silverblue-main:43 are now: 5 GNOME extension/QoL RPMs + gnome-software + gnome-software-rpm-ostree + 4 docker-ce-stack + ~6 font RPMs + nix-installer binary stage = ~17 RPMs and ~150 MB delta over the base. Most user-facing software lives in nix profiles (~/.nix-profile) which add weight on first `home-manager switch` rather than to the image. *(2026-05-01: bazaar swapped for gnome-software + plugin; gnome-software is likely already in base, so true delta is +1 small plugin RPM minus the bazaar RPM — roughly net-neutral.)*
 
 ### Shells
 

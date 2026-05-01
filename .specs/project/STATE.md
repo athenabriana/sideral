@@ -3,80 +3,85 @@
 Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current feature
-- None. `sideral-rpms` Phase R landed and CI is green (run 25188178498, sha `e06bc39`, 6m24s end-to-end). All 8 sub-packages build inline, install cleanly, and the image was signed + pushed to `ghcr.io/athenabriana/sideral:latest`. Two deferred ACRs remain (29: README signed-rebase cutover, 38: drift-detection CI job) — both documented in `.specs/features/sideral-rpms/spec.md` Rollout § "Deferred follow-ups" and intentionally non-blocking.
+- **`chezmoi-home`** — replaces `nix-home` (retired pre-VM-verification 2026-05-01). 23 requirements across 6 user stories, 9 locked decisions. See `.specs/features/chezmoi-home/spec.md`, `context.md`, and `tasks.md`. Drops nix entirely (composefs/SELinux/post-upgrade frictions on Fedora atomic 42+), restores 14 CLI tools as RPMs in a new `sideral-cli-tools` sub-package, adds VS Code via Microsoft repo (restores ATH-14/15), centralizes shell-init wiring in `/etc/profile.d/sideral-cli-init.sh` shipped by `sideral-shell-ux`. User runs `chezmoi init --apply <repo>` themselves — no auto-bootstrap service. **Source-tree changes landed 2026-05-01 via `/spec-run chezmoi-home` (T01–T14)**; `just build` verification pending (T15) — needs a host with `podman` + `shellcheck`.
+
+## Past feature (retired pre-shipping)
+- `nix-home` — designed and implemented locally (40 requirements, 15 locked decisions) but **retired before VM verification on 2026-05-01**. Reason: composefs vs nix-installer ostree planner ([nix-installer#1445](https://github.com/DeterminateSystems/nix-installer/issues/1445)), SELinux mislabel of /nix store paths ([#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383), still open), and `/nix` + nix-daemon disappearing after `rpm-ostree upgrade` on F42+ (multiple Universal Blue forum reports). Replaced by `chezmoi-home`. Spec preserved at `.specs/features/nix-home/spec.md` for historical reference. See `.specs/features/chezmoi-home/context.md` D-01.
 
 ## Past feature (verified)
-- `sideral-rpms` — 26 requirements, inline RPM build inside the Containerfile (rpmbuild + `rpm -Uvh --replacefiles` + `rpm -e` toolchain teardown in one RUN layer). Renamed from `sideral-copr` 2026-04-29 when the Copr publishing path was dropped (D-15). See `.specs/features/sideral-rpms/spec.md`. Signing requirements (ACR-27..29) still parked until user flips to signed-rebase; see `packages/sideral-signing/UPGRADE.md`.
-
-## Past feature (verified-pending-VM)
-- `nix-home` — migrates user-level config to nix + home-manager, collapses `/etc/skel` to a single `home.nix`, moves mise from RPM to nix. 40 requirements across 7 user stories. See `.specs/features/nix-home/spec.md`.
+- `sideral-rpms` — 26 requirements, inline RPM build inside the Containerfile (rpmbuild + `rpm -Uvh --replacefiles` + `rpm -e` toolchain teardown in one RUN layer). Renamed from `sideral-copr` 2026-04-29 when the Copr publishing path was dropped (D-15). See `.specs/features/sideral-rpms/spec.md`. Phase R landed 2026-04-30 (CI run 25188178498, sha `e06bc39`, 6m24s end-to-end). Signing requirements (ACR-27..29) still parked until user flips to signed-rebase; see `packages/sideral-signing/UPGRADE.md`.
 
 ## Roadmap
-- See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog (`gnome-extras`, `ublue-adopt`, `nix-extras-v2`, hardware, security) features. `image-ops` entry criterion (`nix-home` Verified AND `sideral-rpms` Phase R landed) is half-met — only `nix-home` VM verification remains.
+- See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog features. `image-ops` entry criterion now reads: `chezmoi-home` shipped AND `sideral-rpms` Phase R landed (was: `nix-home` Verified). The `nix-extras-v2` backlog entry retired alongside `nix-home`.
 
 ## Previous feature
 - `sideral` — fork from `fedora-sideral`/Hyprland lineage into GNOME + tiling-shell on `silverblue-main:43`. 27 requirements across 5 user stories. See `.specs/features/sideral/spec.md`.
-  - Superseded by `nix-home`: ATH-17, ATH-23, ATH-24, ATH-26 (mise + VS Code extensions moved into home.nix; first-login services collapsed to one).
-  - Superseded by 2026-04-23 cleanup: ATH-12 (helium → Zen flatpak), ATH-14, ATH-15, ATH-18 (VS Code RPM removed), ATH-13 count (7 → 8 flatpaks).
-  - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, dotfile workflow, mise lazy-install behavior).
+  - Superseded by `nix-home` then partially restored by `chezmoi-home`: ATH-14, ATH-15 (vscode.repo + RPM install) restored via chezmoi-home CHM-09. ATH-17 restored as image-build-time RPM (no first-login service). ATH-23, ATH-24, ATH-26 stay superseded (mise config + bashrc activation now user-managed via chezmoi).
+  - Superseded by 2026-04-23 cleanup: ATH-12 (helium → Zen flatpak), ATH-18 (now superseded again — VS Code is back as RPM), ATH-13 count (7 → 8 flatpaks).
+  - Still valid: ATH-01..11, ATH-16, ATH-19..22, ATH-25, ATH-27 (image build, GNOME session, flatpak first-boot mechanics, mise lazy-install behavior).
 
 ## Pending decisions
-- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/sideral-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/sideral-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`. (This is the same work as ACR-29.)
+- **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `packages/sideral-signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `packages/sideral-signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`. (Same work as ACR-29.)
 
 ## Locked decisions
-See `.specs/features/sideral/context.md` (9 decisions, some now superseded), `.specs/features/nix-home/context.md` (15 decisions), and `.specs/features/sideral-rpms/context.md` (15 decisions, 4 superseded by D-15 inline-rpm). Highlights:
+See `.specs/features/sideral/context.md` (9 decisions, some now superseded), `.specs/features/nix-home/context.md` (15 decisions, **all superseded — feature retired**), `.specs/features/sideral-rpms/context.md` (15 decisions, 4 superseded by D-15 inline-rpm), and `.specs/features/chezmoi-home/context.md` (9 decisions). Highlights:
 - Desktop: GNOME + tiling-shell, Hyprland dropped entirely.
 - Browser: Zen Browser via flatpak (`app.zen_browser.zen`). helium-bin dropped 2026-04-23 due to imput/helium COPR's `/opt/helium` unpack conflict with Silverblue's tmpfiles-managed `/opt`; supersedes earlier "helium via COPR" decision.
-- Editor: `vscode` via `programs.vscode` in home.nix (with `ms-vscode-remote.remote-ssh` + `remote-containers`); supersedes ATH-14, ATH-15, ATH-17 (VS Code RPM + sideral-vscode-setup.service removed; vscode.repo file deleted).
+- Editor: VS Code via Microsoft RPM repo (chezmoi-home D-06). Restores ATH-14/15. Was briefly `programs.vscode` in home.nix during nix-home (2026-04-23 → 2026-05-01).
 - Container: `docker-ce` + `containerd.io` from docker-ce-stable repo.
-- **User layer:** nix + home-manager is the sole source of user-level config. `/etc/skel` reduced to one file: `~/.config/home-manager/home.nix`.
-- **Nix:** upstream CppNix via `NixOS/experimental-nix-installer`, baked binary at `/usr/libexec/nix-installer`, first-boot `ostree` planner, `/nix` bind-mounted from `/var/lib/nix`, `restorecon` post-install, default NixOS behavior (flakes off, channels).
-- **home-manager:** channels-based (release-24.11), bootstrapped on first login via user systemd unit, starter `home.nix` declares bash/starship/git/atuin + `pkgs.mise` + inlined mise config.
-- **2026-04-23 cleanup — RPM layer narrowed to system-integration only.** Single sweep removed every plain CLI from the RPM layer; everything user-facing now lives in nix or flatpak. Specifically:
-  - **Removed RPMs** (now via home.nix): `gh`, `starship`, `gcc`, `make`, `cmake`, `git-lfs`, `git-subtree`, `git-credential-libsecret`, `code` (VS Code).
-  - **Removed RPMs** (no replacement, niche/unused): `nix-software-center` (snowfallorg fetch), `android-tools` (use `nix shell` ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload never needed).
-  - **Removed RPM** (replaced by flatpak): `helium-bin` (tmpfiles `/opt` conflict on Silverblue, see Browser entry above) → Zen Browser via flatpak.
-  - **Removed feature dirs**: `build_files/features/devtools/` and `build_files/features/browser/` deleted entirely. Remaining RPM features: gnome, container, fonts, gnome-extensions only.
-  - **home.nix integration**: `programs.vscode` (with `ms-vscode-remote.remote-ssh` + `remote-containers`), `programs.git` (with `lfs.enable` + `credential.helper = "libsecret"`), `programs.gh`, `programs.starship`, `pkgs.gcc`/`gnumake`/`cmake` in `home.packages`.
-  - **`/etc/distrobox/distrobox.conf`** added — auto-mounts `/nix`, `/var/lib/nix`, `/etc/nix` into every distrobox container; bashrc snippet sources nix-daemon profile so `nix`, `nix-shell`, `nix-build` work inside containers without per-container flags.
-- **mise:** moved from RPM to nix (via `home.packages`); `mise.jdx.dev/rpm/` repo and `sideral-mise-install.service` removed. Config inlined into `home.nix` via `home.file.".config/mise/config.toml".text`.
-- **Dropped from mise toolchain**: `direnv` (user declined), `act` (on-demand via `nix profile install`); `atuin` moved to `programs.atuin.enable`. mise toolchain now 12 tools (was 15).
-- Shell: bash only; `~/.bashrc` is fully home-manager-generated (was hand-authored `/etc/skel/.bashrc`).
+- **User layer (2026-05-01):** chezmoi (Fedora-packaged Go binary) for user-driven dotfile management. User runs `chezmoi init --apply <repo>` once after rebase. CLI integrations (starship/atuin/zoxide/mise/fzf) wired centrally via `/etc/profile.d/sideral-cli-init.sh` shipped by `sideral-shell-ux`. **Nix and home-manager dropped** — see chezmoi-home D-01 (composefs/SELinux/post-upgrade frictions on Fedora atomic 42+).
+- **CLI tools (2026-05-01):** new `sideral-cli-tools` meta sub-package with `Requires:` on chezmoi + 13 Fedora-supplied RPMs + `code`. mise via persistent `mise.jdx.dev/rpm/` repo; VS Code via persistent `packages.microsoft.com/yumrepos/vscode` repo (same pattern as docker-ce.repo).
+- **2026-04-23 cleanup — RPM layer narrowed to system-integration only.** Single sweep removed every plain CLI from the RPM layer with the intent of putting everything user-facing in nix or flatpak. **NOTE 2026-05-01:** with `nix-home` retired in favor of `chezmoi-home`, the moves to `home.nix` are being reversed — those tools come back as RPMs via the new `sideral-cli-tools` sub-package. Original cleanup details:
+  - **Removed RPMs** (originally moved to home.nix; restored via `sideral-cli-tools` 2026-05-01): `gh`, `starship`, `gcc`, `make`, `cmake`, `git-lfs`, `code` (VS Code). `git-subtree` is bundled in core `git`, no separate package needed; `git-credential-libsecret` ships with Fedora's `git` package.
+  - **Removed RPMs** (no replacement, niche/unused — still removed): `nix-software-center` (snowfallorg fetch, n/a now), `android-tools` (use distrobox ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload never needed).
+  - **Removed RPM** (replaced by flatpak — still): `helium-bin` (tmpfiles `/opt` conflict on Silverblue) → Zen Browser via flatpak.
+  - **Removed feature dirs**: `build_files/features/devtools/` and `build_files/features/browser/` deleted entirely. Remaining feature dirs: gnome, container, fonts, gnome-extensions only.
+  - **`/etc/distrobox/distrobox.conf`** — kept, but **`/nix` mount lines removed 2026-05-01** with chezmoi-home (D-01). Distrobox containers no longer share a host nix store (there is none).
+- **mise (2026-05-01):** restored as RPM via persistent `mise.jdx.dev/rpm/` repo (same pattern as docker-ce.repo). User-side config (`~/.config/mise/config.toml`) is chezmoi-managed; sideral does not ship a default. Brief earlier history: moved from RPM to nix `home.packages` during nix-home (2026-04-23), reverted with chezmoi-home.
+- **Dropped from mise toolchain** (still applies): `direnv` (user declined), `act` (rare use, distrobox covers). `atuin` is RPM-installed and shell-init wired via `/etc/profile.d/sideral-cli-init.sh` (was: `programs.atuin.enable` in home.nix). User picks their own toolchain in their chezmoi'd `~/.config/mise/config.toml`.
+- Shell: bash only. `~/.bashrc` is user-managed (via chezmoi or hand). System integrations (starship/atuin/zoxide/mise/fzf init lines) live in `/etc/profile.d/sideral-cli-init.sh` per chezmoi-home D-05.
 - Fonts: Source Serif 4 + Source Sans 3 built from Adobe GitHub at image time; cascadia-code, jetbrains-mono, adwaita, opendyslexic from Fedora.
 - Flatpaks: **8 curated refs** via systemd oneshot on first boot — Zen Browser + Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile.
-- No distrobox pre-bake (DistroShelf flatpak available on demand). `/nix` IS auto-mounted into every distrobox.
-- **Host-first, distrobox-shared:** mise and nix run on the host; distrobox containers share the host's `/nix` store via the new auto-mount config.
-- No brew (user declined; nix via `nix profile install` covers ad-hoc CLI tooling, mise covers language runtimes).
+- No distrobox pre-bake (DistroShelf flatpak available on demand).
+- **Host-only:** mise and chezmoi run on the host. Distrobox containers install their own tooling if needed (no shared `/nix`, no shared user profile).
+- No brew, no nix (user declined both; ad-hoc CLI tooling via distrobox or RPM, language runtimes via mise).
 
 ## Known blockers
 None yet.
 
-## nix-home implementation status (Apr 2026)
-All 9 tasks implemented locally. Local gate limited to `bash -n` + INI parse + grep invariants
-(shellcheck/podman/just not on this dev host). Full `just build` + `bootc container lint` runs in
-CI. Runtime criteria (NXH-06/27/28) require VM rebase to verify.
-
-**Spec deviation**: NXH-01 URL/asset text is stale. Upstream renamed
-`experimental-nix-installer` → `nix-installer`; x86_64 asset is `nix-installer-x86_64-linux`
-(dropped the `-unknown-linux-gnu` suffix). Using `2.34.5` pin. Spec intent (upstream CppNix via
-installer's ostree planner, per D-01) unchanged. See `.specs/features/nix-home/tasks.md`
-SPEC-DEV-01. Update spec.md NXH-01 text when promoting to Verified.
+## chezmoi-home implementation status (May 2026)
+Spec landed 2026-05-01. Source-tree implementation landed same day (T01–T14, 14 of 15 tasks). T15 (`just build` verification) deferred — needs a host with podman + shellcheck. Affected paths:
+- `os/build.sh` — remove nix-installer fetch + `NIX_INSTALLER_VERSION`; register vscode.repo + mise.repo at build time; `dnf5 install -y code mise` in the same RUN; `FEATURES=` array gains the new `cli` entry (CHM-23) before `gnome-extensions`.
+- `os/features/cli/packages.txt` — **new** (CHM-23): the 13 Fedora-main RPMs (`chezmoi starship atuin fzf bat eza ripgrep zoxide gh git-lfs gcc make cmake`). Install order ensures all 15 `sideral-cli-tools` Requires are present in the rpmdb before the inline-RPM `rpm -Uvh` step runs.
+- `os/packages/sideral-services/*` — remove nix-* and home-manager-setup unit files **and** any nix-related `%post`/`%postun`/`Requires:`/comments in `sideral-services.spec` (CHM-03 spec-cleanup clause).
+- `os/packages/sideral-base/src/etc/distrobox/distrobox.conf` — drop `/nix`, `/var/lib/nix`, `/etc/nix` mounts and the `nix-daemon.sh` source line.
+- `os/packages/sideral-base/src/etc/yum.repos.d/` — add `mise.repo` and `vscode.repo` (persistent repo files, same pattern as `docker-ce.repo`; vscode.repo uses `gpgkey=https://packages.microsoft.com/keys/microsoft.asc` per CHM-09).
+- `os/packages/sideral-user/*` — **package deleted entirely**. /etc/skel ships nothing user-facing now; sideral-base.spec drops `Requires: sideral-user`.
+- `os/packages/sideral-selinux/*` — **package deleted entirely**. The file_contexts.local rules were /nix-only; with nix gone the rules match nothing and the %post `restorecon -RF /nix` is a no-op. sideral-base.spec drops `Requires: sideral-selinux`.
+- `os/packages/sideral-shell-ux/*` — add `/etc/profile.d/sideral-cli-init.sh` + `/etc/profile.d/sideral-onboarding.sh`; **remove** the obsolete `/etc/profile.d/sideral-hm-status.sh` from both `src/` and `%files` (home-manager bootstrap waiter, no longer needed — CHM-13).
+- `os/packages/sideral-cli-tools/*` — new sub-package: spec + empty `src/` (meta-package, no files). 15 `Requires:` (14 small + `code`).
+- `Justfile` — remove `home-edit` / `home-apply` / `home-diff`.
+- `README.md` — add "Set up dotfiles" section (chezmoi flow); add retrospective "Why not nix?" paragraph linking to chezmoi-home D-01; remove all other nix/home-manager mentions.
+- `home/` directory at repo root — delete.
 
 ## Lessons
-- **docker-ce repo is both shipped AND registered at build time.** Shipped file (`/etc/yum.repos.d/docker-ce.repo`) is for `rpm-ostree upgrade` to see. Inline `dnf5 config-manager addrepo --from-repofile=<URL>` in `build.sh` is for the build itself — the shipped copy isn't available during the RUN step because `COPY system_files/etc /etc` happens *after* `build.sh`.
+- **docker-ce repo is both shipped AND registered at build time.** Shipped file (`/etc/yum.repos.d/docker-ce.repo`) is for `rpm-ostree upgrade` to see. Inline `dnf5 config-manager addrepo --from-repofile=<URL>` in `build.sh` is for the build itself — the shipped copy isn't available during the RUN step because `COPY system_files/etc /etc` happens *after* `build.sh`. (Same pattern now applies to `mise.repo` and `vscode.repo` per chezmoi-home D-03.)
 - **`--allowerasing` is required** on the dnf5 install that adds `containerd.io`, because Fedora's `containerd` is already present in `silverblue-main:43` and dnf can't swap it without explicit permission.
 - **GNOME-extension download at build time** needs the real `gnome-shell --version` of the running container — we call it inside the container (since silverblue-main ships gnome-shell), then query `extensions.gnome.org/extension-info/?uuid=<uuid>&shell_version=<N>`. `glib2-devel`/`jq`/`unzip` are installed and removed in the same script so they don't bloat the final layer.
 - **`dconf update` must run after `COPY system_files/etc /etc`.** The Containerfile now has a second RUN step for that, followed by the final `ostree container commit`.
-- **flatpak-install service is system-level, not user.** System-wide flatpaks live under `/var/lib/flatpak`, which is mutable on atomic. User-level would require a per-user unit, which we already use for `mise` and `vscode-setup`.
-- **Persistent COPR pattern**: repos enabled during build.sh + kept enabled in the shipped image let `rpm-ostree upgrade` pull new releases without touching the image. Currently used for `ublue-os/packages` (bazaar). Same applies to docker-ce.repo (Docker Inc's official dnf repo, shipped as /etc/yum.repos.d/docker-ce.repo).
-- **Dev host shell used here had no podman / just / shellcheck**, so the final gate was limited to `bash -n` on shell scripts, YAML parse, and INI parse on dconf files. The real `just build` gate runs in CI.
+- **flatpak-install service is system-level, not user.** System-wide flatpaks live under `/var/lib/flatpak`, which is mutable on atomic. User-level would require a per-user unit.
+- **Persistent repo pattern**: repos enabled during build.sh + kept enabled in the shipped image let `rpm-ostree upgrade` pull new releases without touching the image. Currently used for `docker-ce.repo`. Extending to `mise.repo` and `vscode.repo` per chezmoi-home D-03. *(2026-05-01: `ublue-os/packages` COPR retired alongside the Bazaar→GNOME-Software swap; gnome-software comes from Fedora main, no extra repo needed.)*
 - **Phase R lessons (2026-04-30, run 25188178498)**:
-  - **`/ctx` bind-mount layout is `/ctx/build_files/...`, not `/ctx/...`** — Containerfile does `COPY build_files /build_files` then mounts the carrier at `/ctx`, so features live at `/ctx/build_files/features`. A wrong `FEATURES_DIR=/ctx/features` made the per-feature install loop silently no-op (every `[ -f .../packages.txt ]` false, no error), and the failure surfaced two RUN layers later when `rpm -Uvh sideral-base` couldn't resolve `bazaar/docker-ce/containerd.io`. Lesson: when a downstream RPM Requires-check fails for packages you "know" are installed, suspect the upstream install loop ran zero iterations.
+  - **`/ctx` bind-mount layout is `/ctx/build_files/...`, not `/ctx/...`** — Containerfile does `COPY build_files /build_files` then mounts the carrier at `/ctx`, so features live at `/ctx/build_files/features`. A wrong `FEATURES_DIR=/ctx/features` made the per-feature install loop silently no-op. Lesson: when a downstream RPM Requires-check fails for packages you "know" are installed, suspect the upstream install loop ran zero iterations.
   - **RPM file-path Requires resolves through the rpmdb, not the filesystem.** `Requires: /usr/libexec/nix-installer` against a curl-staged binary (no owning package) can never satisfy. Use `ConditionPathExists=` in the systemd unit instead.
-  - **`rpm -Uvh --replacefiles --replacepkgs` does not bypass package-level `Conflicts:`.** `--replacefiles` only handles file-ownership transfer. silverblue-main:43 ships `ublue-os-signing` and our `sideral-signing.spec` declares `Conflicts:` against it (intentionally — we target a different sigstore policy identity). Containerfile must `rpm -e --nodeps ublue-os-signing` *before* the install step. `--nodeps` is safe because nothing in the base image Requires it.
-  - **`set -o pipefail` makes `var=$(... | grep ...)` a hidden landmine** when the grep can find nothing. The unauthenticated GitHub-API call in `features/fonts/post-install.sh` for adobe-fonts/source-sans hit a rate limit on the second back-to-back call, returned an error JSON without any `browser_download_url`, grep emitted nothing, and the whole image build aborted *before* reaching the script's own "Could not resolve URL" fallback. Pattern: capture the response into a variable first, then `grep ... || true`, then validate.
+  - **`rpm -Uvh --replacefiles --replacepkgs` does not bypass package-level `Conflicts:`.** `--replacefiles` only handles file-ownership transfer. silverblue-main:43 ships `ublue-os-signing` and our `sideral-signing.spec` declares `Conflicts:` against it (intentionally). Containerfile must `rpm -e --nodeps ublue-os-signing` *before* the install step.
+  - **`set -o pipefail` makes `var=$(... | grep ...)` a hidden landmine** when the grep can find nothing. The unauthenticated GitHub-API call in `features/fonts/post-install.sh` for adobe-fonts/source-sans hit a rate limit on the second back-to-back call, returned an error JSON without any `browser_download_url`, grep emitted nothing, and the whole image build aborted. Pattern: capture the response into a variable first, then `grep ... || true`, then validate.
+- **2026-05-01 — nix on Fedora atomic 42+ is fragile.** Three issues remain unresolved upstream as of late 2025: composefs vs ostree planner ([nix-installer#1445](https://github.com/DeterminateSystems/nix-installer/issues/1445)), SELinux mislabel of /nix paths ([#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383)), /nix daemon disappearing after rpm-ostree upgrade. Decision to retire nix-home was made before paying the production cost. See chezmoi-home D-01.
+- **2026-05-01 — Bazaar → GNOME Software swap.** App store moved from `bazaar` (ublue-os/packages COPR, GNOME-Shell-extension bundled) to `gnome-software` + `gnome-software-rpm-ostree` (Fedora main). `org.gnome.software.packaging-format-preference` dconf default biases gnome-software toward flatpak when an app is available in both formats. `ublue-os/packages` COPR removed from `build.sh` `PERSISTENT_COPRS`. Bazaar flatpak NOT re-added — clean break. Affected: `os/features/gnome/packages.txt`, `os/packages/sideral-base/sideral-base.spec` (drop `Requires: bazaar`), `os/packages/sideral-dconf/src/etc/dconf/db/local.d/20-sideral-gnome-software` (new), `os/build.sh`, `os/Containerfile` (banner + comment). ATH-04 reduced from 5 → 4 enabled extensions (bazaar-integration gone). Reasoning: portability across future non-GNOME variants (gnome-software has no DE-specific shell-extension dependency), unified rpm-ostree-image-update + flatpak GUI surface, simpler repo set.
 
 ## Deferred
 - Tailscale daemon + GNOME indicator.
-- ISO / QCOW2 / bootc-image-builder outputs.
+- ISO / QCOW2 / bootc-image-builder outputs (ISO landed 2026-04-30; qcow2/raw still skipped).
 - Matrix builds (aarch64).
+- Bitwarden CLI integration via chezmoi templates (chezmoi-home D-07 — user can opt in by editing their chezmoi source tree; image stays neutral).
+- VS Code extension auto-install via `code --install-extension` in /etc/profile.d/ (chezmoi-home open concern; not worth the time-to-first-shell penalty for now).

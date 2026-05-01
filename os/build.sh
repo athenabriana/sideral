@@ -6,48 +6,33 @@
 #   post-install.sh    — optional script, run after packages install
 #
 # Repo strategy:
-#   • The docker-ce-stable repo is registered here AND shipped as
-#     /etc/yum.repos.d/docker-ce.repo so `rpm-ostree upgrade` can pull new
-#     Docker releases between image rebuilds.
-#   • ublue-os/packages COPR stays enabled in the shipped image to source
-#     bazaar (GNOME app store) and any future ublue-shared RPMs.
-#   • Any other build-time repos would be disabled before image commit.
+#   • Three "persistent" repos are registered here AND shipped under
+#     /etc/yum.repos.d/ (via sideral-base) so `rpm-ostree upgrade` can pull
+#     new releases between image rebuilds:
+#       - docker-ce-stable      (docker-ce + containerd.io)
+#       - mise.jdx.dev/rpm      (mise)
+#       - packages.microsoft.com (code / VS Code)
+#   • The shipped /etc/yum.repos.d/ copies aren't yet on disk during this
+#     RUN step (sideral-base is built later inline), so we register each
+#     repo from upstream URL here and rely on the shipped copy taking over
+#     post-install.
 
 set -euo pipefail
 
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
-# ── Pinned nix-installer (upstream CppNix, ostree planner) ──────────────
-# Staged at /usr/libexec/nix-installer; invoked by sideral-nix-install.service
-# on first boot. Upstream repo was renamed from experimental-nix-installer
-# to nix-installer (same code, no longer "experimental"); both URLs work.
-NIX_INSTALLER_VERSION="2.34.5"
-NIX_INSTALLER_URL="https://github.com/NixOS/nix-installer/releases/download/${NIX_INSTALLER_VERSION}/nix-installer-x86_64-linux"
-
-log "Staging nix-installer ${NIX_INSTALLER_VERSION} at /usr/libexec/nix-installer"
-curl -sSfL "$NIX_INSTALLER_URL" -o /usr/libexec/nix-installer
-chmod 0755 /usr/libexec/nix-installer
-
 FEATURES_DIR="/ctx/features"
-FEATURES=(gnome container fonts gnome-extensions)
+FEATURES=(cli gnome container fonts gnome-extensions)
 
-# ── COPRs that stay enabled in the shipped image (for `rpm-ostree upgrade`) ──
-# Universal Blue's curated packages repo — source of `bazaar` (GNOME app
-# store) and other ublue-specific RPMs. Same COPR used by Bazzite/Aurora.
-PERSISTENT_COPRS=(
-    ublue-os/packages
-)
-
-# ── Enable persistent COPRs ─────────────────────────────────────────────
-log "Enabling persistent COPRs"
-for repo in "${PERSISTENT_COPRS[@]}"; do
-    dnf5 -y copr enable "$repo"
-done
-
-# ── Register docker-ce-stable repo for build-time install ───────────────
-# (The same repo file is also shipped under system_files/ for post-boot upgrades.)
+# ── Register persistent repos for build-time install ────────────────────
 log "Registering docker-ce-stable repo"
 dnf5 -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+
+log "Registering mise repo"
+dnf5 -y config-manager addrepo --from-repofile=https://mise.jdx.dev/rpm/mise.repo
+
+log "Registering Microsoft VS Code repo"
+dnf5 -y config-manager addrepo --from-repofile=https://packages.microsoft.com/yumrepos/vscode/config.repo
 
 # ── Per-feature install loop ────────────────────────────────────────────
 for feature in "${FEATURES[@]}"; do
@@ -69,6 +54,14 @@ for feature in "${FEATURES[@]}"; do
         "$feature_dir/post-install.sh"
     fi
 done
+
+# ── mise + code from non-Fedora persistent repos ────────────────────────
+# Listed separately because they don't live in any features/*/packages.txt
+# (those are reserved for Fedora-main packages that share the standard install
+# path). Together with the cli feature's 13 RPMs, this satisfies all 15
+# Requires: of sideral-cli-tools when its inline-built RPM lands later.
+log "Installing mise + code from persistent repos"
+dnf5 install -y --setopt=install_weak_deps=False mise code
 
 # /etc/os-release is now owned by sideral-base (sideral-rpms feature).
 # Lives at packages/sideral-base/src/etc/os-release; the Containerfile's
