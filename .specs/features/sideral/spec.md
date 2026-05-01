@@ -15,8 +15,8 @@ This spec describes the **original sideral feature** as conceived. Substantial p
 ### Superseded by 2026-04-23 RPM cleanup
 | Original ATH-* | What changed |
 |---|---|
-| **ATH-12** | Browser is **`helium-bin` RPM** via `imput/helium` COPR (baked into the OCI image at build time). 2026-04-23 → 2026-05-01: briefly replaced with `app.zen_browser.zen` flatpak after a `/opt/helium` cpio conflict on a live Silverblue host; restored as RPM 2026-05-01 because the OCI Containerfile build path treats `/opt` as a normal directory, sidestepping the conflict. |
-| **ATH-13** | Flatpak count is now **7** (was: 7 → 8 → 7 — Zen added when helium dropped 2026-04-23, removed when helium restored 2026-05-01) |
+| **ATH-12** | Browser is **Helium via the community `helium` Flatpak remote** from [`ShyVortex/helium-flatpak`](https://github.com/ShyVortex/helium-flatpak) (no Flathub listing, no upstream flatpak; remote serves an ostree archive-z2 wrapping `imputnet/helium-linux` prebuilt binaries from GitHub Pages, GPGVerify=false). Preinstalled at image build by `os/build.sh` after registering the remote; updates pulled by the standard `flatpak update` cadence (run nightly by inherited `ublue-os-update-services`). History: 2026-04-23 hit `/opt/helium` cpio conflict on a live Silverblue host with `imput/helium` COPR → swap to `app.zen_browser.zen` flatpak. 2026-05-01 attempt #1: re-tried `imput/helium` COPR betting that the OCI Containerfile build path would behave differently — same `/opt/helium` cpio conflict broke the build. 2026-05-01 attempt #2: shipped as a local `.flatpak` bundle from ShyVortex's GH Releases — reverted before merge because bundles have no remote and `flatpak update` can't refresh them. 2026-05-01 attempt #3 (current): community `helium` Flatpak remote (ShyVortex GH Pages, ostree archive-z2). Preinstalled at image build; standard update flow. |
+| **ATH-13** | Flatpak count is **8** (Helium from `helium` remote + 7 GNOME apps from flathub). Curated set is **preinstalled at image build** into `/var/lib/flatpak`; ISO ships with everything present. The first-boot service (`sideral-flatpak-install.service`) repurposed to forward-compat self-heal — re-applies remotes + manifest every boot so future image rebases that add new entries install on existing user systems. |
 | **ATH-14** | `/etc/yum.repos.d/vscode.repo` deleted; VS Code now via `programs.vscode` in home.nix |
 | **ATH-15** | `sideral-vscode-setup.service` deleted; extensions installed declaratively via home.nix |
 | **ATH-18** | `rpm-ostree upgrade` no longer pulls VS Code; `home-manager switch` does (faster updates, less coupling) |
@@ -37,7 +37,7 @@ Personal Fedora atomic desktop built directly on `ghcr.io/ublue-os/silverblue-ma
 - [ ] Image `ghcr.io/<user>/sideral:latest` built daily by GH Actions (signed with keyless cosign, tagged `:latest`, `:YYYYMMDD`, `:sha-<short>`)
 - [ ] Rebase + reboot → GNOME session with 5 extensions active and captured dconf settings applied
 - [ ] Custom keybinds active (Ctrl+Alt+T / Super+T → Ptyxis, Ctrl+Shift+Esc → Resources, Ctrl+Alt+Space / Super+. → Smile, Super+Down → minimize)
-- [ ] `helium-bin` (from `imput/helium` COPR) installed — browser is in the image, not via flatpak
+- [ ] Helium browser preinstalled at image build via the community `helium` Flatpak remote (`ShyVortex/helium-flatpak`); updates flow through standard `flatpak update`
 - [ ] `code` (Microsoft VS Code RPM) installed — editor in image; vscode.repo stays enabled for weekly MS updates
 - [ ] First-login user systemd units (`sideral-mise-install.service`, `sideral-vscode-setup.service`) install mise + pre-install `act`/`atuin`/`direnv` + install 3 VS Code extensions (Remote-SSH, Remote-Containers, Azure-Containers)
 - [ ] 7 curated flatpaks auto-install on first boot (systemd oneshot, idempotent)

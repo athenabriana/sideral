@@ -1,21 +1,37 @@
 [Unit]
-Description=Install Sideral OS curated flatpaks on first boot
+Description=Sideral OS flatpak self-heal (remotes + curated set, idempotent)
 Documentation=https://github.com/
 Wants=network-online.target
 After=network-online.target
-# Once the sentinel is written, this unit never runs again.
-ConditionPathExists=!/var/lib/sideral/flatpak-install-done
 
 [Service]
 Type=oneshot
 # Never block boot on network hiccups — the user can re-trigger with `systemctl start sideral-flatpak-install`.
 TimeoutStartSec=600
+# Primary install runs at image build (see os/build.sh) — flatpaks land in
+# /var/lib/flatpak before the image is shipped, factory-seeded to deployed
+# systems on first boot. This service is the forward-compat self-heal:
+# on every boot it re-applies the remotes config + manifest. Useful when:
+#   • An image rebase adds new entries to the manifest. Existing user
+#     systems (whose /var/lib/flatpak was seeded at an older image) pick
+#     up the additions on next boot.
+#   • An image rebase adds a new remote in /etc/sideral-flatpak-remotes.
+#     Same forward-compat path.
+# Per-line idempotency keeps the cost negligible:
+#   • `flatpak remote-add --if-not-exists` is a no-op when present.
+#   • `flatpak info <ref>` skips when the ref is already installed.
 ExecStart=/usr/bin/bash -c '\
     set -u; \
+    remotes=/etc/sideral-flatpak-remotes; \
     manifest=/etc/flatpak-manifest; \
+    if [ -r "$remotes" ]; then \
+        while read -r name url; do \
+            case "$name" in ""|\\#*) continue;; esac; \
+            echo "[remote] $name -> $url"; \
+            flatpak remote-add --system --if-not-exists "$name" "$url" || true; \
+        done < "$remotes"; \
+    fi; \
     [ -r "$manifest" ] || { echo "no manifest at $manifest"; exit 0; }; \
-    mkdir -p /var/lib/sideral; \
-    failed=0; \
     while read -r remote ref; do \
         case "$remote" in ""|\\#*) continue;; esac; \
         if flatpak info "$ref" >/dev/null 2>&1; then \
@@ -23,14 +39,9 @@ ExecStart=/usr/bin/bash -c '\
             continue; \
         fi; \
         echo "[install] $remote $ref"; \
-        flatpak install -y --noninteractive "$remote" "$ref" || failed=1; \
+        flatpak install -y --noninteractive "$remote" "$ref" || true; \
     done < "$manifest"; \
-    if [ "$failed" -eq 0 ]; then \
-        touch /var/lib/sideral/flatpak-install-done; \
-    else \
-        echo "one or more flatpak installs failed; will retry next boot"; \
-        exit 0; \
-    fi'
+    exit 0'
 StandardOutput=journal
 StandardError=journal
 

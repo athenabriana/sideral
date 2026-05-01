@@ -39,11 +39,14 @@ flathub/com.ranfdev.DistroShelf
 flathub/net.nokyan.Resources
 flathub/it.mijorus.smile
 ```
-**Browser:** Helium via the `imput/helium` Fedora COPR (`helium-bin` RPM, baked into the OCI image at build time). NOT a flatpak — see decision #8 history below.
-**History (7 → 8 → 7):**
+**Browser:** Helium via the community `helium` Flatpak remote from [`ShyVortex/helium-flatpak`](https://github.com/ShyVortex/helium-flatpak) (8 flatpaks total). Remote is registered + the app preinstalled at image build by `os/build.sh`; updates flow via standard `flatpak update` — see decision #8 history below.
+**Curated remotes (3):** `flathub`, `fedora` (oci+https://registry.fedoraproject.org), `helium` (https://shyvortex.github.io/helium-flatpak/, GPGVerify=false). All registered system-wide at image build, persisted into the image via `/var/lib/flatpak/repo/config` (factory-seeded to deployed systems on first boot).
+**History (7 → 8 → 7 → 8):**
 - Originally 7: list above without a browser; browser was helium-bin RPM (decision #8 below).
-- 2026-04-23: added `app.zen_browser.zen` flatpak when the COPR's `helium-bin` hit a `/opt/helium` cpio conflict on a live Silverblue host (8 flatpaks).
-- 2026-05-01: dropped `app.zen_browser.zen` and restored helium-bin as the browser RPM. The conflict was specific to `rpm-ostree install` against an already-booted system; the OCI Containerfile build path treats `/opt` as a normal directory at install time, so the same package installs cleanly. Back to 7 flatpaks.
+- 2026-04-23: added `app.zen_browser.zen` flatpak when the COPR's `helium-bin` hit a `/opt/helium` cpio unpack conflict on a live Silverblue host (8 flatpaks).
+- 2026-05-01 attempt #1: dropped `app.zen_browser.zen` and re-tried `helium-bin` from the same COPR (back to 7 flatpaks), betting that the OCI Containerfile build path would behave differently from `rpm-ostree install` on a live host. The bet lost — buildah hit the same `/opt/helium` cpio conflict (the COPR's RPM packages `/opt/` itself, conflicting with the existing directory regardless of install path). CI broke.
+- 2026-05-01 attempt #2: dropped the COPR, shipped Helium as a local `.flatpak` bundle from ShyVortex's GH Releases (manifest gained a `bundle <path>` line type). Reverted before merge: bundles have no remote → `flatpak update` can't refresh them, leaving the bundle install frozen between image rebases.
+- 2026-05-01 attempt #3 (current): community `helium` Flatpak remote (ShyVortex GH Pages, ostree archive-z2). Preinstalled at image build alongside the other 7 flatpaks; standard `flatpak update` flow. Manifest format reverts to `<remote> <ref>` only.
 **Explicitly excluded:** Discord, Slack (comms), Pinta (creative), Stremio (media), DevToolbox, Ignition, Clapgrep, Impression, embellish, Evolution, Obsidian, Chrome, Chromium — all dropped on user request. Also tried-and-rejected: Zen Browser flatpak (used 2026-04-23 → 2026-05-01 only), Mozilla Firefox (briefly considered as helium replacement before Zen).
 
 ## 6. GNOME Shell extensions
@@ -93,7 +96,7 @@ Rationale vs the other options considered:
 > - **Wave 1 (nix-home, NXH-01..40, ~2026-04 mid):** mise moved from RPM to nix; `sideral-mise-install.service` removed; `act`, `atuin`, `direnv` dropped from mise toolchain or moved to home-manager; `/etc/skel/.bashrc` replaced by home-manager-generated `~/.bashrc`.
 > - **Wave 2 (RPM cleanup, 2026-04-23):** every plain-CLI moved to home.nix or removed:
 >   - **→ home.nix**: `gh`, `starship`, `gcc`/`make`/`cmake`, `git-lfs`/`subtree`/`credential-libsecret`, `code` (VS Code).
->   - **→ flatpak (briefly)**: `helium-bin` replaced by `app.zen_browser.zen` (Silverblue `/opt` cpio conflict on a live host). **Reverted 2026-05-01:** `helium-bin` is the browser again, installed via the same `imput/helium` COPR but inside the OCI Containerfile build where `/opt` is a regular directory at install time. Zen flatpak dropped.
+>   - **→ flatpak (settled)**: `helium-bin` replaced by `app.zen_browser.zen` 2026-04-23 after a Silverblue `/opt` cpio conflict on a live host. 2026-05-01 attempt to re-RPM via `imput/helium` COPR broke buildah on the same `/opt` conflict. A `.flatpak` bundle from `ShyVortex/helium-flatpak` was tried briefly and reverted before merge (bundles can't be refreshed by `flatpak update`). Settled on the community `helium` Flatpak remote from the same project (ShyVortex GH Pages, ostree archive-z2) — preinstalled at image build, standard `flatpak update` flow. Zen flatpak dropped.
 >   - **Removed entirely**: `nix-software-center` (snowfall fetch, never used), `android-tools` (use `nix shell` ad-hoc), kernel-debug stack `bcc`/`bpftop`/`bpftrace`/`sysprof`/`trace-cmd`/`tiptop`/`nicstat`/`iotop`/`udica` (bluefin-dx parity that the personal workload didn't need).
 >   - **Feature dirs deleted**: `build_files/features/devtools/`, `build_files/features/browser/`.
 > - **Net result:** RPM layer now contains GNOME shell extensions + bazaar + docker-ce stack + fonts only. Everything user-facing is home.nix or flatpak.
@@ -125,8 +128,13 @@ Rationale vs the other options considered:
 **CLI (mise doesn't package it):** ⚠ moved to home.nix
 - ~~`gh` — GitHub CLI~~ — now via `programs.gh.enable`
 
-**Browser:** ✓ Helium RPM (post 2026-05-01 restore)
-- `helium-bin` from `imput/helium` COPR — RPM is back. The 2026-04-23 retreat to `app.zen_browser.zen` flatpak was driven by a `/opt/helium` cpio unpack conflict against a live Silverblue host (`rpm-ostree install`). The OCI Containerfile build path treats `/opt` as a regular directory at install time, so `dnf5 install -y helium-bin` succeeds; the resulting bytes ship inside the image. `rpm-ostree upgrade` continues to pick up new helium releases between image rebuilds via the persistent `_copr_imput-helium.repo` shipped under sideral-base.
+**Browser:** ✓ Helium via community Flatpak remote (settled 2026-05-01)
+- Source: [`ShyVortex/helium-flatpak`](https://github.com/ShyVortex/helium-flatpak) — community packaging of the upstream `imputnet/helium-linux` prebuilt binaries. No Flathub listing exists for Helium and upstream does not ship a flatpak directly. ShyVortex hosts a real ostree archive-z2 Flatpak repo on GitHub Pages with a `helium.flatpakrepo` descriptor, so the canonical install path is via remote (not bundle).
+- Mechanism: `os/build.sh` registers three system-wide flatpak remotes (`flathub`, `fedora` oci+registry, `helium` from `https://shyvortex.github.io/helium-flatpak/helium.flatpakrepo`) and runs `flatpak install --system` for every entry in `/etc/flatpak-manifest`. All 8 curated flatpaks land in `/var/lib/flatpak` before the image is shipped; ostree factory-seeds them to deployed systems on first boot. `sideral-flatpak-install.service` repurposed as forward-compat self-heal — every boot it re-applies remotes + manifest so future image rebases that add new entries install on existing user systems.
+- Trust posture: `helium.flatpakrepo` declares `GPGVerify=false`. Trust chain = TLS to `shyvortex.github.io` (GitHub Pages cert) + ShyVortex (single maintainer, ~41⭐ repo) to publish honest builds wrapping `imputnet/helium-linux` prebuilt binaries. Equivalent posture to a single-maintainer COPR; same posture applies at runtime when `flatpak update` pulls new builds.
+- Why not the COPR: `imput/helium` was tried twice. 2026-04-23 the RPM hit a `/opt/helium` cpio unpack conflict during `rpm-ostree install` on a live Silverblue host. 2026-05-01 a re-attempt bet that the OCI buildah path would behave differently — it didn't; same `/opt/` cpio conflict broke CI. The COPR's RPM packages `/opt/` itself (not just `/opt/helium/`), which conflicts with the existing directory regardless of install context. Flatpak sidesteps RPM packaging entirely.
+- Why not the bundle: 2026-05-01 attempt #2 shipped Helium as a `.flatpak` bundle fetched from ShyVortex's GH Releases. Reverted before merge — bundles have no remote, so `flatpak update` can't refresh them and the install would freeze at whatever version was bundled until the next image rebase.
+- Update cadence: standard `flatpak update`, run nightly by inherited `ublue-os-update-services`. New helium upstream releases land as soon as ShyVortex's CI publishes a new ostree commit to the GH Pages repo.
 
 **GNOME quality-of-life (adopted from bluefin's strong-recs):** ✓ still RPM-layered
 - `gnome-tweaks`, `adw-gtk3-theme`, `fastfetch`

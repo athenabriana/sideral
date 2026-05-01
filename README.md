@@ -38,11 +38,11 @@ sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral:l
 systemctl reboot
 ```
 
-After reboot the image is fully wired — Helium browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code are all on `$PATH`. First boot also installs the curated flatpak set in the background. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
+After reboot the image is fully wired — Helium browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code are all on `$PATH`. The curated flatpak set (Helium + 7 GNOME quality-of-life apps) is preinstalled at image build, so it's there immediately — no first-boot download wait. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
 
 ---
 
-Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set, a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Helium as the default browser (RPM from `imput/helium` COPR), and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
+Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set (preinstalled at image build), a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Helium as the default browser (Flatpak from the community `ShyVortex/helium-flatpak` remote), and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
 
 ## What's in the image
 
@@ -51,14 +51,14 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
 | **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
 | **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
-| **Browser** | [Helium](https://helium.computer) via the `imput/helium` Fedora COPR (`helium-bin` RPM, baked into the image at build time — `rpm-ostree upgrade` pulls new releases between rebuilds) |
+| **Browser** | [Helium](https://helium.computer) via the community [`ShyVortex/helium-flatpak`](https://github.com/ShyVortex/helium-flatpak) Flatpak remote (ostree archive-z2 hosted on GitHub Pages). Preinstalled at image build; new releases pulled by the standard `flatpak update` cadence. |
 | **Editor** | `code` (VS Code) via Microsoft RPM repo at `packages.microsoft.com/yumrepos/vscode` — Remote-SSH and Remote-Containers extensions install from the marketplace on first launch |
 | **Containers** | `docker-ce` stack (podman inherited from base) |
 | **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. `starship` is baked into `/usr/bin` from the latest upstream release at image build (no Fedora RPM). All present at `$PATH` after rebase. |
 | **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh` (shipped by `sideral-shell-ux`) sources starship, atuin, zoxide, mise, and fzf integrations into every interactive bash shell. Each line is `command -v`-guarded. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
 | **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
-| **Flatpaks (auto-install on first boot)** | Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile (browser is RPM, see above) |
+| **Flatpaks (preinstalled at image build)** | Helium browser (`helium` remote), Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile (all from Flathub). Curated remotes registered: `flathub`, `fedora` (oci+registry), `helium`. |
 
 ## Repo layout
 
@@ -78,7 +78,7 @@ sideral/
 │       ├── sideral-base       → /etc/os-release, distrobox.conf, yum.repos.d/{docker-ce,mise,vscode}.repo
 │       ├── sideral-cli-tools  → meta-RPM: Requires: 13 RPM-packaged CLI tools + code (starship binary baked separately)
 │       ├── sideral-dconf      → /etc/dconf/db/local.d/* + profile/user
-│       ├── sideral-flatpaks   → flatpak first-boot install service + manifest
+│       ├── sideral-flatpaks   → flatpak remotes + manifest + every-boot self-heal service
 │       ├── sideral-services   → placeholder for future systemd units
 │       ├── sideral-shell-ux   → /etc/profile.d/sideral-cli-init.sh + sideral-onboarding.sh
 │       └── sideral-signing    → /etc/containers/policy.json
