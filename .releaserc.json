@@ -48,10 +48,6 @@
     [
       "@semantic-release/github",
       {
-        "assets": [
-          { "path": "output/athens-os-*.iso.part-*", "label": "athens-os installer ISO part (cat parts to reassemble)" },
-          { "path": "output/sha256sums.txt", "label": "SHA-256 checksums" }
-        ],
         "successComment": false,
         "failComment": false,
         "releasedLabels": false

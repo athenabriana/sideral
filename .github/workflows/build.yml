@@ -222,9 +222,26 @@ jobs:
           sha256sum *.part-* >> sha256sums.txt
           ls -lh
 
-      # ── Phase 4: cut release with the ISO attached ───────────────────
+      # ── Phase 4: cut release, then attach ISO parts via gh CLI ───────
+      # semantic-release handles tag/changelog/release creation only —
+      # asset upload is split out because @semantic-release/github reads
+      # each asset into a Node Buffer and uploads them in parallel,
+      # OOM-killing the runner on multi-GiB parts. `gh release upload`
+      # streams via curl, so memory stays flat regardless of file size.
       - name: semantic-release (real)
         if: steps.dryrun.outputs.skip == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Attach ISO parts to release
+        if: steps.dryrun.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd ./output
+          ls -lh
+          gh release upload "v${{ steps.dryrun.outputs.next_version }}" \
+            athens-os-*.iso.part-* sha256sums.txt \
+            --clobber --repo "${{ github.repository }}"
