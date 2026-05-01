@@ -16,16 +16,11 @@ Two ways to try athens-os.
 
 ### Boot from USB (try before installing)
 
-```bash
-oras pull ghcr.io/athenabriana/athens-os-iso:latest
-sha256sum -c sha256sums.txt
-sudo dd if=athens-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
-# reboot, pick the USB at boot — Anaconda installer is preloaded
-```
+<p align="center">
+  <a href="https://github.com/athenabriana/athens-os/releases/latest"><img src="https://img.shields.io/github/v/release/athenabriana/athens-os?label=%E2%AC%87%20Download%20ISO&style=for-the-badge&logo=fedora&logoColor=white&labelColor=294172&color=4d7eb8" alt="Download ISO" height="40"></a>
+</p>
 
-The ISO ships with GNOME, the full flatpak set, and the Anaconda installer ready to write athens-os to disk.
-
-> Don't have `oras`? It's a single Go binary — `dnf install oras`, `apt install oras`, or `brew install oras`.
+The release page has the one-line install command and SHA-256 checksum. Flash with `dd`, Etcher, Impression, or GNOME Disks — reboot from the USB and the preloaded Anaconda installer walks you through writing athens-os to disk.
 
 ### Rebase an existing Fedora atomic install
 
