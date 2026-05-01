@@ -61,14 +61,32 @@ athens-os/
    ```bash
    gh repo create athens-os --public --source . --remote origin --push
    ```
-2. Wait ~10 min for the `build-athens-os` workflow to push `ghcr.io/<you>/athens-os:latest`.
-3. Rebase your host:
+2. **One-time release-publishing setup** (only needed if you want CI to ship installer ISOs):
+   - Create a [Hugging Face](https://huggingface.co/) account and a public dataset at `huggingface.co/datasets/<you>/athens-os` (the ISO lives here because GitHub Releases caps each asset at 2 GiB).
+   - Mint a write-scoped access token (Settings → Access Tokens → "Write").
+   - Add it to the GitHub repo as the secret `HF_TOKEN` (Settings → Secrets and variables → Actions).
+   - Update `HF_REPO` at the top of `.github/workflows/build.yml` if your HF username differs from `athenabriana`.
+3. Wait ~10 min for the `build-athens-os` workflow to push `ghcr.io/<you>/athens-os:latest`. The first commit also cuts a GitHub Release with a Hugging Face download link to the ISO.
+4. Rebase your host:
    ```bash
    sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/<you>/athens-os:latest
    systemctl reboot
    ```
-4. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
-5. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, and the rest of `home.nix`).
+5. First boot runs `athens-nix-install.service` (pulls ~200 MB, installs Nix, relabels `/nix`); `athens-flatpak-install.service` installs the manifest in parallel.
+6. First graphical login runs `athens-home-manager-setup.service` (adds the home-manager channel, installs `home-manager`, runs `home-manager switch` — this installs VS Code + its extensions, mise, and the rest of `home.nix`).
+
+## Installer ISO
+
+Each tagged release links to a single-file ISO hosted on Hugging Face. Browse releases on GitHub for the link, or pull directly:
+
+```bash
+VERSION=v1.0.1
+curl -LO "https://huggingface.co/datasets/<you>/athens-os/resolve/main/${VERSION}/athens-os-${VERSION}-x86_64.iso"
+curl -LO "https://huggingface.co/datasets/<you>/athens-os/resolve/main/${VERSION}/sha256sums.txt"
+sha256sum -c sha256sums.txt
+```
+
+Flash with `dd if=athens-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync` or any GUI ISO writer (Etcher, Impression, etc).
 
 ## Local build
 

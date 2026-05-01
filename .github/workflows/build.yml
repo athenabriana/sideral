@@ -25,6 +25,10 @@ env:
   IMAGE_NAME: athens-os
   IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with curated flatpaks (Zen Browser + GUI apps), home-manager user layer (mise, vscode, CLI QoL), and a narrow RPM layer (docker-ce, dev + kernel-debug stack, fonts)."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+  # Hugging Face dataset where ISO artifacts are published. The ISO
+  # exceeds GitHub Releases' 2 GiB per-asset cap, so binaries live on
+  # HF and GitHub Releases hold only the changelog + download links.
+  HF_REPO: athenabriana/athens-os
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -203,45 +207,71 @@ jobs:
           mkdir -p ${{ github.workspace }}/output
           mv ${{ steps.build-iso.outputs.iso-dest }} ${{ github.workspace }}/output/${{ steps.tags.outputs.iso_name }}
 
-      # GitHub Releases caps each asset at 2 GiB and @semantic-release/github
-      # reads files into a Node Buffer (also ~2 GiB). The ISO is ~5 GiB and
-      # zstd only shaved ~4% off the squashfs-heavy payload, so we skip
-      # compression entirely and split the raw ISO into 1.8 GiB chunks.
-      # Reassemble: `cat athens-os-*.iso.part-* > athens-os.iso`
-      - name: Split ISO + checksum
+      - name: Checksum ISO
         if: steps.dryrun.outputs.skip == 'false'
         run: |
           set -euo pipefail
           cd ./output
-          ls -lh
           sha256sum "${{ steps.tags.outputs.iso_name }}" > sha256sums.txt
-          split -b 1800M -d -a 2 \
-            "${{ steps.tags.outputs.iso_name }}" \
-            "${{ steps.tags.outputs.iso_name }}.part-"
-          rm "${{ steps.tags.outputs.iso_name }}"
-          sha256sum *.part-* >> sha256sums.txt
           ls -lh
 
-      # ── Phase 4: cut release, then attach ISO parts via gh CLI ───────
-      # semantic-release handles tag/changelog/release creation only —
-      # asset upload is split out because @semantic-release/github reads
-      # each asset into a Node Buffer and uploads them in parallel,
-      # OOM-killing the runner on multi-GiB parts. `gh release upload`
-      # streams via curl, so memory stays flat regardless of file size.
+      # ── Phase 4: cut release on GitHub, ship ISO to Hugging Face ─────
+      # semantic-release creates the tag + changelog + release shell on
+      # GitHub. The ISO itself goes to a Hugging Face dataset because
+      # GitHub Releases caps each asset at 2 GiB and the ISO is ~5 GiB.
+      # huggingface-cli streams uploads (no Node Buffer, no OOM) and
+      # the dataset gives users a single-file download via plain HTTPS:
+      #   https://huggingface.co/datasets/<HF_REPO>/resolve/main/<file>
       - name: semantic-release (real)
         if: steps.dryrun.outputs.skip == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
 
-      - name: Attach ISO parts to release
+      - name: Upload ISO to Hugging Face
+        if: steps.dryrun.outputs.skip == 'false'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -euo pipefail
+          pip install --quiet --upgrade huggingface_hub
+          VERSION="v${{ steps.dryrun.outputs.next_version }}"
+          ISO="${{ steps.tags.outputs.iso_name }}"
+          # Upload raw ISO + checksum into a per-version directory so
+          # old releases stay browsable. --commit-message tags each
+          # upload with the GitHub release version for traceability.
+          huggingface-cli upload \
+            --repo-type dataset \
+            --commit-message "athens-os ${VERSION}" \
+            "${HF_REPO}" \
+            "./output/${ISO}" \
+            "${VERSION}/${ISO}"
+          huggingface-cli upload \
+            --repo-type dataset \
+            --commit-message "athens-os ${VERSION} checksum" \
+            "${HF_REPO}" \
+            "./output/sha256sums.txt" \
+            "${VERSION}/sha256sums.txt"
+
+      - name: Append download links to release notes
         if: steps.dryrun.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          cd ./output
-          ls -lh
-          gh release upload "v${{ steps.dryrun.outputs.next_version }}" \
-            athens-os-*.iso.part-* sha256sums.txt \
-            --clobber --repo "${{ github.repository }}"
+          VERSION="v${{ steps.dryrun.outputs.next_version }}"
+          ISO="${{ steps.tags.outputs.iso_name }}"
+          BASE="https://huggingface.co/datasets/${HF_REPO}/resolve/main/${VERSION}"
+          gh release view "${VERSION}" --repo "${{ github.repository }}" --json body -q .body > /tmp/notes.md
+          {
+            echo
+            echo "## Downloads"
+            echo
+            echo "- [\`${ISO}\`](${BASE}/${ISO}) — installer ISO (~5 GiB)"
+            echo "- [\`sha256sums.txt\`](${BASE}/sha256sums.txt) — checksum"
+            echo
+            echo "Verify: \`sha256sum -c sha256sums.txt\`"
+          } >> /tmp/notes.md
+          gh release edit "${VERSION}" \
+            --repo "${{ github.repository }}" \
+            --notes-file /tmp/notes.md
