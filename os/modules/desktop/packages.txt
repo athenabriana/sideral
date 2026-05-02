@@ -6,12 +6,13 @@
 gnome-shell-extension-appindicator
 gnome-shell-extension-dash-to-panel
 
-# ── App store: GNOME Software with rpm-ostree + flatpak plugins ──
-# gnome-software ships with silverblue-main:43; declaring it explicitly makes the
-# intent traceable and survives any future base swap. The flatpak plugin is built
-# into gnome-software itself on F43 (no separate sub-package).
-gnome-software
-gnome-software-rpm-ostree
+# ── App store ──
+# Bazaar (Flathub) handles flatpak app discovery — see modules/flatpaks/
+# manifest. gnome-software + gnome-software-rpm-ostree dropped 2026-05-02
+# matching bluefin's direction; OS update notifications come from
+# ublue-os-update-services (inherited from silverblue-main), and RPM
+# layering is done via the rpm-ostree CLI when needed. The dnf-prune
+# in os/lib/build.sh actively removes them from the inherited base.
 
 # ── Quality-of-life ──
 gnome-tweaks

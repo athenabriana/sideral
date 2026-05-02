@@ -53,3 +53,10 @@ rclone
 # rclone but listing explicitly so removing rclone via override doesn't
 # leave the mount recipe broken on systems that don't already have it.
 fuse3
+# chromium — second browser, useful for headless automation (puppeteer/
+# playwright), web-app debugging, and as a fallback when Zen Browser
+# can't render a particular site. Installed but HIDDEN from the GNOME
+# app grid via hide-chromium.sh in this same module — the .desktop
+# file gets `NoDisplay=true` patched in. Invokable from the shell as
+# `chromium-browser`.
+chromium

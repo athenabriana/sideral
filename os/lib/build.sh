@@ -38,15 +38,20 @@ MODULES_DIR="/ctx/modules"
 MODULES=(shell-tools desktop containers kubernetes fonts flatpaks nvidia)
 
 # ── 1. Remove inherited base packages we don't ship ─────────────────────
-# silverblue-{main,nvidia}:43 ship firefox + htop + dconf-editor as part
-# of the default ublue-main set. sideral's curated stack replaces these:
+# silverblue-{main,nvidia}:43 ship several packages by default that
+# sideral's curated stack replaces or doesn't need:
 #   • firefox  → Zen Browser (Flathub)
 #   • htop     → Resources (Flathub)
 #   • dconf-editor → gnome-tweaks for the rare adjustment users actually need
+#   • gnome-software + gnome-software-rpm-ostree → Bazaar (Flathub) handles
+#     flatpak app discovery; ublue-os-update-services (still inherited)
+#     surfaces OS update notifications; RPM layering is done via the
+#     rpm-ostree CLI when needed. Matches bluefin's current direction.
 # Tolerant of upstream renames: only remove what's actually present.
 log "Removing inherited base packages we don't ship"
 to_remove=()
-for pkg in firefox firefox-langpacks htop dconf-editor; do
+for pkg in firefox firefox-langpacks htop dconf-editor \
+           gnome-software gnome-software-rpm-ostree; do
     rpm -q "$pkg" >/dev/null 2>&1 && to_remove+=("$pkg")
 done
 if [ ${#to_remove[@]} -gt 0 ]; then
