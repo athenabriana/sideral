@@ -41,6 +41,39 @@ if command -v fzf >/dev/null 2>&1; then
     source <(fzf --bash)
 fi
 
+# Ctrl-P — VS-Code-style quick-open. Pick a file with fzf, open in
+# editor. Uses `rg --files` when available (respects .gitignore + is
+# fast on big repos); falls back to find. Editor pick order: $VISUAL,
+# $EDITOR, then `code` (sideral ships VS Code), then vi.
+#
+# Guarded by `[[ $- == *i* ]]` (interactive shell) because `bind -x`
+# requires readline. Non-interactive shells — including the way agent
+# tools spawn `bash -c …` — silently skip the bind so the Ctrl-P
+# slot they may already use stays untouched.
+#
+# Note: bash's default Ctrl-P is `previous-history`. Up-arrow does
+# the same thing and is what most people use, so rebinding Ctrl-P
+# rarely surprises anyone. To restore the default, drop this block
+# or run `bind '"\C-p": previous-history'` in your shell.
+if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
+    _sideral_fzf_quick_open() {
+        local file editor
+        if command -v rg >/dev/null 2>&1; then
+            file=$(rg --files --hidden --follow --glob '!.git' 2>/dev/null \
+                   | fzf --height 40% --reverse --prompt 'Open: ') || return
+        else
+            file=$(find . -type f -not -path '*/.git/*' 2>/dev/null \
+                   | fzf --height 40% --reverse --prompt 'Open: ') || return
+        fi
+        editor="${VISUAL:-${EDITOR:-}}"
+        if [ -z "$editor" ]; then
+            if command -v code >/dev/null 2>&1; then editor=code; else editor=vi; fi
+        fi
+        $editor "$file"
+    }
+    bind -x '"\C-p": _sideral_fzf_quick_open'
+fi
+
 # eza / bat aliases — only for human-driven interactive shells.
 #
 # AI coding agents read command output as raw strings to feed back
