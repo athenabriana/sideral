@@ -24,7 +24,7 @@ Requires:       systemd
 %description
 Ships:
   /etc/sideral-flatpak-remotes                       — 1 curated remote (flathub)
-  /etc/flatpak-manifest                              — 8 entries
+  /etc/flatpak-manifest                              — 11 entries
   /etc/sideral-flatpak-purge                         — refs to actively uninstall
                                                        on deployed systems
   /etc/systemd/system/sideral-flatpak-install.service — every-boot self-heal,
@@ -37,9 +37,10 @@ its presence caused titanoboa's live-ISO flatpak install to fail on
 refs that exist in both remotes (Flatseal in particular). One remote =
 no ambiguity for `flatpak install --noninteractive -y <bare-ref>`.
 
-Curated apps (8, all from flathub): Zen Browser (app.zen_browser.zen) +
-Flatseal, Extension Manager, Podman Desktop, DistroShelf, Resources,
-Smile, Web App Hub.
+Curated apps (11, all from flathub): Zen Browser (app.zen_browser.zen),
+Bazaar (flatpak-first app store), Flatseal, Extension Manager, Podman
+Desktop, DistroShelf, Resources, Smile, Web App Hub, Pika Backup,
+and Junction (open-with picker).
 
 The primary install runs at image build (os/build.sh) — flatpaks land
 in /var/lib/flatpak before the image ships, factory-seeded to deployed
@@ -65,6 +66,21 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/multi-user.target.wants/sideral-flatpak-install.service
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
+- Add three more flatpaks (manifest goes 8 → 11):
+  • io.github.kolunmi.Bazaar       — flatpak-first app store. Bluefin's
+                                      direction; complements (does not
+                                      replace) gnome-software, which
+                                      stays for OS-update + RPM-layer UI.
+  • org.gnome.World.PikaBackup     — Borg-based backup with a clean
+                                      GNOME-native UI. Universal pick
+                                      for any laptop.
+  • re.sonny.Junction              — "Open with…" picker that lets you
+                                      choose the app at click-time
+                                      instead of hard-binding MIME
+                                      types via xdg-open. Useful when
+                                      you have multiple apps that can
+                                      handle the same file type.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
 - Add org.pvermeer.WebAppHub to the curated set (manifest goes 7 → 8
   entries). GUI for creating standalone-window web apps with their

@@ -7,6 +7,9 @@
 # ── Browser ──
 app.zen_browser.zen
 
+# ── App store ──
+io.github.kolunmi.Bazaar
+
 # ── GNOME quality-of-life ──
 com.github.tchx84.Flatseal
 com.mattjakeman.ExtensionManager
@@ -15,3 +18,5 @@ com.ranfdev.DistroShelf
 net.nokyan.Resources
 it.mijorus.smile
 org.pvermeer.WebAppHub
+org.gnome.World.PikaBackup
+re.sonny.Junction
