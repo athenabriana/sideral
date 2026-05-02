@@ -155,32 +155,68 @@ done < "$manifest_file"
 # fedora-release-common.
 
 # ── NVIDIA-variant tweaks ───────────────────────────────────────────────
-# silverblue-nvidia:43 already supplies the full nvidia stack inherited
-# down to sideral-nvidia: signed kmod-nvidia matched to a versionlocked
-# kernel, kargs (rd.driver.blacklist=nouveau, modprobe.blacklist=nouveau,
-# nvidia-drm.modeset=1, initcall_blacklist=simpledrm_platform_driver_init)
-# at /usr/lib/bootc/kargs.d/00-nvidia.toml, and a dracut force_drivers
-# config that bakes nvidia into the initramfs.
+# silverblue-nvidia:43 partially supplies the nvidia stack: signed
+# kmod-nvidia matched to a versionlocked kernel, /usr/lib/modprobe.d/
+# nvidia.conf with `blacklist nouveau`, and /usr/lib/dracut/dracut.conf.d/
+# 99-nvidia.conf with `force_drivers+=" i915 amdgpu nvidia ... "`.
 #
-# What's missing on top — and what bluefin-nvidia adds — is mutter's
-# `kms-modifiers` experimental feature. Without it, GNOME on Wayland
-# falls back to non-atomic mode-setting on NVIDIA and you get tearing /
-# partial-frame glitches even though the driver is loaded correctly.
-# Stock GNOME on F43 does NOT enable kms-modifiers by default for
-# nvidia-drm. (Also enable scale-monitor-framebuffer for fractional
-# scaling — same default-off, same one-line cost to flip on.)
+# What it does NOT ship — verified by inspecting a deployed system —
+# is /usr/lib/bootc/kargs.d/00-nvidia.toml. ublue-os/main's
+# nvidia-install.sh stops at modprobe + dracut config; the kargs file
+# is written separately by bluefin's own 03-install-kernel-akmods.sh,
+# which doesn't run for downstreams that derive from silverblue-nvidia
+# instead of building from scratch. So sideral-nvidia ships without:
+#   • nvidia-drm.modeset=1  → Wayland on NVIDIA falls back to non-DRM
+#     mode-setting; GNOME Shell gets driven by the iGPU with PRIME
+#     offload, no native nvidia Wayland path
+#   • rd.driver.blacklist=nouveau  → nouveau still blacklisted via
+#     modprobe.d as a backstop, but the karg-level block is what
+#     guarantees nouveau is never touched in early-userspace
+#   • initcall_blacklist=simpledrm_platform_driver_init  → simpledrm
+#     can grab the framebuffer at boot and not hand it off cleanly to
+#     nvidia-drm
+# Write the kargs.d file ourselves with bluefin's exact set.
 #
-# Detect the variant by checking for kmod-nvidia in rpmdb so the same
-# build.sh works for both base and nvidia. The dconf snippet is picked
-# up by the Containerfile's `dconf update` after the inline RPM step
-# installs sideral-dconf's user profile.
+# The other piece bluefin adds on top of stock GNOME is mutter's
+# `kms-modifiers` experimental feature — without it, even after
+# nvidia-drm.modeset=1 is set, the Wayland compositor uses legacy mode-
+# setting on NVIDIA and you get tearing / partial frames. Stock GNOME
+# on F43 does NOT enable kms-modifiers by default for nvidia-drm.
+# (Also enable scale-monitor-framebuffer for fractional scaling — same
+# default-off, same one-line cost to flip on.)
+#
+# Variant detection by `rpm -q kmod-nvidia` so the same build.sh
+# works for both base and nvidia. The dconf snippet is picked up by the
+# Containerfile's `dconf update` after the inline RPM step installs
+# sideral-dconf's user profile.
 if rpm -q kmod-nvidia >/dev/null 2>&1; then
-    log "NVIDIA variant detected — enabling mutter kms-modifiers"
+    log "NVIDIA variant detected — writing kargs.d + enabling mutter kms-modifiers"
+
+    mkdir -p /usr/lib/bootc/kargs.d
+    cat > /usr/lib/bootc/kargs.d/00-nvidia.toml <<'EOF'
+# bootc kargs for the sideral-nvidia variant. Applied to the bootloader
+# entry on `rpm-ostree upgrade` + reboot. Mirrors bluefin/bazzite-nvidia.
+#   • rd.driver.blacklist=nouveau, modprobe.blacklist=nouveau —
+#     keep nouveau out of both initramfs and the running kernel.
+#     /usr/lib/modprobe.d/nvidia.conf already does the modprobe-level
+#     blacklist, but the karg covers the early-userspace window before
+#     modprobe rules apply.
+#   • nvidia-drm.modeset=1 — required for Wayland on NVIDIA. Without
+#     it GNOME Wayland either falls back to llvmpipe or runs the
+#     desktop on the iGPU with NVIDIA as PRIME offload only. With it,
+#     GNOME drives the display directly through nvidia-drm.
+#   • initcall_blacklist=simpledrm_platform_driver_init — prevents
+#     simpledrm from binding the framebuffer at boot, so the handoff
+#     to nvidia-drm is clean.
+kargs = ["rd.driver.blacklist=nouveau", "modprobe.blacklist=nouveau", "nvidia-drm.modeset=1", "initcall_blacklist=simpledrm_platform_driver_init"]
+EOF
+
     mkdir -p /etc/dconf/db/local.d
     cat > /etc/dconf/db/local.d/50-sideral-nvidia <<'EOF'
 # Auto-applied at image build for the sideral-nvidia variant. Without
 # kms-modifiers, GNOME's Wayland compositor uses legacy mode-setting on
-# NVIDIA and produces visible tearing / partial frames.
+# NVIDIA and produces visible tearing / partial frames even with
+# nvidia-drm.modeset=1 in the kargs.
 [org/gnome/mutter]
 experimental-features=['scale-monitor-framebuffer', 'kms-modifiers']
 EOF
