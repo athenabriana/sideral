@@ -7,29 +7,32 @@
 # Run any recipe with `ujust <name>` (e.g. `ujust chsh fish`).
 # Run `ujust` (no args) to list all recipes.
 
-# Switch login shell. Defaults to zsh (sideral's recommended interactive
-# shell — fish-parity for highlighting + autosuggestions via the two
-# zsh-users plugins, plus bash-compatible syntax so your scripts and
-# one-liners work unchanged). Pass `bash` or `fish` for those instead.
-# Uses `sudo usermod -s` because ublue-os/main removes setuid `chsh`
-# as part of its hardening pass — `usermod` is the equivalent root-
-# only path.
+# Switch login shell. With no argument, opens an interactive picker
+# (ugum/fzf). Pass a shell name to skip the picker. Uses `sudo usermod
+# -s` because ublue-os/main removes setuid `chsh` as part of its
+# hardening pass — `usermod` is the equivalent root-only path.
 #
 # Examples:
-#   ujust chsh           # → /usr/bin/zsh (default)
+#   ujust chsh           # interactive picker (recommended)
 #   ujust chsh zsh       # → /usr/bin/zsh
 #   ujust chsh fish      # → /usr/bin/fish
 #   ujust chsh bash      # → /bin/bash
 [group('System')]
-chsh shell="zsh":
+chsh shell="":
     #!/usr/bin/bash
     set -euo pipefail
-    case "{{shell}}" in
+    selected="{{shell}}"
+    if [ -z "$selected" ]; then
+        # ugum is the ublue gum-or-fzf wrapper; falls through to fzf
+        # if gum isn't installed, which it isn't on sideral by default.
+        selected="$(ugum choose zsh fish bash)" || exit 0
+    fi
+    case "$selected" in
         bash) target=/bin/bash ;;
         fish) target=/usr/bin/fish ;;
         zsh)  target=/usr/bin/zsh ;;
         *)
-            echo "Unknown shell: {{shell}} (try: bash, fish, zsh)" >&2
+            echo "Unknown shell: $selected (try: bash, fish, zsh)" >&2
             exit 1
             ;;
     esac
@@ -56,6 +59,9 @@ chsh shell="zsh":
 [group('Help')]
 tools:
     #!/usr/bin/bash
+    # Urllink renders modern terminal hyperlinks (OSC 8); falls back
+    # gracefully on terminals that ignore the escape.
+    source /usr/lib/ujust/libformatting.sh
     B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
     cat <<EOF
 
@@ -117,6 +123,8 @@ tools:
       ujust update        rpm-ostree upgrade + flatpak update
 
     EOF
+    echo "    Source: $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"
+    echo
 
 # Initialize dotfiles from a chezmoi git repo. Wraps `chezmoi init
 # --apply <url>`. On first run chezmoi clones the repo to
@@ -134,13 +142,24 @@ tools:
 chezmoi-init repo="":
     #!/usr/bin/bash
     set -euo pipefail
-    if [ -z "{{repo}}" ]; then
-        echo "Usage: ujust chezmoi-init <git-repo-url>" >&2
-        echo "Example: ujust chezmoi-init https://github.com/yourname/dotfiles" >&2
+    target="{{repo}}"
+    if [ -z "$target" ]; then
+        # No URL passed — confirm the user actually wants this prompt
+        # since it's irreversible on a fresh $HOME (chezmoi apply
+        # overwrites tracked files).
+        echo "ujust chezmoi-init bootstraps your dotfiles from a chezmoi git repo."
+        echo "Example: https://github.com/yourname/dotfiles"
+        echo
+        ugum confirm "Proceed?" || exit 0
+        echo -n "Repo URL: "
+        read -r target
+    fi
+    if [ -z "$target" ]; then
+        echo "No repo URL — aborting." >&2
         exit 1
     fi
     if [ ! -x /usr/bin/chezmoi ]; then
         echo "chezmoi not found — should ship via sideral-cli-tools" >&2
         exit 1
     fi
-    chezmoi init --apply "{{repo}}"
+    chezmoi init --apply "$target"

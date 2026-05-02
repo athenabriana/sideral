@@ -50,6 +50,7 @@ Requires:       zsh
 Requires:       zsh-syntax-highlighting
 Requires:       zsh-autosuggestions
 
+%description
 Meta-package: depends on the 17 RPM-packaged CLI tools sideral wires
 into the user shell via parallel init files for bash, fish, and zsh
 (/etc/profile.d/sideral-cli-init.sh, /etc/fish/conf.d/sideral-cli-
