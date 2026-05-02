@@ -33,6 +33,18 @@ if (( ${+commands[fzf]} )); then
     source <(fzf --zsh)
 fi
 
+# ── Fish-parity plugins ─────────────────────────────────────────────────
+# zsh-autosuggestions: greyed-out completion from history as you type,
+# accept the rest of the suggestion with → (or End). Same UX as fish.
+# zsh-syntax-highlighting: commands turn red if invalid, paths blue,
+# strings yellow, etc. Same as fish.
+# Order matters per the upstream README: autosuggestions first, then
+# syntax-highlighting LAST (it has to wrap ZLE widgets and works
+# correctly only when loaded after everything else that hooks ZLE).
+if [[ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
+
 # ── Agent shell detection ───────────────────────────────────────────────
 # Same canonical 14-marker list as the bash and fish inits. ${(P)v} is
 # zsh's indirect parameter expansion (equivalent to bash's ${!v}).
@@ -96,4 +108,13 @@ if (( ${+commands[fzf]} )); then
     }
     zle -N _sideral_fzf_quick_open
     bindkey '^P' _sideral_fzf_quick_open
+fi
+
+# ── Syntax highlighting (must load LAST) ────────────────────────────────
+# zsh-syntax-highlighting wraps every ZLE widget that exists at source-
+# time. Loading after the bindings above means our Ctrl+P widget gets
+# colored too; loading earlier would leave any later-defined widget
+# uncolored. Upstream README requires this ordering.
+if [[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi

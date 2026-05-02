@@ -32,8 +32,15 @@ helix
 # all built in (no config). Sideral ships parallel bash/fish/zsh init
 # wiring (sideral-cli-init.{sh,fish,zsh}); switch via `ujust chsh fish`.
 fish
-# zsh — third interactive-shell option. Has its own ecosystem
-# (oh-my-zsh, prezto, etc.) but works fine vanilla too. Sideral's
-# /etc/zshrc + /etc/zsh/sideral-cli-init.zsh wire it up the same as
-# the other two shells. Switch via `ujust chsh zsh`.
+# zsh — third interactive-shell option. Switch via `ujust chsh zsh`.
+# Sideral's /etc/zshrc + /etc/zsh/sideral-cli-init.zsh wire it up
+# the same as bash and fish.
 zsh
+# zsh-syntax-highlighting + zsh-autosuggestions — bring zsh to
+# parity with fish's two killer interactive features (red-on-invalid
+# command coloring + greyed-out autosuggestions from history). Both
+# from Fedora main, source-loaded by sideral-cli-init.zsh — no plugin
+# manager needed for two source lines. Users who want bigger plugin
+# stacks (oh-my-zsh, prezto, zinit) install at user level on top.
+zsh-syntax-highlighting
+zsh-autosuggestions

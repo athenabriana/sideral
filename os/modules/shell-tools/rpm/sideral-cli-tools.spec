@@ -47,6 +47,8 @@ Requires:       code
 Requires:       helix
 Requires:       fish
 Requires:       zsh
+Requires:       zsh-syntax-highlighting
+Requires:       zsh-autosuggestions
 
 Meta-package: depends on the 17 RPM-packaged CLI tools sideral wires
 into the user shell via parallel init files for bash, fish, and zsh
@@ -67,6 +69,15 @@ that nix-home would have shipped.
 # Intentionally empty — meta-package, no payload.
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
+- Add Requires: zsh-syntax-highlighting + zsh-autosuggestions. Brings
+  vanilla zsh to fish-parity for the two killer interactive features
+  (red-on-invalid command coloring + greyed-out autosuggestions from
+  history). Both Fedora main, source-loaded by sideral-cli-init.zsh
+  with the upstream-required ordering (autosuggestions first, syntax-
+  highlighting last so it wraps every ZLE widget). No plugin manager
+  needed for two source lines; oh-my-zsh / prezto / zinit remain
+  user-level options on top of this.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
 - Add Requires: zsh as a third interactive-shell option alongside
   bash (default) and fish. Sideral ships parallel init for all three:
