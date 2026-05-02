@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
 # Fetch Adobe's Source Sans / Source Serif (latest releases) from GitHub
 # and install system-wide. The Fedora RPMs ship older Pro (v3) variants.
+#
+# Self-contained: installs unzip at the top and removes it at the end,
+# so this module doesn't have to ride on whatever ordering the
+# orchestrator picks for desktop/extensions.sh (which used to be the
+# happenstance source of unzip pre-refactor).
 
 set -euo pipefail
 
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
+
+# silverblue-main:43 ships curl but NOT unzip. Install temporarily.
+log "Installing build-time deps (unzip)"
+dnf5 install -y --setopt=install_weak_deps=False unzip
+trap 'dnf5 remove -y unzip || true' EXIT
 
 install_adobe_font() {
     local repo="$1" name="$2"
