@@ -15,20 +15,32 @@ Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 Requires:       bash
+# fish is in sideral-cli-tools' Requires graph and is the parallel
+# default for users who `chsh -s /usr/bin/fish` after deployment.
 
 %description
-Ships two /etc/profile.d/ snippets:
+Ships shell-init wiring for both bash and fish.
 
-  sideral-cli-init.sh   — central shell-init wiring for starship, atuin,
-                          zoxide, mise, and fzf. Each integration is
-                          `command -v`-guarded so removing any single tool
-                          via `rpm-ostree override remove` doesn't break
-                          the rest. Replaces home-manager's declarative
-                          `programs.X.enable` wiring.
+Bash side — /etc/profile.d/:
+  sideral-cli-init.sh    — central wiring for starship, atuin, zoxide,
+                           mise, fzf. Plus EDITOR=hx / VISUAL=code,
+                           eza/bat aliases (skipped on AI-agent shells),
+                           and Ctrl+P → fzf quick-open. Each integration
+                           is `command -v`-guarded so `rpm-ostree
+                           override remove` of any one tool doesn't
+                           break the rest.
+  sideral-onboarding.sh  — one-shot chezmoi init hint shown on the first
+                           interactive shell per user. Subsequent shells
+                           stay silent (marker at ~/.cache/sideral/).
 
-  sideral-onboarding.sh — one-shot chezmoi init hint shown on the first
-                          interactive shell per user. Subsequent shells
-                          stay silent (marker at ~/.cache/sideral/).
+Fish side — /etc/fish/conf.d/:
+  sideral-cli-init.fish  — fish port of sideral-cli-init.sh. Same tool
+                           inits, same agent guard, same Ctrl+P quick-
+                           open, same eza/bat aliases. Fish brings
+                           syntax highlighting + autosuggestions +
+                           smarter tab completion built-in (no extra
+                           wiring needed). Sourced automatically when
+                           the user's login shell is fish.
 
 (sideral-kind-podman.sh moved to sideral-kubernetes 2026-05-02 as part
 of the module refactor — that snippet is K8s-tooling-specific, not a
@@ -44,8 +56,18 @@ cp -a etc %{buildroot}/
 %files
 /etc/profile.d/sideral-cli-init.sh
 /etc/profile.d/sideral-onboarding.sh
+/etc/fish/conf.d/sideral-cli-init.fish
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
+- Add /etc/fish/conf.d/sideral-cli-init.fish — fish port of the bash
+  init. Same tool wiring (starship/atuin/zoxide/mise/fzf), same
+  EDITOR=hx + VISUAL=code, same agent-shell detection list (14
+  markers), same Ctrl+P → fzf quick-open, same eza/bat aliases. Fish
+  brings syntax highlighting + autosuggestions + smarter tab
+  completion built-in (no config needed). Bash init unchanged. Switch
+  per-user with `chsh -s /usr/bin/fish` after deployment; both shells
+  remain functional out of the box.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
 - Module refactor: source tree moved to os/modules/shell-init/src/.
   /etc/profile.d/sideral-kind-podman.sh ownership transferred to
