@@ -23,15 +23,17 @@ Requires:       systemd
 
 %description
 Ships:
-  /etc/sideral-flatpak-remotes                       — 2 curated remotes
-                                                        (flathub, fedora)
+  /etc/sideral-flatpak-remotes                       — 1 curated remote (flathub)
   /etc/flatpak-manifest                              — 8 entries
   /etc/systemd/system/sideral-flatpak-install.service — every-boot self-heal,
                                                         per-line idempotent
   multi-user.target.wants/ enablement symlink
 
-Curated remotes: flathub (Flathub), fedora (Fedora Flatpak registry,
-oci+https://registry.fedoraproject.org).
+Curated remote: flathub (Flathub). The Fedora flatpak registry was
+previously also registered but never used by any manifest entry, and
+its presence caused titanoboa's live-ISO flatpak install to fail on
+refs that exist in both remotes (Flatseal in particular). One remote =
+no ambiguity for `flatpak install --noninteractive -y <bare-ref>`.
 
 Curated apps (8, all from flathub): Zen Browser (app.zen_browser.zen) +
 Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf,
@@ -60,6 +62,15 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/multi-user.target.wants/sideral-flatpak-install.service
 
 %changelog
+* Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
+- Drop the unused `fedora` flatpak remote. Every manifest entry installs
+  from flathub; the fedora remote was registered but never referenced.
+  Its presence broke the live-ISO build because titanoboa's
+  `flatpak install --noninteractive -y <bare-ref>` cannot disambiguate
+  refs that exist in multiple remotes — Flatseal exists in both flathub
+  and fedora, so the install prompted for a remote and aborted in
+  non-interactive mode. Single-remote setup eliminates that class of
+  failure.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
 - Browser is now Zen Browser (app.zen_browser.zen from Flathub).
   Replaces the imput/helium COPR (broke twice on the same /opt cpio
@@ -71,6 +82,7 @@ cp -a etc %{buildroot}/
 - New file: /etc/sideral-flatpak-remotes — curated remote set
   (flathub, fedora oci+registry). Read by os/build.sh at image build
   and by sideral-flatpak-install.service for forward-compat re-add.
+  (fedora remote subsequently removed in 0.0.0-4.)
 - Curated flatpaks are now preinstalled at image build (os/build.sh
   registers remotes + installs the full manifest into /var/lib/flatpak).
   ISO ships with everything present — no first-boot download wait,

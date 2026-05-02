@@ -6,8 +6,11 @@
 #   <name>  <url-or-flatpakrepo>
 # Lines starting with # and blank lines are ignored.
 
-# Flathub — primary community flatpak distribution.
+# Flathub — primary community flatpak distribution. The ONLY remote we
+# register: every entry in flatpak-manifest installs from flathub. The
+# Fedora flatpak registry was previously also registered but unused, and
+# its presence broke the live-ISO build because titanoboa's
+# `flatpak install --noninteractive -y <bare-ref>` cannot disambiguate
+# refs that exist in multiple remotes (e.g. com.github.tchx84.Flatseal
+# is in both flathub and fedora). One remote = no ambiguity.
 flathub  https://dl.flathub.org/repo/flathub.flatpakrepo
-
-# Fedora Flatpak registry (Fedora-built, signed flatpaks).
-fedora   oci+https://registry.fedoraproject.org

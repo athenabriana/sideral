@@ -16,7 +16,7 @@ env:
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
   R2_BUCKET: sideral
   R2_PUBLIC_BASE: https://sideral.athenabriana.com
-  ISO_KEY: sideral.iso
+  ISO_KEY: Sideral x86_64.iso
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -172,8 +172,8 @@ jobs:
       - name: Stage ISO under output/
         if: steps.dryrun.outputs.skip == 'false'
         run: |
-          mkdir -p ${{ github.workspace }}/output
-          mv ${{ steps.build-iso.outputs.iso-dest }} ${{ github.workspace }}/output/${{ env.ISO_KEY }}
+          mkdir -p "${{ github.workspace }}/output"
+          mv "${{ steps.build-iso.outputs.iso-dest }}" "${{ github.workspace }}/output/${{ env.ISO_KEY }}"
 
       - name: Checksum ISO
         if: steps.dryrun.outputs.skip == 'false'
@@ -215,8 +215,12 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="v${{ steps.dryrun.outputs.next_version }}"
-          ISO_URL="${{ env.R2_PUBLIC_BASE }}/${{ env.ISO_KEY }}"
-          SUM_URL="${{ env.R2_PUBLIC_BASE }}/${{ env.ISO_KEY }}.sha256"
+          # Filename has a space ("Sideral x86_64.iso"), so URL-encode for
+          # the public download links and shell-quote for the curl/dd
+          # commands shown in the release notes.
+          ISO_KEY_ENC="$(jq -rn --arg s "${{ env.ISO_KEY }}" '$s|@uri')"
+          ISO_URL="${{ env.R2_PUBLIC_BASE }}/${ISO_KEY_ENC}"
+          SUM_URL="${{ env.R2_PUBLIC_BASE }}/${ISO_KEY_ENC}.sha256"
           gh release view "${VERSION}" --repo "${{ github.repository }}" --json body -q .body > /tmp/notes.md
           {
             echo
@@ -226,10 +230,10 @@ jobs:
             echo "- SHA256: <${SUM_URL}>"
             echo
             echo '```bash'
-            echo "curl -LO ${ISO_URL}"
-            echo "curl -LO ${SUM_URL}"
-            echo "sha256sum -c ${{ env.ISO_KEY }}.sha256"
-            echo "sudo dd if=${{ env.ISO_KEY }} of=/dev/sdX bs=4M status=progress oflag=sync"
+            echo "curl -L -o '${{ env.ISO_KEY }}' ${ISO_URL}"
+            echo "curl -L -o '${{ env.ISO_KEY }}.sha256' ${SUM_URL}"
+            echo "sha256sum -c '${{ env.ISO_KEY }}.sha256'"
+            echo "sudo dd if='${{ env.ISO_KEY }}' of=/dev/sdX bs=4M status=progress oflag=sync"
             echo '```'
           } >> /tmp/notes.md
           gh release edit "${VERSION}" \
