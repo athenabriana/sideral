@@ -83,10 +83,12 @@ for module in "${MODULES[@]}"; do
 
     # Run any *.sh scripts in lexical order. install.sh / *-install.sh /
     # apply.sh / post.sh / extensions.sh — the convention is one script
-    # per concern within a module, named for what it does.
+    # per concern within a module, named for what it does. Scripts must
+    # be committed with the executable bit set (git update-index
+    # --chmod=+x); /ctx is bind-mounted read-only here so we can't
+    # chmod at runtime.
     shopt -s nullglob
     for script in "$module_dir"/*.sh; do
-        chmod +x "$script"
         log "[$module] running $(basename "$script")"
         "$script"
     done
