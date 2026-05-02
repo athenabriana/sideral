@@ -60,7 +60,8 @@ dnf install -y \
     libblockdev-btrfs \
     libblockdev-lvm \
     libblockdev-dm \
-    anaconda-live
+    anaconda-live \
+    pciutils
 
 # ── Anaconda profile ─────────────────────────────────────────────────
 # Modeled on ublue-os/bazzite installer/system_files/shared/etc/anaconda/
@@ -104,10 +105,26 @@ hidden_webui_pages =
 use_geolocation = False
 EOF
 
-# Interactive kickstart: pull our published bootc image and install it.
+# Interactive kickstart: detect GPU at install time and pull the matching
+# bootc image variant. The ISO carries no image bytes — both variants
+# (sideral, sideral-nvidia) live on ghcr.io and the install pulls
+# whichever matches the user's hardware. lspci|grep heuristic mirrors
+# what ublue-os uses in production. Pre-Maxwell NVIDIA cards (GTX 700
+# series and older) match the regex but ublue's 580-series proprietary
+# driver dropped support — those users need to manually rebase to the
+# base variant or use a legacy-driver fork. eGPUs not connected at
+# install time get the base image; rebase later if needed.
+#
 # --no-signature-verification because we don't ship a policy.json yet —
 # tracked under the image-ops feature; once that lands, drop this flag
 # and add a `bootc switch --enforce-container-sigpolicy` post-script.
 tee -a /usr/share/anaconda/interactive-defaults.ks <<EOF
-ostreecontainer --url=${IMAGE_REF}:${IMAGE_TAG} --transport=registry --no-signature-verification
+%pre --erroronfail --interpreter=/bin/bash
+URL="${IMAGE_REF}:${IMAGE_TAG}"
+if lspci 2>/dev/null | grep -qiE 'vga.*nvidia|3d.*nvidia|display.*nvidia'; then
+    URL="${IMAGE_REF}-nvidia:${IMAGE_TAG}"
+fi
+echo "ostreecontainer --url=\$URL --transport=registry --no-signature-verification" > /tmp/sideral-image.ks
+%end
+%include /tmp/sideral-image.ks
 EOF

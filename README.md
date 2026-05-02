@@ -33,8 +33,15 @@ Or use Etcher / Impression / GNOME Disks. Boot the USB and the preloaded Anacond
 
 ### Rebase an existing Fedora atomic install
 
+Pick the variant that matches your GPU. The ISO installer auto-detects via `lspci`; for manual rebase you choose explicitly:
+
 ```bash
+# Open-source GPU stack (AMD / Intel / nouveau)
 sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral:latest
+
+# NVIDIA proprietary drivers (Maxwell / GTX 900-series and newer)
+sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral-nvidia:latest
+
 systemctl reboot
 ```
 
@@ -48,7 +55,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 
 | Layer | Contents |
 | --- | --- |
-| **Base** | `ghcr.io/ublue-os/silverblue-main:43` |
+| **Base** | `ghcr.io/ublue-os/silverblue-main:43` (open-source GPU); `silverblue-main-nvidia:43` for the `sideral-nvidia` variant. ISO installer reads `lspci` and pulls the matching variant at install time. |
 | **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
 | **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
 | **Browser** | [Zen Browser](https://zen-browser.app) (`app.zen_browser.zen` from Flathub). Preinstalled at image build; new releases pulled by the standard `flatpak update` cadence. |
@@ -58,7 +65,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 | **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh` (shipped by `sideral-shell-ux`) sources starship, atuin, zoxide, mise, and fzf integrations into every interactive bash shell. Each line is `command -v`-guarded. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
 | **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
-| **Flatpaks (preinstalled at image build)** | Zen Browser, Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile (all from Flathub). Curated remotes registered: `flathub`, `fedora` (oci+registry). |
+| **Flatpaks (preinstalled at image build)** | Zen Browser, Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile (all from Flathub). Single curated remote: `flathub`. |
 
 ## Repo layout
 
@@ -94,15 +101,15 @@ Want to run your own variant?
    ```bash
    gh repo create sideral --public --source . --remote origin --push
    ```
-2. Wait ~25 min for the `build-sideral` workflow. It builds the bootc OCI image, runs semantic-release (which cuts a GitHub Release with changelog), builds the installer ISO with titanoboa, and uploads it to your Cloudflare R2 bucket under a constant `sideral.iso` key.
+2. Wait ~30 min for the `build-sideral` workflow. It builds two bootc OCI image variants in parallel (`sideral` open-source and `sideral-nvidia` proprietary-drivers), runs semantic-release (which cuts a GitHub Release with changelog), builds a single installer ISO with titanoboa that auto-detects GPU at install time and pulls the matching variant from ghcr.io, and uploads the ISO to your Cloudflare R2 bucket under a constant `Sideral x86_64.iso` key.
 3. From then on, every push to `main` cuts a new versioned release; every night the workflow rebases on the latest Silverblue base and republishes if anything changed.
 
 What lands in CI:
 
 | Artifact | Where | Tags |
 | --- | --- | --- |
-| Bootc image (rebase target) | `ghcr.io/<you>/sideral` | `:latest`, `:YYYYMMDD`, `:sha-<short>` |
-| Installer ISO (latest only, single file) | Cloudflare R2 (`s3://<bucket>/sideral.iso`) | constant key — overwrites |
+| Bootc images (rebase targets) | `ghcr.io/<you>/sideral` (open-source GPU), `ghcr.io/<you>/sideral-nvidia` (proprietary NVIDIA) | `:latest`, `:YYYYMMDD`, `:sha-<short>` |
+| Installer ISO (latest only, single file) | Cloudflare R2 (`s3://<bucket>/Sideral x86_64.iso`) | constant key — overwrites |
 | Changelog + version tag | GitHub Releases | `v<semver>` |
 
 R2 secrets needed in repo settings: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`. Update `R2_ENDPOINT`, `R2_BUCKET`, and `R2_PUBLIC_BASE` in `.github/workflows/build.yml` to match your account.

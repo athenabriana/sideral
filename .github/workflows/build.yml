@@ -10,8 +10,7 @@ on:
     branches: [main]
 
 env:
-  IMAGE_NAME: sideral
-  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, with Helium browser (imput/helium COPR), curated flatpaks (GNOME quality-of-life apps), chezmoi-driven user dotfiles, sideral-cli-tools meta-RPM (mise, code, starship, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, chezmoi), and docker-ce."
+  IMAGE_DESC: "Personal Fedora atomic desktop — GNOME + tiling-shell on ublue-os/silverblue-main, Zen Browser (Flatpak from Flathub), curated flatpaks (GNOME quality-of-life apps), chezmoi-driven user dotfiles, sideral-cli-tools meta-RPM (mise, code, starship, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, chezmoi), and docker-ce."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
   R2_BUCKET: sideral
@@ -24,12 +23,29 @@ concurrency:
 
 jobs:
   build:
-    name: Build container image
+    name: Build container image (${{ matrix.variant }})
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
       id-token: write
+
+    # Matrix builds two image variants from the same Containerfile:
+    #   • base   — stock open-source GPU stack (amdgpu/i915/xe/nouveau)
+    #   • nvidia — proprietary NVIDIA drivers, derived from
+    #     silverblue-main-nvidia which bakes signed kmods. The ISO chooser
+    #     (iso/anaconda-hook.sh) reads `lspci` at install time and pulls
+    #     whichever variant matches the user's hardware.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: base
+            base_image: ghcr.io/ublue-os/silverblue-main:43
+            image_name: sideral
+          - variant: nvidia
+            base_image: ghcr.io/ublue-os/silverblue-main-nvidia:43
+            image_name: sideral-nvidia
 
     steps:
       - name: Checkout
@@ -42,13 +58,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.IMAGE_REGISTRY }}/${{ matrix.image_name }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value={{date 'YYYYMMDD'}},enable={{is_default_branch}}
             type=sha,prefix=sha-
           labels: |
-            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            org.opencontainers.image.title=${{ matrix.image_name }}
             org.opencontainers.image.description=${{ env.IMAGE_DESC }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.url=https://github.com/${{ github.repository }}
@@ -62,10 +78,12 @@ jobs:
         with:
           context: ./os
           containerfiles: ./os/Containerfile
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ matrix.image_name }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           oci: true
+          build-args: |
+            BASE_IMAGE=${{ matrix.base_image }}
 
       - name: Log in to ghcr.io
         if: github.event_name != 'pull_request'
@@ -92,7 +110,7 @@ jobs:
           DIGEST: ${{ steps.push.outputs.digest }}
           COSIGN_EXPERIMENTAL: "true"
         run: |
-          cosign sign --yes "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}"
+          cosign sign --yes "${{ env.IMAGE_REGISTRY }}/${{ matrix.image_name }}@${DIGEST}"
 
   release:
     name: Build ISO & publish release
