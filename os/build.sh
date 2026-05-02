@@ -154,6 +154,54 @@ done < "$manifest_file"
 # it via `rpm -Uvh --replacefiles` to claim file ownership from
 # fedora-release-common.
 
+# ── NVIDIA-variant tweaks ───────────────────────────────────────────────
+# silverblue-nvidia:43 already supplies the full nvidia stack inherited
+# down to sideral-nvidia: signed kmod-nvidia matched to a versionlocked
+# kernel, kargs (rd.driver.blacklist=nouveau, modprobe.blacklist=nouveau,
+# nvidia-drm.modeset=1, initcall_blacklist=simpledrm_platform_driver_init)
+# at /usr/lib/bootc/kargs.d/00-nvidia.toml, and a dracut force_drivers
+# config that bakes nvidia into the initramfs.
+#
+# What's missing on top — and what bluefin-nvidia adds — is mutter's
+# `kms-modifiers` experimental feature. Without it, GNOME on Wayland
+# falls back to non-atomic mode-setting on NVIDIA and you get tearing /
+# partial-frame glitches even though the driver is loaded correctly.
+# Stock GNOME on F43 does NOT enable kms-modifiers by default for
+# nvidia-drm. (Also enable scale-monitor-framebuffer for fractional
+# scaling — same default-off, same one-line cost to flip on.)
+#
+# Detect the variant by checking for kmod-nvidia in rpmdb so the same
+# build.sh works for both base and nvidia. The dconf snippet is picked
+# up by the Containerfile's `dconf update` after the inline RPM step
+# installs sideral-dconf's user profile.
+if rpm -q kmod-nvidia >/dev/null 2>&1; then
+    log "NVIDIA variant detected — enabling mutter kms-modifiers"
+    mkdir -p /etc/dconf/db/local.d
+    cat > /etc/dconf/db/local.d/50-sideral-nvidia <<'EOF'
+# Auto-applied at image build for the sideral-nvidia variant. Without
+# kms-modifiers, GNOME's Wayland compositor uses legacy mode-setting on
+# NVIDIA and produces visible tearing / partial frames.
+[org/gnome/mutter]
+experimental-features=['scale-monitor-framebuffer', 'kms-modifiers']
+EOF
+fi
+
+# ── Regenerate initramfs ────────────────────────────────────────────────
+# Defensive end-of-build regen, matching bluefin's pattern. silverblue-
+# {main,nvidia}:43 each generate an initramfs at upstream build time and
+# nothing in the steps above should invalidate it (we install only
+# userspace packages and don't touch kernel modules), but if a future
+# package install triggers a kernel post-script that strips nvidia/zfs/
+# whatever from the initramfs without rebuilding, this catches it.
+# --reproducible + DRACUT_NO_XATTR=1 keep the output deterministic so
+# rebuilds with no upstream change produce byte-identical images.
+log "Regenerating initramfs"
+KERNEL_VERSION="$(rpm -q --queryformat='%{evr}.%{arch}' kernel-core)"
+export DRACUT_NO_XATTR=1
+/usr/bin/dracut --no-hostonly --kver "$KERNEL_VERSION" --reproducible --add ostree -f "/lib/modules/${KERNEL_VERSION}/initramfs.img"
+chmod 0600 "/lib/modules/${KERNEL_VERSION}/initramfs.img"
+unset DRACUT_NO_XATTR
+
 # ── Cleanup ─────────────────────────────────────────────────────────────
 log "Cleaning dnf caches and logs"
 dnf5 clean all
