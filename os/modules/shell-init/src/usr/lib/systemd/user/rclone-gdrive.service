@@ -1,0 +1,26 @@
+[Unit]
+Description=Mount Google Drive (rclone) at ~/gdrive
+Documentation=https://rclone.org/commands/rclone_mount/
+# Wait for network so the OAuth token refresh has connectivity at start.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+# %h expands to the user's home dir at runtime — works for any user
+# whose login enabled this unit.
+ExecStartPre=/usr/bin/mkdir -p %h/gdrive
+ExecStart=/usr/bin/rclone mount gdrive: %h/gdrive \
+    --config=%h/.config/rclone/rclone.conf \
+    --vfs-cache-mode=writes \
+    --vfs-cache-max-age=24h \
+    --dir-cache-time=72h \
+    --log-level=INFO
+ExecStop=/usr/bin/fusermount3 -u %h/gdrive
+
+# Recover from transient network drops, expired-token refreshes, etc.
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -124,8 +124,8 @@ tools:
     ${B}Other ujust recipes${R}
       ujust                       list every recipe (sideral + ublue stock)
       ujust chezmoi-init          bootstrap dotfiles from a chezmoi git repo
-      ujust gdrive-init/-mount    set up + mount Google Drive at ~/gdrive
-      ujust gdrive-unmount        unmount ~/gdrive
+      ujust gdrive-setup          set up Google Drive auto-mount at ~/gdrive
+                                  (one-time; mounts on every login after)
       ujust update                rpm-ostree upgrade + flatpak update
 
     EOF
@@ -144,86 +144,59 @@ tools:
 # Examples:
 #   ujust chezmoi-init https://github.com/yourname/dotfiles
 #   ujust chezmoi-init git@github.com:yourname/dotfiles.git
-# One-time setup of a Google Drive remote in rclone. Walks you through
-# rclone's interactive OAuth flow (browser opens to Google for
-# authorization). Creates a remote named `gdrive` you can then mount
-# with `ujust gdrive-mount`. Re-runs are safe but typically not needed
-# unless tokens expired or you want to switch accounts.
+# One-command Google Drive setup. Idempotent — safe to run multiple
+# times. Combines what used to be three separate recipes (init / mount
+# / unmount) into a single auto-mount-on-login flow:
 #
-# Behind the scenes: `rclone config create gdrive drive
-# config_is_local=false`. The config is written to
-# ~/.config/rclone/rclone.conf (per-user, not system-wide).
+#   1. If rclone has no `gdrive:` remote, walk the OAuth flow
+#      (browser → Google consent → tokens written to ~/.config/rclone/).
+#   2. Enable the rclone-gdrive.service systemd USER unit shipped at
+#      /usr/lib/systemd/user/rclone-gdrive.service. From then on the
+#      mount auto-starts on every login (WantedBy=default.target),
+#      survives reboots, and self-restarts on transient network drops.
+#   3. Start it now so you don't have to log out + back in.
+#
+# Net result after one `ujust gdrive-setup`: `~/gdrive` is mounted,
+# stays mounted across reboots, no further commands needed.
+#
+# To turn it off:  systemctl --user disable --now rclone-gdrive.service
+# To inspect:      systemctl --user status rclone-gdrive.service
+# To see logs:     journalctl --user -u rclone-gdrive.service
 [group('Setup')]
-gdrive-init:
+gdrive-setup:
     #!/usr/bin/bash
     set -euo pipefail
     if ! command -v rclone >/dev/null 2>&1; then
         echo "rclone not found — should ship via sideral-cli-tools" >&2
         exit 1
     fi
+
+    # Step 1: rclone remote. Skip OAuth if `gdrive:` already configured.
     if rclone listremotes 2>/dev/null | grep -q '^gdrive:$'; then
-        echo "rclone already has a 'gdrive' remote configured."
-        echo "Re-running this would replace it. Continue?"
-        ugum confirm || exit 0
-    fi
-    echo "Launching rclone's interactive Google Drive setup."
-    echo "When prompted to use auto-config, say YES — it'll open"
-    echo "your browser to the Google OAuth consent screen."
-    echo
-    rclone config create gdrive drive
-
-# Mount the `gdrive:` rclone remote at ~/gdrive. Backgrounds the mount
-# (--daemon) so it survives the shell. Auto-creates ~/gdrive if it
-# doesn't exist. Idempotent: bails if already mounted.
-#
-# Once mounted, ~/gdrive behaves like any other directory — you can
-# `cp`, `ls`, open files in apps, browse with Files (Nautilus). Latency
-# is per-API-call so heavy I/O (compiling, large diff'ing) is slow;
-# best for "drop a file in to share" / "grab a file" workflows.
-[group('System')]
-gdrive-mount:
-    #!/usr/bin/bash
-    set -euo pipefail
-    if ! command -v rclone >/dev/null 2>&1; then
-        echo "rclone not found — should ship via sideral-cli-tools" >&2
-        exit 1
-    fi
-    if ! rclone listremotes 2>/dev/null | grep -q '^gdrive:$'; then
-        echo "No 'gdrive' remote configured. Run \`ujust gdrive-init\` first." >&2
-        exit 1
-    fi
-    target="$HOME/gdrive"
-    if mountpoint -q "$target" 2>/dev/null; then
-        echo "$target is already mounted. \`ujust gdrive-unmount\` to unmount first."
-        exit 0
-    fi
-    mkdir -p "$target"
-    # --vfs-cache-mode writes makes writes work properly for apps that
-    # can't handle the streaming-write pattern rclone uses by default.
-    # --daemon detaches so the mount outlives this shell.
-    rclone mount gdrive: "$target" --vfs-cache-mode writes --daemon
-    sleep 1
-    if mountpoint -q "$target"; then
-        echo "Mounted gdrive: at $target"
-        echo "Browse with: ls $target  (or open in Files)"
-        echo "Unmount with: ujust gdrive-unmount"
+        echo "rclone gdrive: remote already configured — skipping OAuth."
     else
-        echo "Mount appears to have failed — check \`journalctl --user | tail\`" >&2
-        exit 1
+        echo "Setting up Google Drive remote in rclone."
+        echo "Your browser will open for the Google OAuth consent screen."
+        echo "Say YES when prompted to use auto-config."
+        echo
+        rclone config create gdrive drive
     fi
 
-# Unmount ~/gdrive. Safe to run if not mounted (no-op).
-[group('System')]
-gdrive-unmount:
-    #!/usr/bin/bash
-    set -euo pipefail
-    target="$HOME/gdrive"
-    if ! mountpoint -q "$target" 2>/dev/null; then
-        echo "$target is not mounted."
-        exit 0
+    # Step 2 + 3: enable + start the systemd user unit.
+    # --now combines `enable` (link into default.target.wants) + `start`
+    # so a single command both arms auto-mount-on-login and mounts now.
+    systemctl --user enable --now rclone-gdrive.service
+    sleep 1
+    if mountpoint -q "$HOME/gdrive" 2>/dev/null; then
+        echo
+        echo "Done. Google Drive is mounted at $HOME/gdrive and will"
+        echo "auto-mount on every login from now on."
+    else
+        echo
+        echo "Service enabled but mount didn't come up — check:" >&2
+        echo "  journalctl --user -u rclone-gdrive.service" >&2
+        exit 1
     fi
-    fusermount3 -u "$target" || fusermount -u "$target"
-    echo "Unmounted $target"
 
 [group('Setup')]
 chezmoi-init repo="":

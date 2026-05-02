@@ -71,8 +71,19 @@ cp -a usr %{buildroot}/
 /etc/zshrc
 /etc/user-motd
 /usr/share/ublue-os/just/60-custom.just
+/usr/lib/systemd/user/rclone-gdrive.service
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
+- Ship /usr/lib/systemd/user/rclone-gdrive.service. Systemd USER unit
+  that runs `rclone mount gdrive: %h/gdrive --vfs-cache-mode=writes
+  --daemon` with WantedBy=default.target so it auto-mounts on every
+  login once enabled. Restart=on-failure handles transient network
+  drops and OAuth-token refresh hiccups. Not enabled by default —
+  user opts in via the new `ujust gdrive-setup` recipe (single
+  command: walks rclone OAuth on first run, enables + starts the
+  unit, sticks across reboots). Replaces the previous three-recipe
+  init/mount/unmount split with one auto-mount-forever flow.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
 - Add /etc/zsh/sideral-cli-init.zsh + /etc/zshrc — zsh port of the
   bash/fish init. Same 14-marker agent detection, same eza/bat
