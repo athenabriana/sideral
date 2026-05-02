@@ -110,6 +110,38 @@ if (( ${+commands[fzf]} )); then
     bindkey '^P' _sideral_fzf_quick_open
 fi
 
+# ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
+# BUFFER / CURSOR are zsh's editable-line variables, equivalent of
+# bash's READLINE_LINE / READLINE_POINT.
+_sideral_toggle_sudo() {
+    if [[ "$BUFFER" == sudo\ * ]]; then
+        BUFFER="${BUFFER#sudo }"
+        (( CURSOR -= 5 ))
+        (( CURSOR < 0 )) && CURSOR=0
+    else
+        BUFFER="sudo $BUFFER"
+        (( CURSOR += 5 ))
+    fi
+}
+zle -N _sideral_toggle_sudo
+bindkey '^[s' _sideral_toggle_sudo  # ^[ = ESC = Alt prefix; s = lowercase
+
+# ── Ctrl-G — fzf git branch picker → checkout ─────────────────────────
+if (( ${+commands[fzf]} )); then
+    _sideral_fzf_git_checkout() {
+        git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
+        local branch
+        branch=$(git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/ 2>/dev/null \
+                 | sed 's|^origin/||' | awk '!seen[$0]++' \
+                 | fzf --height 40% --reverse --prompt 'Checkout: ')
+        [[ -z "$branch" ]] && return
+        git checkout "$branch"
+        zle reset-prompt 2>/dev/null
+    }
+    zle -N _sideral_fzf_git_checkout
+    bindkey '^G' _sideral_fzf_git_checkout
+fi
+
 # ── Syntax highlighting (must load LAST) ────────────────────────────────
 # zsh-syntax-highlighting wraps every ZLE widget that exists at source-
 # time. Loading after the bindings above means our Ctrl+P widget gets

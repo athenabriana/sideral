@@ -123,3 +123,29 @@ if command -v fzf >/dev/null 2>&1
     end
     bind \cp _sideral_fzf_quick_open
 end
+
+# ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
+function _sideral_toggle_sudo
+    set -l line (commandline)
+    if string match -q 'sudo *' -- "$line"
+        commandline -r (string sub -s 6 -- "$line")
+    else
+        commandline -C 0
+        commandline -i 'sudo '
+    end
+end
+bind \es _sideral_toggle_sudo
+
+# ── Ctrl-G — fzf git branch picker → checkout ─────────────────────────
+if command -v fzf >/dev/null 2>&1
+    function _sideral_fzf_git_checkout
+        git rev-parse --is-inside-work-tree >/dev/null 2>&1; or return
+        set -l branch (git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/ 2>/dev/null \
+                       | sed 's|^origin/||' | awk '!seen[$0]++' \
+                       | fzf --height 40% --reverse --prompt 'Checkout: ')
+        test -z "$branch"; and return
+        git checkout "$branch"
+        commandline -f repaint
+    end
+    bind \cg _sideral_fzf_git_checkout
+end

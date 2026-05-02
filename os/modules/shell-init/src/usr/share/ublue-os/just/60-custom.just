@@ -82,6 +82,10 @@ tools:
                       cross-shell history, optional sync.
       Ctrl+T          ${D}NEW.${R} fzf — paste a file path at cursor.
       Alt+C           ${D}NEW.${R} fzf — cd into a subdir picked from the tree.
+      Alt+S           ${D}NEW.${R} toggle \`sudo \` prefix on the current line.
+                      Useful for "type cmd → realize you need root → Alt+S".
+      Ctrl+G          ${D}NEW.${R} fzf-driven git branch picker → checkout.
+                      No-op outside a git repo.
 
     ${B}Containers${R} — there is no docker daemon
       \`docker ...\`    runs podman (via podman-docker shim). No daemon

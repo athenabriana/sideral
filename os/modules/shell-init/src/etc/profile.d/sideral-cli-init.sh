@@ -95,6 +95,42 @@ if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
     bind -x '"\C-p": _sideral_fzf_quick_open'
 fi
 
+# ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
+# Type the command, realize you need root, hit Alt-S. Hit it again to
+# remove. READLINE_LINE / READLINE_POINT are the bash-readline variables
+# that `bind -x` lets us mutate — equivalent of zsh's BUFFER/CURSOR.
+if [[ $- == *i* ]]; then
+    _sideral_toggle_sudo() {
+        if [[ "$READLINE_LINE" == sudo\ * ]]; then
+            READLINE_LINE="${READLINE_LINE#sudo }"
+            READLINE_POINT=$((READLINE_POINT - 5))
+            (( READLINE_POINT < 0 )) && READLINE_POINT=0
+        else
+            READLINE_LINE="sudo $READLINE_LINE"
+            READLINE_POINT=$((READLINE_POINT + 5))
+        fi
+    }
+    bind -x '"\eS": _sideral_toggle_sudo'
+fi
+
+# ── Ctrl-G — fzf git branch picker → checkout ─────────────────────────
+# Pops fzf over the union of local + remote branches (origin/foo
+# de-duped down to foo). Selection runs `git checkout`. No-ops cleanly
+# outside a git repo. Bash's default Ctrl-G is `abort-line` which most
+# people never use; muscle-memory for cancel is Ctrl-C anyway.
+if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
+    _sideral_fzf_git_checkout() {
+        git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
+        local branch
+        branch=$(git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/ 2>/dev/null \
+                 | sed 's|^origin/||' | awk '!seen[$0]++' \
+                 | fzf --height 40% --reverse --prompt 'Checkout: ') || return
+        [ -z "$branch" ] && return
+        git checkout "$branch"
+    }
+    bind -x '"\C-g": _sideral_fzf_git_checkout'
+fi
+
 # eza / bat aliases — only for human-driven interactive shells.
 #
 # AI coding agents read command output as raw strings to feed back
