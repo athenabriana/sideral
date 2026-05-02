@@ -6,12 +6,14 @@
 #   post-install.sh    — optional script, run after packages install
 #
 # Repo strategy:
-#   • Three "persistent" repos are registered here AND shipped under
+#   • Two "persistent" repos are registered here AND shipped under
 #     /etc/yum.repos.d/ (via sideral-base) so `rpm-ostree upgrade` can pull
 #     new releases between image rebuilds:
-#       - docker-ce-stable       (docker-ce + containerd.io)
 #       - mise.jdx.dev/rpm       (mise)
 #       - packages.microsoft.com (code / VS Code)
+#     (docker-ce-stable was a third entry until 2026-05-02 — replaced by
+#     rootless podman + docker compatibility shims, which come from
+#     Fedora main and need no extra repo.)
 #   • The shipped /etc/yum.repos.d/ copies aren't yet on disk during this
 #     RUN step (sideral-base is built later inline), so we register each
 #     repo from upstream URL here and rely on the shipped copy taking over
@@ -64,8 +66,9 @@ if [ ${#to_remove[@]} -gt 0 ]; then
 fi
 
 # ── Register persistent repos for build-time install ────────────────────
-log "Registering docker-ce-stable repo"
-dnf5 -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
+# docker-ce-stable was here until 2026-05-02 to source the docker-ce
+# stack; sideral now uses podman-docker + podman-compose from Fedora
+# main, so the third-party repo is no longer needed.
 
 log "Registering mise repo"
 dnf5 -y config-manager addrepo --from-repofile=https://mise.jdx.dev/rpm/mise.repo
@@ -83,8 +86,7 @@ for feature in "${FEATURES[@]}"; do
         if [ -n "$packages" ]; then
             log "[$feature] Installing packages"
             echo "  $packages"
-            # --allowerasing lets containerd.io replace Fedora's containerd.
-            dnf5 install -y --allowerasing --setopt=install_weak_deps=False $packages
+            dnf5 install -y --setopt=install_weak_deps=False $packages
         fi
     fi
 

@@ -1,7 +1,7 @@
 # sideral-base — meta-package + core system identity files
 #
 # Owns: /etc/os-release, /etc/distrobox/distrobox.conf,
-#       /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
+#       /etc/yum.repos.d/{mise,vscode}.repo
 # Requires: all sideral-* sub-packages + transitive third-party deps
 
 Name:           sideral-base
@@ -23,23 +23,28 @@ Requires:       sideral-signing   = %{version}-%{release}
 Requires:       sideral-cli-tools = %{version}-%{release}
 
 # Third-party deps:
-#   docker-ce      — from docker-ce-stable
-#   containerd.io  — from docker-ce-stable
+#   podman-docker  — Fedora main (docker → podman wrapper)
+#   podman-compose — Fedora main (Python-based docker-compose drop-in)
 # (Bazaar removed 2026-05-01 → gnome-software via features/gnome/packages.txt.)
+# (Docker stack swapped for podman 2026-05-02 — see features/container/
+# packages.txt for the rationale. docker-ce + containerd.io were also
+# removed from this Requires graph; the repo file at
+# /etc/yum.repos.d/docker-ce.repo + the docker-ce-stable build-time
+# repo registration in os/build.sh were dropped at the same time.)
 # (mise + code from sideral-cli-tools; their repos are shipped here so
 # `rpm-ostree upgrade` continues to pull updates between image rebuilds.)
-Requires:       docker-ce
-Requires:       containerd.io
+Requires:       podman-docker
+Requires:       podman-compose
 
 %description
 Meta-package for sideral, a personal Fedora atomic desktop layered on
 ublue-os/silverblue-main. Installs the full sideral customization
-layer plus the curated docker-ce stack and the chezmoi-driven CLI
-toolset (sideral-cli-tools).
+layer plus rootless podman (with docker compatibility shims) and the
+chezmoi-driven CLI toolset (sideral-cli-tools).
 
 Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
-(distrobox defaults), and /etc/yum.repos.d/{docker-ce,mise,vscode}.repo
-(kept enabled so `rpm-ostree upgrade` pulls Docker, mise, and VS Code
+(distrobox defaults), and /etc/yum.repos.d/{mise,vscode}.repo
+(kept enabled so `rpm-ostree upgrade` pulls mise and VS Code
 updates between image rebuilds). starship is not in any of these repos
 — it's baked into /usr/bin from the latest upstream binary at image
 build (see os/build.sh). Zen Browser ships as a Flathub flatpak
@@ -57,11 +62,19 @@ cp -a etc %{buildroot}/
 %files
 /etc/os-release
 /etc/distrobox/distrobox.conf
-/etc/yum.repos.d/docker-ce.repo
 /etc/yum.repos.d/mise.repo
 /etc/yum.repos.d/vscode.repo
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
+- Drop /etc/yum.repos.d/docker-ce.repo and the docker-ce / containerd.io
+  Requires. Container stack swapped from rootful Docker to rootless
+  podman + docker compatibility shims (podman-docker, podman-compose).
+  The persistent docker-ce-stable repo registration in os/build.sh,
+  the --allowerasing flag that swapped Fedora's containerd, and the
+  empty `docker` group footgun all go away with this change. See
+  features/container/packages.txt for the full rationale; the
+  podman.socket user-unit auto-enable lives in sideral-services.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
 - Drop /etc/yum.repos.d/_copr_imput-helium.repo. The imput/helium COPR
   was tried twice as the source for the default browser and broke both

@@ -3,8 +3,8 @@
 # (preinstalled Flatpak from Flathub), a curated flatpak set (GNOME
 # quality-of-life apps, preinstalled at image build), chezmoi-driven
 # user dotfile layer + sideral-cli-tools (mise, code, starship, atuin,
-# fzf, etc.), and a narrow RPM layer (docker-ce + compose, gnome
-# extensions + gnome-software, fonts).
+# fzf, etc.), and a narrow RPM layer (rootless podman with docker
+# compatibility shims, gnome extensions + gnome-software, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
@@ -48,9 +48,10 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 #
 # Several sideral files conflict with base-image packages on file
 # ownership (/etc/os-release vs fedora-release-common, /etc/containers/policy.json
-# vs containers-common, /etc/yum.repos.d/docker-ce.repo vs docker-ce). rpm
-# -Uvh --replacefiles transfers ownership cleanly — the standard
-# derivative-distro pattern. dnf install rejects file conflicts.
+# vs containers-common). rpm -Uvh --replacefiles transfers ownership
+# cleanly — the standard derivative-distro pattern. dnf install rejects
+# file conflicts. (The /etc/yum.repos.d/docker-ce.repo conflict went away
+# 2026-05-02 when the docker stack was swapped for rootless podman.)
 #
 # `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:43 ships
 # ublue-os-signing pre-installed, and sideral-signing declares Conflicts:
@@ -59,8 +60,9 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # explicitly. --nodeps is safe here because nothing else in the base image
 # Requires ublue-os-signing.
 #
-# Requires: docker-ce/containerd.io must already be installed (build.sh
-# above did that via the container feature); rpm -Uvh verifies presence
+# Requires: podman-docker / podman-compose / podman must already be
+# installed (build.sh above did that via the container feature plus
+# silverblue-main's preinstalled podman); rpm -Uvh verifies presence
 # but won't fetch.
 #
 # `rpm -e` (not `dnf remove`) for the toolchain teardown: dnf would

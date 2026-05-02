@@ -1,10 +1,28 @@
-# Docker (docker-ce) — from docker-ce-stable repo. Fedora's `containerd` is
-# swapped out automatically by dnf because `containerd.io` obsoletes it.
-# The docker-ce repo is added at build time via `dnf5 config-manager` in
-# build.sh and also shipped as /etc/yum.repos.d/docker-ce.repo so
-# `rpm-ostree upgrade` keeps pulling updates.
-containerd.io
-docker-ce
-docker-ce-cli
-docker-buildx-plugin
-docker-compose-plugin
+# Container runtime — podman + docker compatibility shims.
+#
+# silverblue-main:43 already ships `podman` itself. We layer:
+#   • podman-docker    — installs /usr/bin/docker as a wrapper that
+#                        redirects to podman, plus /etc/profile.d/
+#                        podman-docker.sh which sets DOCKER_HOST to
+#                        the per-user podman socket. Most `docker`,
+#                        `docker build`, `docker run` invocations
+#                        keep working as muscle-memory.
+#   • podman-compose   — Python implementation of docker-compose
+#                        backed by podman. `podman compose` (and the
+#                        bare `podman-compose` command) drive
+#                        compose.yaml workflows with ~95% docker-
+#                        compose v2 parity. Gaps land mostly around
+#                        Compose-spec `extends`, BuildKit-specific
+#                        build args, and some `network_mode: host`
+#                        edge cases on rootless.
+#
+# Prior layout: docker-ce + docker-ce-cli + containerd.io +
+# docker-buildx-plugin + docker-compose-plugin from docker-ce-stable.
+# Replaced 2026-05-02 — Fedora atomic + rootful Docker is a known
+# friction point (group footgun, daemon to enable, ostree-unfriendly
+# storage on /var/lib/docker), and rootless podman is the de facto
+# atomic-desktop default. The persistent docker-ce repo, the
+# --allowerasing swap of Fedora's containerd, and the docker-ce
+# Requires in sideral-base all go away with this change.
+podman-docker
+podman-compose
