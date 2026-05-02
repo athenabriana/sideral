@@ -6,25 +6,25 @@
 # Tools split by source:
 #   • Fedora main:           chezmoi, atuin, fzf, bat, eza, ripgrep,
 #                            zoxide, gh, git-lfs, gcc, make, cmake,
-#                            helix, fish
+#                            helix, fish, zsh
 #   • mise.jdx.dev/rpm:      mise          (persistent repo, see sideral-base)
 #   • packages.microsoft.com: code         (persistent repo, see sideral-base)
 #   • upstream binary:       starship      (pinned tarball baked into
 #                                           /usr/bin by build.sh — not RPM-tracked)
 #
-# The 16 RPM tools above are dnf-installed in build.sh before the inline
+# The 17 RPM tools above are dnf-installed in build.sh before the inline
 # rpmbuild step; rpm -Uvh of this package then verifies they're in the
 # rpmdb. starship is NOT listed in Requires: because no RPM owns it.
-# helix is set as $EDITOR by sideral-shell-ux's cli-init.{sh,fish} so
-# git, sudoedit, mise, etc. spawn it by default. fish is the optional
-# friendly-interactive-shell alternative to bash; per-user opt-in via
-# `chsh -s /usr/bin/fish` after deployment (sideral-shell-ux ships
-# parallel init for both shells).
+# helix is set as $EDITOR by sideral-shell-ux's cli-init.{sh,fish,zsh}
+# so git, sudoedit, mise, etc. spawn it by default. fish + zsh are
+# alternative interactive shells; per-user opt-in via `ujust chsh
+# {fish,zsh}` (sideral-shell-ux ships parallel init for all three
+# shells under /etc/profile.d/ + /etc/fish/conf.d/ + /etc/zsh/).
 
 Name:           sideral-cli-tools
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral CLI toolset (chezmoi + 14 small RPMs + mise + code; starship baked separately)
+Summary:        sideral CLI toolset (chezmoi + 15 small RPMs + mise + code; starship baked separately)
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
@@ -46,16 +46,18 @@ Requires:       cmake
 Requires:       code
 Requires:       helix
 Requires:       fish
+Requires:       zsh
 
-Meta-package: depends on the 16 RPM-packaged CLI tools sideral wires
-into the user shell via /etc/profile.d/sideral-cli-init.sh and the
-parallel /etc/fish/conf.d/sideral-cli-init.fish. Plus VS Code (`code`)
-as the GUI editor (VISUAL), Helix (`hx`) as the default terminal
-editor (EDITOR), and fish as the optional friendly-interactive-shell
-alternative to bash (per-user opt-in via `chsh -s /usr/bin/fish`).
-starship ships alongside as a pinned upstream binary baked into
-/usr/bin (see build.sh) — outside this package's Requires: because
-no RPM owns the file. Replaces the home-manager `home.packages` list
+Meta-package: depends on the 17 RPM-packaged CLI tools sideral wires
+into the user shell via parallel init files for bash, fish, and zsh
+(/etc/profile.d/sideral-cli-init.sh, /etc/fish/conf.d/sideral-cli-
+init.fish, /etc/zsh/sideral-cli-init.zsh). Plus VS Code (`code`) as
+the GUI editor (VISUAL), Helix (`hx`) as the default terminal editor
+(EDITOR), and fish + zsh as alternatives to the default bash login
+shell (per-user opt-in via `ujust chsh {fish,zsh}`). starship ships
+alongside as a pinned upstream binary baked into /usr/bin (see
+build.sh) — outside this package's Requires: because no RPM owns
+the file. Replaces the home-manager `home.packages` list
 that nix-home would have shipped.
 
 %prep
@@ -65,6 +67,12 @@ that nix-home would have shipped.
 # Intentionally empty — meta-package, no payload.
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
+- Add Requires: zsh as a third interactive-shell option alongside
+  bash (default) and fish. Sideral ships parallel init for all three:
+  /etc/profile.d/sideral-cli-init.sh + /etc/fish/conf.d/sideral-cli-
+  init.fish + /etc/zsh/sideral-cli-init.zsh. Switch via the new
+  `ujust chsh {bash,fish,zsh}` recipe (60-custom.just).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
 - Add Requires: fish. Friendly-interactive-shell alternative to bash
   with first-class syntax highlighting, autosuggestions, and smarter

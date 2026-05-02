@@ -19,28 +19,38 @@ Requires:       bash
 # default for users who `chsh -s /usr/bin/fish` after deployment.
 
 %description
-Ships shell-init wiring for both bash and fish.
+Ships shell-init wiring for bash, fish, and zsh — same tools, same
+agent guard, same Ctrl+P quick-open, same eza/bat aliases — plus
+ujust recipes and the user-motd banner.
 
-Bash side — /etc/profile.d/:
-  sideral-cli-init.sh    — central wiring for starship, atuin, zoxide,
-                           mise, fzf. Plus EDITOR=hx / VISUAL=code,
-                           eza/bat aliases (skipped on AI-agent shells),
-                           and Ctrl+P → fzf quick-open. Each integration
-                           is `command -v`-guarded so `rpm-ostree
-                           override remove` of any one tool doesn't
-                           break the rest.
-  sideral-onboarding.sh  — one-shot chezmoi init hint shown on the first
-                           interactive shell per user. Subsequent shells
-                           stay silent (marker at ~/.cache/sideral/).
+Bash side — /etc/profile.d/sideral-cli-init.sh:
+  Central wiring for starship, atuin, zoxide, mise, fzf. Plus
+  EDITOR=hx / VISUAL=code, eza/bat aliases (skipped on AI-agent
+  shells), and Ctrl+P → fzf quick-open. Each integration is
+  `command -v`-guarded so `rpm-ostree override remove` of any one
+  tool doesn't break the rest.
 
-Fish side — /etc/fish/conf.d/:
-  sideral-cli-init.fish  — fish port of sideral-cli-init.sh. Same tool
-                           inits, same agent guard, same Ctrl+P quick-
-                           open, same eza/bat aliases. Fish brings
-                           syntax highlighting + autosuggestions +
-                           smarter tab completion built-in (no extra
-                           wiring needed). Sourced automatically when
-                           the user's login shell is fish.
+Fish side — /etc/fish/conf.d/sideral-cli-init.fish:
+  Fish port. Fish brings syntax highlighting + autosuggestions +
+  smarter tab completion built-in.
+
+Zsh side — /etc/zsh/sideral-cli-init.zsh + /etc/zshrc:
+  Zsh port (same shape, zsh syntax). The shipped /etc/zshrc replaces
+  Fedora's stock 3-line stub via rpm -Uvh --replacefiles; it sets
+  umask and sources sideral-cli-init.zsh.
+
+User-facing UX — /etc/user-motd:
+  Welcome banner displayed on every interactive login by ublue-os-
+  just's /etc/profile.d/user-motd.sh. Lists the most-used `ujust`
+  recipes (chsh, chezmoi-init, update). Per-user opt-out via
+  `touch ~/.config/no-show-user-motd`. Replaces the previous
+  one-shot sideral-onboarding.sh (was bash-only and tied to first-
+  shell; the motd works for any login shell and any session).
+
+ujust recipes — /usr/share/ublue-os/just/60-custom.just:
+  Fills the ublue-os-just `import? "60-custom.just"` extension slot.
+  Provides `chsh [bash|fish|zsh]` (sudo usermod wrapper) and
+  `chezmoi-init <repo>` (chezmoi init --apply wrapper).
 
 (sideral-kind-podman.sh moved to sideral-kubernetes 2026-05-02 as part
 of the module refactor — that snippet is K8s-tooling-specific, not a
@@ -52,13 +62,41 @@ generic shell-init concern.)
 %install
 mkdir -p %{buildroot}
 cp -a etc %{buildroot}/
+cp -a usr %{buildroot}/
 
 %files
 /etc/profile.d/sideral-cli-init.sh
-/etc/profile.d/sideral-onboarding.sh
 /etc/fish/conf.d/sideral-cli-init.fish
+/etc/zsh/sideral-cli-init.zsh
+/etc/zshrc
+/etc/user-motd
+/usr/share/ublue-os/just/60-custom.just
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
+- Add /etc/zsh/sideral-cli-init.zsh + /etc/zshrc — zsh port of the
+  bash/fish init. Same 14-marker agent detection, same eza/bat
+  aliases, same Ctrl+P fzf quick-open (via zsh's ZLE widget +
+  bindkey '^P'). The shipped /etc/zshrc replaces Fedora's stock
+  zsh package /etc/zshrc via rpm -Uvh --replacefiles — content is
+  minimal (umask + source sideral-cli-init.zsh).
+- Add /etc/user-motd — every-login banner picked up by ublue-os-
+  just's /etc/profile.d/user-motd.sh. Lists the common `ujust`
+  recipes. User opt-out via touch ~/.config/no-show-user-motd.
+- Drop /etc/profile.d/sideral-onboarding.sh — replaced by the motd
+  (works for any login shell, not just bash; shows on every login,
+  not just the first; consistent with bluefin's first-run UX).
+- Extend 60-custom.just: `ujust chsh` now accepts zsh as a third
+  option, and a new `ujust chezmoi-init <repo>` recipe replaces the
+  removed onboarding hint with an actually-actionable command.
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
+- Add /usr/share/ublue-os/just/60-custom.just — sideral's ujust recipe
+  drop-in. Fills the `import? "60-custom.just"` slot left by ublue-os/
+  main's justfile for downstreams. First recipe: `ujust chsh [shell]`,
+  defaulting to fish, switches login shell via sudo usermod -s
+  (chsh proper is removed by ublue's setuid hardening). Run
+  `ujust chsh bash` to switch back, `ujust` (no args) to list all
+  recipes including ublue's stock set.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
 - Add /etc/fish/conf.d/sideral-cli-init.fish — fish port of the bash
   init. Same tool wiring (starship/atuin/zoxide/mise/fzf), same

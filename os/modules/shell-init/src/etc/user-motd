@@ -1,0 +1,12 @@
+
+  ─────────────────────────────────────────────────────────────────
+  sideral OS — Fedora atomic desktop
+
+  Common tasks (all via ujust):
+    ujust                            list every recipe (sideral + ublue)
+    ujust chsh [bash|fish|zsh]       switch login shell (default: fish)
+    ujust chezmoi-init <repo-url>    initialize dotfiles from a chezmoi repo
+    ujust update                     pull latest image + flatpak updates
+
+  Hide this banner: touch ~/.config/no-show-user-motd
+  ─────────────────────────────────────────────────────────────────

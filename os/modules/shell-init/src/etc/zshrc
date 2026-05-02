@@ -1,0 +1,10 @@
+# sideral OS — system-wide zsh config.
+#
+# Replaces Fedora's stock /etc/zshrc (taken via rpm -Uvh --replacefiles
+# in the Containerfile). Stock content was a 3-line umask + path-to-
+# profile.d sourcing stub; we keep the umask and source our own zsh
+# init instead of /etc/profile.d (which is bash syntax).
+
+umask 022
+
+[ -r /etc/zsh/sideral-cli-init.zsh ] && source /etc/zsh/sideral-cli-init.zsh

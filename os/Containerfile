@@ -52,11 +52,12 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # inside this image.
 #
 # Several sideral files conflict with base-image packages on file
-# ownership (/etc/os-release vs fedora-release-common, /etc/containers/policy.json
-# vs containers-common). rpm -Uvh --replacefiles transfers ownership
-# cleanly — the standard derivative-distro pattern. dnf install rejects
-# file conflicts. (The /etc/yum.repos.d/docker-ce.repo conflict went away
-# 2026-05-02 when the docker stack was swapped for rootless podman.)
+# ownership (/etc/os-release vs fedora-release-common,
+# /etc/containers/policy.json vs containers-common, /etc/zshrc vs zsh).
+# rpm -Uvh --replacefiles transfers ownership cleanly — the standard
+# derivative-distro pattern. dnf install rejects file conflicts.
+# (The /etc/yum.repos.d/docker-ce.repo conflict went away 2026-05-02
+# when the docker stack was swapped for rootless podman.)
 #
 # `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:43 ships
 # ublue-os-signing pre-installed, and sideral-signing declares Conflicts:
