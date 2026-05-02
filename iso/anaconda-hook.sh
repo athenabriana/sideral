@@ -16,7 +16,7 @@ mkdir -p /usr/share/glib-2.0/schemas
 tee /usr/share/glib-2.0/schemas/zz2-sideral-installer.gschema.override <<'EOF'
 [org.gnome.shell]
 welcome-dialog-last-shown-version='4294967295'
-favorite-apps=['anaconda.desktop', 'org.gnome.Nautilus.desktop', 'org.mozilla.firefox.desktop']
+favorite-apps=['anaconda.desktop', 'org.gnome.Nautilus.desktop', 'app.zen_browser.zen.desktop']
 
 [org.gnome.settings-daemon.plugins.power]
 sleep-inactive-ac-type='nothing'
@@ -60,10 +60,19 @@ dnf install -y \
     libblockdev-btrfs \
     libblockdev-lvm \
     libblockdev-dm \
-    anaconda-live \
-    firefox
+    anaconda-live
 
 # ── Anaconda profile ─────────────────────────────────────────────────
+# Modeled on ublue-os/bazzite installer/system_files/shared/etc/anaconda/
+# profile.d/bazzite.conf. Bluefin proper ships no Anaconda profile —
+# Bazzite's is the canonical ublue reference. Notable choices we mirror:
+# - Hide ZERO classic spokes (Network/Password/User all visible). User
+#   creation happens through Anaconda's accounts step at install time —
+#   gnome-initial-setup is NOT used for first-boot account creation on
+#   ublue derivatives. Hiding NetworkSpoke would also break wifi-only
+#   installs since the ostreecontainer kickstart pulls from ghcr.io.
+# - Hide only the `network` webui page (the classic NetworkSpoke covers
+#   it; the webui duplicate causes UX churn in bazzite's testing).
 mkdir -p /etc/anaconda/profile.d
 tee /etc/anaconda/profile.d/sideral.conf <<'EOF'
 [Profile]
@@ -88,12 +97,8 @@ default_partitioning =
     /var  (btrfs)
 
 [User Interface]
-hidden_spokes =
-    NetworkSpoke
-    PasswordSpoke
-    UserSpoke
 hidden_webui_pages =
-    anaconda-screen-accounts
+    network
 
 [Localization]
 use_geolocation = False
