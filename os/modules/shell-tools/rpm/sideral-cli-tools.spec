@@ -49,6 +49,8 @@ Requires:       fish
 Requires:       zsh
 Requires:       zsh-syntax-highlighting
 Requires:       zsh-autosuggestions
+Requires:       rclone
+Requires:       fuse3
 
 %description
 Meta-package: depends on the 17 RPM-packaged CLI tools sideral wires
@@ -70,6 +72,13 @@ that nix-home would have shipped.
 # Intentionally empty — meta-package, no payload.
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
+- Add Requires: rclone + fuse3. rclone is the CLI cloud-storage
+  frontend (Google Drive, S3, B2, Dropbox, etc.); fuse3 is the
+  kernel-side dependency for `rclone mount`. Powers the new
+  `ujust gdrive-{init,mount,unmount}` recipes that make mounting a
+  Google Drive remote at ~/gdrive a one-line operation. See
+  60-custom.just for the recipe shape.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
 - Add Requires: zsh-syntax-highlighting + zsh-autosuggestions. Brings
   vanilla zsh to fish-parity for the two killer interactive features

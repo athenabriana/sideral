@@ -44,3 +44,12 @@ zsh
 # stacks (oh-my-zsh, prezto, zinit) install at user level on top.
 zsh-syntax-highlighting
 zsh-autosuggestions
+# rclone — CLI cloud-storage frontend (Google Drive, S3, B2, Dropbox,
+# OneDrive, etc.). Powers `ujust gdrive-mount` for FUSE-mounting a
+# Google Drive remote at ~/gdrive. Also useful for one-shot copies
+# (`rclone copy ~/Documents gdrive:Backup/`) without a persistent mount.
+rclone
+# fuse3 — required for `rclone mount`. Usually pulled transitively by
+# rclone but listing explicitly so removing rclone via override doesn't
+# leave the mount recipe broken on systems that don't already have it.
+fuse3

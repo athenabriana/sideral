@@ -7,6 +7,7 @@
     ujust tools                      cheatsheet of CLIs / aliases / keybinds
     ujust chsh [bash|fish|zsh]       switch login shell (default: zsh)
     ujust chezmoi-init <repo-url>    initialize dotfiles from a chezmoi repo
+    ujust gdrive-init / -mount       set up + mount Google Drive at ~/gdrive
     ujust update                     pull latest image + flatpak updates
 
   Hide this banner: touch ~/.config/no-show-user-motd
