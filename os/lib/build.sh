@@ -41,16 +41,19 @@ MODULES=(shell-tools desktop containers kubernetes fonts flatpaks nvidia)
 # silverblue-{main,nvidia}:43 ship several packages by default that
 # sideral's curated stack replaces or doesn't need:
 #   • firefox  → Zen Browser (Flathub)
-#   • htop     → Resources (Flathub)
 #   • dconf-editor → gnome-tweaks for the rare adjustment users actually need
 #   • gnome-software + gnome-software-rpm-ostree → Bazaar (Flathub) handles
 #     flatpak app discovery; ublue-os-update-services (still inherited)
 #     surfaces OS update notifications; RPM layering is done via the
 #     rpm-ostree CLI when needed. Matches bluefin's current direction.
+# (htop kept after initially being on the prune list — pairs naturally
+# with the inherited nvtop for GPU monitoring; htop covers CPU/RAM/
+# processes, nvtop covers GPU. Both used directly, complementary not
+# aliased. Resources flatpak remains the GUI option.)
 # Tolerant of upstream renames: only remove what's actually present.
 log "Removing inherited base packages we don't ship"
 to_remove=()
-for pkg in firefox firefox-langpacks htop dconf-editor \
+for pkg in firefox firefox-langpacks dconf-editor \
            gnome-software gnome-software-rpm-ostree; do
     rpm -q "$pkg" >/dev/null 2>&1 && to_remove+=("$pkg")
 done
