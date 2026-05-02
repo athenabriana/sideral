@@ -14,3 +14,4 @@ io.podman_desktop.PodmanDesktop
 com.ranfdev.DistroShelf
 net.nokyan.Resources
 it.mijorus.smile
+org.pvermeer.WebAppHub
