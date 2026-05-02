@@ -48,6 +48,70 @@ chsh shell="zsh":
     echo "Done. Log out and back in for the change to take effect,"
     echo "or run \`exec $target -l\` to swap your current session now."
 
+# Print a cheatsheet of every CLI tool sideral ships, plus the shell
+# aliases and keybindings wired up by sideral-cli-init.{sh,fish,zsh}.
+# Designed for "I just installed sideral, what's actually here?" —
+# the every-login motd intentionally stays brief and points at this.
+[group('Help')]
+tools:
+    #!/usr/bin/bash
+    # ANSI: bold section headers, dim notes
+    B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
+    cat <<EOF
+
+    ${B}Editors${R}
+      hx <file>           Helix — modal, treesitter, multi-cursor (default \$EDITOR)
+      code <file|dir>     VS Code GUI (default \$VISUAL)
+
+    ${B}Navigation${R}
+      z <partial-path>    zoxide — fuzzy jump to a frecent dir
+      zi                  zoxide — interactive picker
+      Ctrl+T              fzf — insert a file path at cursor
+      Alt+C               fzf — cd into a subdir
+      Ctrl+R              atuin — fuzzy search shell history
+      Ctrl+P              fzf quick-open — pick file → opens in \$VISUAL
+
+    ${B}File / text utilities${R}
+      ls / ll / la / lt   eza — modern ls (icons, git status, tree)
+      tree                eza — full tree view
+      cat <file>          bat — cat with syntax color (paging off)
+      bat <file>          bat — full pager + line numbers
+      rg <pattern>        ripgrep — fast recursive grep
+      ${D}\\\\ls / \\\\cat            backslash escapes the alias, runs GNU coreutils${R}
+
+    ${B}Dev / version management${R}
+      mise                runtime version manager (.mise.toml per project)
+      gh                  GitHub CLI
+      git-lfs             large files in git
+      chezmoi             dotfile manager
+
+    ${B}Containers${R}
+      podman              rootless container engine
+      docker              alias for podman (via podman-docker)
+      podman-compose      docker-compose drop-in for compose.yaml
+      docker compose      same, via podman wrapper
+
+    ${B}Kubernetes${R}
+      kubectl             K8s CLI
+      kind create cluster spin up a local K8s cluster (via podman)
+      helm                K8s package manager
+
+    ${B}Build toolchain${R}
+      gcc / make / cmake  C/C++ build basics
+
+    ${B}Shells${R}
+      bash                default + what agents/scripts run (always present)
+      fish                friendly interactive — \`ujust chsh fish\`
+      zsh                 bash-compat + highlighting + autosuggest — \`ujust chsh zsh\`
+
+    ${B}Other ujust recipes${R}
+      ujust               list every recipe
+      ujust chsh [shell]  switch login shell (default: zsh)
+      ujust chezmoi-init  bootstrap dotfiles from a git repo
+      ujust update        rpm-ostree upgrade + flatpak update
+
+    EOF
+
 # Initialize dotfiles from a chezmoi git repo. Wraps `chezmoi init
 # --apply <url>`. On first run chezmoi clones the repo to
 # ~/.local/share/chezmoi/ and applies its templates to $HOME.
