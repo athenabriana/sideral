@@ -6,13 +6,16 @@
 #   post-install.sh    — optional script, run after packages install
 #
 # Repo strategy:
-#   • Two "persistent" repos are registered here AND shipped under
+#   • Three "persistent" repos are registered here AND shipped under
 #     /etc/yum.repos.d/ (via sideral-base) so `rpm-ostree upgrade` can pull
 #     new releases between image rebuilds:
 #       - mise.jdx.dev/rpm       (mise)
 #       - packages.microsoft.com (code / VS Code)
-#     (docker-ce-stable was a third entry until 2026-05-02 — replaced by
-#     rootless podman + docker compatibility shims, which come from
+#       - pkgs.k8s.io/core stable (kubectl) — K8s minor versioned in
+#         the URL (currently v1.32). Bump in lockstep with
+#         sideral-base's kubernetes.repo when newer minors land.
+#     (docker-ce-stable was a fourth entry until 2026-05-02 — replaced
+#     by rootless podman + docker compatibility shims, which come from
 #     Fedora main and need no extra repo.)
 #   • The shipped /etc/yum.repos.d/ copies aren't yet on disk during this
 #     RUN step (sideral-base is built later inline), so we register each
@@ -46,7 +49,7 @@ set -euo pipefail
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 FEATURES_DIR="/ctx/features"
-FEATURES=(cli gnome container fonts gnome-extensions)
+FEATURES=(cli gnome container kubernetes fonts gnome-extensions)
 
 # ── Remove inherited base packages we don't ship ────────────────────────
 # silverblue-main:43 ships firefox + htop + dconf-editor as part of the
@@ -76,6 +79,22 @@ dnf5 -y config-manager addrepo --from-repofile=https://mise.jdx.dev/rpm/mise.rep
 log "Registering Microsoft VS Code repo"
 dnf5 -y config-manager addrepo --from-repofile=https://packages.microsoft.com/yumrepos/vscode/config.repo
 
+# pkgs.k8s.io has no single .repo URL we can `--from-repofile` against
+# (the repo is versioned per K8s minor — v1.32, v1.33, etc.). Sideral-
+# base ships the canonical copy at /etc/yum.repos.d/kubernetes.repo;
+# we install it eagerly here so kubectl is reachable at build time
+# without waiting for the inline rpmbuild step. Keep this baseurl in
+# lockstep with packages/sideral-base/src/etc/yum.repos.d/kubernetes.repo.
+log "Registering Kubernetes repo (kubectl source)"
+cat > /etc/yum.repos.d/kubernetes.repo <<'EOF'
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/repodata/repomd.xml.key
+EOF
+
 # ── Per-feature install loop ────────────────────────────────────────────
 for feature in "${FEATURES[@]}"; do
     feature_dir="$FEATURES_DIR/$feature"
@@ -101,8 +120,8 @@ done
 # (those are reserved for Fedora-main packages that share the standard install
 # path). Together with the cli feature's 12 RPMs, this satisfies all 14
 # Requires: of sideral-cli-tools when its inline-built RPM lands later.
-log "Installing mise + code from persistent repos"
-dnf5 install -y --setopt=install_weak_deps=False mise code
+log "Installing mise + code + kubectl from persistent repos"
+dnf5 install -y --setopt=install_weak_deps=False mise code kubectl
 
 # ── starship binary (not in Fedora main, no COPR) ───────────────────────
 # Always-latest: GitHub's /releases/latest/download/<file> redirect resolves

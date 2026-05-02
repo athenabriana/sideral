@@ -1,0 +1,11 @@
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.32/rpm/repodata/repomd.xml.key
+# The pkgs.k8s.io repo is versioned per K8s minor release — bumping
+# requires editing both this file and the matching addrepo line in
+# os/build.sh. Keep the two in lockstep. Cadence: K8s ships ~3 minors
+# per year; one bump per quarter is plenty for kubectl, which stays
+# compatible with control planes one minor older or newer.

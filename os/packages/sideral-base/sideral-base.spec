@@ -1,7 +1,7 @@
 # sideral-base — meta-package + core system identity files
 #
 # Owns: /etc/os-release, /etc/distrobox/distrobox.conf,
-#       /etc/yum.repos.d/{mise,vscode}.repo
+#       /etc/yum.repos.d/{mise,vscode,kubernetes}.repo
 # Requires: all sideral-* sub-packages + transitive third-party deps
 
 Name:           sideral-base
@@ -43,8 +43,8 @@ layer plus rootless podman (with docker compatibility shims) and the
 chezmoi-driven CLI toolset (sideral-cli-tools).
 
 Owns: /etc/os-release (sideral identity), /etc/distrobox/distrobox.conf
-(distrobox defaults), and /etc/yum.repos.d/{mise,vscode}.repo
-(kept enabled so `rpm-ostree upgrade` pulls mise and VS Code
+(distrobox defaults), and /etc/yum.repos.d/{mise,vscode,kubernetes}.repo
+(kept enabled so `rpm-ostree upgrade` pulls mise, VS Code, and kubectl
 updates between image rebuilds). starship is not in any of these repos
 — it's baked into /usr/bin from the latest upstream binary at image
 build (see os/build.sh). Zen Browser ships as a Flathub flatpak
@@ -64,8 +64,15 @@ cp -a etc %{buildroot}/
 /etc/distrobox/distrobox.conf
 /etc/yum.repos.d/mise.repo
 /etc/yum.repos.d/vscode.repo
+/etc/yum.repos.d/kubernetes.repo
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
+- Ship /etc/yum.repos.d/kubernetes.repo for kubectl (pkgs.k8s.io/core
+  stable channel, currently v1.32). Pairs with the new kubernetes
+  feature dir (kind + helm from Fedora main) and the kubectl entry
+  alongside mise + code in os/build.sh's persistent-repo install pass.
+  Powers Podman Desktop's Kubernetes panel.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
 - Drop /etc/yum.repos.d/docker-ce.repo and the docker-ce / containerd.io
   Requires. Container stack swapped from rootful Docker to rootless
