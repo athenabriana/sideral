@@ -24,7 +24,7 @@ Requires:       systemd
 %description
 Ships:
   /etc/sideral-flatpak-remotes                       — 1 curated remote (flathub)
-  /etc/flatpak-manifest                              — 8 entries
+  /etc/flatpak-manifest                              — 7 entries
   /etc/systemd/system/sideral-flatpak-install.service — every-boot self-heal,
                                                         per-line idempotent
   multi-user.target.wants/ enablement symlink
@@ -35,9 +35,8 @@ its presence caused titanoboa's live-ISO flatpak install to fail on
 refs that exist in both remotes (Flatseal in particular). One remote =
 no ambiguity for `flatpak install --noninteractive -y <bare-ref>`.
 
-Curated apps (8, all from flathub): Zen Browser (app.zen_browser.zen) +
-Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf,
-Resources, Smile.
+Curated apps (7, all from flathub): Zen Browser (app.zen_browser.zen) +
+Flatseal, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile.
 
 The primary install runs at image build (os/build.sh) — flatpaks land
 in /var/lib/flatpak before the image ships, factory-seeded to deployed
@@ -62,6 +61,14 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/multi-user.target.wants/sideral-flatpak-install.service
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
+- Drop io.github.flattool.Warehouse from the curated set (manifest goes
+  from 8 → 7 entries). Flatseal covers permission management; Warehouse's
+  bulk-uninstall / snapshot UX duplicates `flatpak uninstall` + ostree's
+  rollback story without adding enough on top to justify the seat.
+  Already-installed copies on deployed systems are NOT removed by this
+  change — the self-heal service only adds entries; users who want it
+  gone run `flatpak uninstall io.github.flattool.Warehouse`.
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
 - Drop the unused `fedora` flatpak remote. Every manifest entry installs
   from flathub; the fedora remote was registered but never referenced.

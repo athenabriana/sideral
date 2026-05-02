@@ -46,6 +46,23 @@ log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 FEATURES_DIR="/ctx/features"
 FEATURES=(cli gnome container fonts gnome-extensions)
 
+# ── Remove inherited base packages we don't ship ────────────────────────
+# silverblue-main:43 ships firefox + htop + dconf-editor as part of the
+# default ublue-main set. sideral's curated stack replaces these:
+#   • firefox  → Zen Browser (Flathub, app.zen_browser.zen)
+#   • htop     → Resources (Flathub, net.nokyan.Resources)
+#   • dconf-editor → gnome-tweaks for the rare adjustment users actually need
+# Remove them here so they don't sit unused on every deployed system.
+# Tolerant of upstream renames/drops: only remove what's actually present.
+log "Removing inherited base packages we don't ship"
+to_remove=()
+for pkg in firefox firefox-langpacks htop dconf-editor; do
+    rpm -q "$pkg" >/dev/null 2>&1 && to_remove+=("$pkg")
+done
+if [ ${#to_remove[@]} -gt 0 ]; then
+    dnf5 remove -y "${to_remove[@]}"
+fi
+
 # ── Register persistent repos for build-time install ────────────────────
 log "Registering docker-ce-stable repo"
 dnf5 -y config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo

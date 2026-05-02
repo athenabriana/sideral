@@ -9,7 +9,6 @@ app.zen_browser.zen
 
 # ── GNOME quality-of-life ──
 com.github.tchx84.Flatseal
-io.github.flattool.Warehouse
 com.mattjakeman.ExtensionManager
 io.podman_desktop.PodmanDesktop
 com.ranfdev.DistroShelf
