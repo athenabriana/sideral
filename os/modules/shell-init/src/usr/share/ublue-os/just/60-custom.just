@@ -126,6 +126,7 @@ tools:
       ujust chezmoi-init          bootstrap dotfiles from a chezmoi git repo
       ujust gdrive-setup          set up Google Drive auto-mount at ~/gdrive
                                   (one-time; mounts on every login after)
+      ujust gdrive-remove         disable auto-mount; optionally wipe config
       ujust update                rpm-ostree upgrade + flatpak update
 
     EOF
@@ -162,6 +163,57 @@ tools:
 # To turn it off:  systemctl --user disable --now rclone-gdrive.service
 # To inspect:      systemctl --user status rclone-gdrive.service
 # To see logs:     journalctl --user -u rclone-gdrive.service
+# Disable the auto-mount and unmount ~/gdrive. Leaves the rclone remote
+# config in place by default so re-running `ujust gdrive-setup` later
+# is a one-step re-enable (no OAuth re-walk). Confirms at the end
+# whether to also wipe the rclone config + ~/gdrive directory for a
+# fully clean removal.
+[group('Setup')]
+gdrive-remove:
+    #!/usr/bin/bash
+    set -euo pipefail
+    target="$HOME/gdrive"
+
+    # Stop + disable the systemd user unit. --now makes one command
+    # both stop the running service and disable it for next login.
+    if systemctl --user is-enabled rclone-gdrive.service >/dev/null 2>&1 \
+       || systemctl --user is-active rclone-gdrive.service >/dev/null 2>&1; then
+        echo "Disabling rclone-gdrive.service..."
+        systemctl --user disable --now rclone-gdrive.service || true
+    else
+        echo "rclone-gdrive.service already disabled."
+    fi
+
+    # ExecStop in the unit handles the unmount, but be defensive in case
+    # the service was killed without running its stop hook.
+    if mountpoint -q "$target" 2>/dev/null; then
+        echo "Force-unmounting $target..."
+        fusermount3 -u "$target" 2>/dev/null || fusermount -u "$target" 2>/dev/null || true
+    fi
+
+    echo
+    echo "Auto-mount disabled. Google Drive will not mount on next login."
+    echo "rclone gdrive: remote config is still in place — re-run"
+    echo "\`ujust gdrive-setup\` to turn it back on without OAuth."
+    echo
+
+    # Optional deeper cleanup. Skipped silently if the user just wants
+    # the auto-mount off.
+    if ugum confirm "Also remove the rclone gdrive: remote config?"; then
+        if command -v rclone >/dev/null 2>&1 \
+           && rclone listremotes 2>/dev/null | grep -q '^gdrive:$'; then
+            rclone config delete gdrive
+            echo "Removed rclone gdrive: remote."
+        fi
+        # Only remove the dir if it's empty — never wipe user data.
+        if [ -d "$target" ] && [ -z "$(ls -A "$target" 2>/dev/null)" ]; then
+            rmdir "$target"
+            echo "Removed empty $target directory."
+        elif [ -d "$target" ]; then
+            echo "Leaving $target in place — directory not empty."
+        fi
+    fi
+
 [group('Setup')]
 gdrive-setup:
     #!/usr/bin/bash

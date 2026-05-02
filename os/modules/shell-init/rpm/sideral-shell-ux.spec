@@ -74,6 +74,14 @@ cp -a usr %{buildroot}/
 /usr/lib/systemd/user/rclone-gdrive.service
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-9
+- Add `ujust gdrive-remove` recipe — counterpart to gdrive-setup.
+  Disables + stops the rclone-gdrive systemd user unit, defensively
+  unmounts ~/gdrive if the ExecStop hook didn't fire, then prompts
+  via ugum confirm whether to also wipe the rclone gdrive: remote
+  config + remove the empty ~/gdrive directory. Default leaves the
+  rclone config in place so a future re-enable via `ujust gdrive-
+  setup` is a one-step no-OAuth re-arm.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
 - Ship /usr/lib/systemd/user/rclone-gdrive.service. Systemd USER unit
   that runs `rclone mount gdrive: %h/gdrive --vfs-cache-mode=writes
