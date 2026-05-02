@@ -97,9 +97,10 @@ default_partitioning =
     /home (min 500 MiB, free 50 GiB)
     /var  (btrfs)
 
-[User Interface]
-hidden_webui_pages =
-    network
+[Password Policies]
+root = quality 1, length 1, allow-empty False
+user = quality 1, length 1, allow-empty False
+luks = quality 1, length 1, allow-empty False
 
 [Localization]
 use_geolocation = False
