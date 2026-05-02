@@ -11,6 +11,27 @@
 [ -n "${SIDERAL_CLI_INIT_RAN:-}" ] && return 0
 SIDERAL_CLI_INIT_RAN=1
 
+# Default editor split — historical convention:
+#   EDITOR   → terminal-only fallback (always works, no display).
+#              Helix (hx) — modal, treesitter, LSP, multi-cursor by
+#              default. Used by git commit, sudoedit, mise edit,
+#              crontab -e, less's `v` key, ssh sessions, etc.
+#   VISUAL   → preferred when a GUI is available. VS Code (code) —
+#              picked up by tools that check VISUAL first (Ctrl+P
+#              quick-open below, some git frontends). Falls through
+#              to $EDITOR on terminal-only sessions automatically
+#              since the GUI binary just won't launch.
+# Both guarded by `command -v` so `rpm-ostree override remove helix`
+# (or code) falls through gracefully. User-level overrides in
+# ~/.bashrc or ~/.config/environment.d/ take precedence — sideral
+# just provides the default.
+if command -v hx >/dev/null 2>&1; then
+    export EDITOR=hx
+fi
+if command -v code >/dev/null 2>&1; then
+    export VISUAL=code
+fi
+
 # starship prompt
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"

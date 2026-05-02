@@ -23,3 +23,7 @@ git-lfs
 gcc
 make
 cmake
+# helix — modal terminal editor (treesitter, LSP, multi-cursor by default).
+# Set as $EDITOR / $VISUAL by sideral-cli-init.sh so git, sudoedit,
+# mise edit, etc. drop into it by default.
+helix
