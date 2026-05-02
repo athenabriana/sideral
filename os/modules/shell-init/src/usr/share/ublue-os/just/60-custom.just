@@ -48,66 +48,72 @@ chsh shell="zsh":
     echo "Done. Log out and back in for the change to take effect,"
     echo "or run \`exec $target -l\` to swap your current session now."
 
-# Print a cheatsheet of every CLI tool sideral ships, plus the shell
-# aliases and keybindings wired up by sideral-cli-init.{sh,fish,zsh}.
-# Designed for "I just installed sideral, what's actually here?" —
-# the every-login motd intentionally stays brief and points at this.
+# Cheatsheet of behavior differences vs. a stock Fedora install — what
+# you actually need to know after installing sideral. Skips the
+# drop-in-replacement tools (eza, bat, rg, podman) past one summary
+# line each since their interfaces match what they replace; spends
+# space on the things that change muscle memory.
 [group('Help')]
 tools:
     #!/usr/bin/bash
-    # ANSI: bold section headers, dim notes
     B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
     cat <<EOF
 
-    ${B}Editors${R}
-      hx <file>           Helix — modal, treesitter, multi-cursor (default \$EDITOR)
-      code <file|dir>     VS Code GUI (default \$VISUAL)
+    ${B}Editor split${R} — \$EDITOR=hx, \$VISUAL=code
+      Tools that check \$VISUAL first (Ctrl+P below, some git frontends)
+      land in VS Code. Everything else (git commit, sudoedit, mise edit,
+      crontab -e, less's \`v\` key, ssh sessions) lands in Helix.
+      ${D}hx is selection-first modal — try \`hx --tutor\` if new to it.${R}
 
-    ${B}Navigation${R}
-      z <partial-path>    zoxide — fuzzy jump to a frecent dir
-      zi                  zoxide — interactive picker
-      Ctrl+T              fzf — insert a file path at cursor
-      Alt+C               fzf — cd into a subdir
-      Ctrl+R              atuin — fuzzy search shell history
-      Ctrl+P              fzf quick-open — pick file → opens in \$VISUAL
+    ${B}Navigation${R} — what changes from stock bash
+      z <partial>     ${D}NEW.${R} zoxide jump by frecency. Replaces \`cd long/path\`
+                      with \`z partial\`. \`z\` alone → highest-frecency match.
+      zi              ${D}NEW.${R} interactive zoxide picker (fzf-backed).
+      Ctrl+P          ${D}NEW.${R} fzf-driven file picker → opens in \$VISUAL.
+                      Like VS Code's Quick Open but shell-side.
+      Ctrl+R          ${D}REPLACED.${R} atuin replaces bash's reverse-i-search.
+                      Adds: fuzzy match, cwd/exit-code/duration metadata,
+                      cross-shell history, optional sync.
+      Ctrl+T          ${D}NEW.${R} fzf — paste a file path at cursor.
+      Alt+C           ${D}NEW.${R} fzf — cd into a subdir picked from the tree.
 
-    ${B}File / text utilities${R}
-      ls / ll / la / lt   eza — modern ls (icons, git status, tree)
-      tree                eza — full tree view
-      cat <file>          bat — cat with syntax color (paging off)
-      bat <file>          bat — full pager + line numbers
-      rg <pattern>        ripgrep — fast recursive grep
-      ${D}\\\\ls / \\\\cat            backslash escapes the alias, runs GNU coreutils${R}
+    ${B}Containers${R} — there is no docker daemon
+      \`docker ...\`    runs podman (via podman-docker shim). No daemon
+                      to start, rootless by default. \$DOCKER_HOST points
+                      at the per-user podman socket so testcontainers,
+                      IDE plugins, and docker-compose binaries that
+                      consult \$DOCKER_HOST all see the rootless engine.
+      podman-compose  drop-in for \`docker compose up\`. ~95% spec parity;
+                      known gaps: Compose-spec \`extends\`, some BuildKit-
+                      specific build args, host-network on rootless.
 
-    ${B}Dev / version management${R}
-      mise                runtime version manager (.mise.toml per project)
-      gh                  GitHub CLI
-      git-lfs             large files in git
-      chezmoi             dotfile manager
+    ${B}Runtime versions${R}
+      mise            polyglot version manager (Node, Python, Go, Ruby,
+                      Rust, etc.) driven by .mise.toml per project. PATH
+                      switches automatically when you cd into a managed
+                      directory. Replaces nvm/pyenv/rbenv/asdf with one
+                      tool. \`mise install\`, \`mise use python@3.13\`.
 
-    ${B}Containers${R}
-      podman              rootless container engine
-      docker              alias for podman (via podman-docker)
-      podman-compose      docker-compose drop-in for compose.yaml
-      docker compose      same, via podman wrapper
+    ${B}Drop-in replacements${R} — same interface, just better
+      ls / ll / la / lt / tree    → eza (icons, git status, grouping)
+      cat <file>                  → bat (syntax color when output is TTY)
+      grep -r                     → rg (respects .gitignore, faster)
+      ${D}\\\\ls / \\\\cat skip the alias and hit GNU coreutils for scripts.${R}
 
-    ${B}Kubernetes${R}
-      kubectl             K8s CLI
-      kind create cluster spin up a local K8s cluster (via podman)
-      helm                K8s package manager
+    ${B}Skipped from this list${R} — you already know these
+      gh, chezmoi, git-lfs, gcc, make, cmake, kubectl, kind, helm,
+      starship, fzf — install fine, work as you'd expect.
 
-    ${B}Build toolchain${R}
-      gcc / make / cmake  C/C++ build basics
-
-    ${B}Shells${R}
-      bash                default + what agents/scripts run (always present)
-      fish                friendly interactive — \`ujust chsh fish\`
-      zsh                 bash-compat + highlighting + autosuggest — \`ujust chsh zsh\`
+    ${B}Shells${R} — bash is always present
+      ujust chsh        switch (default: zsh — bash-compat + highlight + autosuggest)
+      ujust chsh fish   alternative — non-POSIX syntax, cleanest interactive UX
+      ujust chsh bash   stay on bash
+      ${D}All three share the same starship/atuin/zoxide/mise/fzf wiring,${R}
+      ${D}same Ctrl+P, same eza/bat aliases, same agent-shell guard.${R}
 
     ${B}Other ujust recipes${R}
-      ujust               list every recipe
-      ujust chsh [shell]  switch login shell (default: zsh)
-      ujust chezmoi-init  bootstrap dotfiles from a git repo
+      ujust               list every recipe (sideral + ublue stock)
+      ujust chezmoi-init  bootstrap dotfiles from a chezmoi git repo
       ujust update        rpm-ostree upgrade + flatpak update
 
     EOF
