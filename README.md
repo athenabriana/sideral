@@ -55,7 +55,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-sh
 
 | Layer | Contents |
 | --- | --- |
-| **Base** | `ghcr.io/ublue-os/silverblue-main:43` (open-source GPU); `silverblue-main-nvidia:43` for the `sideral-nvidia` variant. ISO installer reads `lspci` and pulls the matching variant at install time. |
+| **Base** | `ghcr.io/ublue-os/silverblue-main:43` (open-source GPU); `silverblue-nvidia:43` for the `sideral-nvidia` variant. ISO installer reads `lspci` and pulls the matching variant at install time. |
 | **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
 | **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
 | **Browser** | [Zen Browser](https://zen-browser.app) (`app.zen_browser.zen` from Flathub). Preinstalled at image build; new releases pulled by the standard `flatpak update` cadence. |

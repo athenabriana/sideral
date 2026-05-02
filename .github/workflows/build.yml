@@ -33,7 +33,7 @@ jobs:
     # Matrix builds two image variants from the same Containerfile:
     #   • base   — stock open-source GPU stack (amdgpu/i915/xe/nouveau)
     #   • nvidia — proprietary NVIDIA drivers, derived from
-    #     silverblue-main-nvidia which bakes signed kmods. The ISO chooser
+    #     silverblue-nvidia which bakes signed kmods. The ISO chooser
     #     (iso/anaconda-hook.sh) reads `lspci` at install time and pulls
     #     whichever variant matches the user's hardware.
     strategy:
@@ -44,7 +44,7 @@ jobs:
             base_image: ghcr.io/ublue-os/silverblue-main:43
             image_name: sideral
           - variant: nvidia
-            base_image: ghcr.io/ublue-os/silverblue-main-nvidia:43
+            base_image: ghcr.io/ublue-os/silverblue-nvidia:43
             image_name: sideral-nvidia
 
     steps:
