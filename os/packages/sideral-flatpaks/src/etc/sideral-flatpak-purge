@@ -1,0 +1,23 @@
+# Flatpak refs to actively uninstall on deployed systems. Read by
+# sideral-flatpak-install.service on every boot.
+#
+# Use when a ref is dropped from /etc/flatpak-manifest AND we want
+# existing user installations of that ref to be removed — not just
+# skipped on future fresh installs. Removing a line from the manifest
+# alone won't uninstall the ref from systems whose /var/lib/flatpak was
+# seeded at an older image rebase; this file is the active-removal
+# escape hatch.
+#
+# Format: bare ref per line. Lines starting with # and blank lines are
+# ignored. Idempotent — `flatpak uninstall` on a ref that's not
+# installed is skipped via a `flatpak info` precheck, so this file can
+# grow over time without measurable boot-time impact.
+#
+# Drop entries when enough release cycles have passed that any system
+# still on the old manifest would have purged the ref already. Two or
+# three image rebases is usually plenty.
+
+# Removed 2026-05-02 (sideral-flatpaks 0.0.0-5). Flatseal covers
+# permissions; Warehouse's bulk-uninstall / snapshot UX duplicates
+# `flatpak uninstall` + ostree rollback without adding enough on top.
+io.github.flattool.Warehouse

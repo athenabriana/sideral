@@ -25,6 +25,8 @@ Requires:       systemd
 Ships:
   /etc/sideral-flatpak-remotes                       — 1 curated remote (flathub)
   /etc/flatpak-manifest                              — 7 entries
+  /etc/sideral-flatpak-purge                         — refs to actively uninstall
+                                                       on deployed systems
   /etc/systemd/system/sideral-flatpak-install.service — every-boot self-heal,
                                                         per-line idempotent
   multi-user.target.wants/ enablement symlink
@@ -57,10 +59,23 @@ cp -a etc %{buildroot}/
 %files
 /etc/sideral-flatpak-remotes
 /etc/flatpak-manifest
+/etc/sideral-flatpak-purge
 /etc/systemd/system/sideral-flatpak-install.service
 /etc/systemd/system/multi-user.target.wants/sideral-flatpak-install.service
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
+- Add active-removal mechanism. New file /etc/sideral-flatpak-purge lists
+  refs to uninstall on deployed systems on every boot. The self-heal
+  service grew a third pass after install — for each ref in the purge
+  file, `flatpak info` checks installation, `flatpak uninstall` runs
+  only when present, then a single `flatpak uninstall --unused` follows
+  if anything was actually removed (cleans up orphan runtimes). Closes
+  the gap from -5 where dropping a manifest entry left existing copies
+  in place forever. Idempotent: empty purge = no-op; non-installed ref
+  = `flatpak info` precheck skips the uninstall.
+- io.github.flattool.Warehouse moves into the purge list so deployed
+  systems still carrying it from earlier images get it actively removed.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
 - Drop io.github.flattool.Warehouse from the curated set (manifest goes
   from 8 → 7 entries). Flatseal covers permission management; Warehouse's

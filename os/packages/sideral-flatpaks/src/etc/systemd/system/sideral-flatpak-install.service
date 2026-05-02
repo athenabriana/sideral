@@ -1,5 +1,5 @@
 [Unit]
-Description=Sideral OS flatpak self-heal (remotes + curated set, idempotent)
+Description=Sideral OS flatpak self-heal (remotes + curated set + purge, idempotent)
 Documentation=https://github.com/
 Wants=network-online.target
 After=network-online.target
@@ -11,19 +11,25 @@ TimeoutStartSec=600
 # Primary install runs at image build (see os/build.sh) — flatpaks land in
 # /var/lib/flatpak before the image is shipped, factory-seeded to deployed
 # systems on first boot. This service is the forward-compat self-heal:
-# on every boot it re-applies the remotes config + manifest. Useful when:
+# on every boot it re-applies remotes + manifest + purge list. Useful when:
 #   • An image rebase adds new entries to the manifest. Existing user
 #     systems (whose /var/lib/flatpak was seeded at an older image) pick
 #     up the additions on next boot.
 #   • An image rebase adds a new remote in /etc/sideral-flatpak-remotes.
 #     Same forward-compat path.
+#   • An image rebase REMOVES an entry from the manifest and lists it
+#     in /etc/sideral-flatpak-purge. Existing systems that still have
+#     the ref get it actively uninstalled (manifest-only removal would
+#     leave it in place forever).
 # Per-line idempotency keeps the cost negligible:
 #   • `flatpak remote-add --if-not-exists` is a no-op when present.
-#   • `flatpak info <ref>` skips when the ref is already installed.
+#   • `flatpak info <ref>` skips installs when the ref is already there
+#     and skips purges when the ref isn't there.
 ExecStart=/usr/bin/bash -c '\
     set -u; \
     remotes=/etc/sideral-flatpak-remotes; \
     manifest=/etc/flatpak-manifest; \
+    purge=/etc/sideral-flatpak-purge; \
     if [ -r "$remotes" ]; then \
         while read -r name url; do \
             case "$name" in ""|\\#*) continue;; esac; \
@@ -31,16 +37,31 @@ ExecStart=/usr/bin/bash -c '\
             flatpak remote-add --system --if-not-exists "$name" "$url" || true; \
         done < "$remotes"; \
     fi; \
-    [ -r "$manifest" ] || { echo "no manifest at $manifest"; exit 0; }; \
-    while read -r remote ref; do \
-        case "$remote" in ""|\\#*) continue;; esac; \
-        if flatpak info "$ref" >/dev/null 2>&1; then \
-            echo "[skip] $ref already installed"; \
-            continue; \
-        fi; \
-        echo "[install] $remote $ref"; \
-        flatpak install -y --noninteractive "$remote" "$ref" || true; \
-    done < "$manifest"; \
+    if [ -r "$manifest" ]; then \
+        while read -r remote ref; do \
+            case "$remote" in ""|\\#*) continue;; esac; \
+            if flatpak info "$ref" >/dev/null 2>&1; then \
+                echo "[skip] $ref already installed"; \
+                continue; \
+            fi; \
+            echo "[install] $remote $ref"; \
+            flatpak install -y --noninteractive "$remote" "$ref" || true; \
+        done < "$manifest"; \
+    fi; \
+    purged=0; \
+    if [ -r "$purge" ]; then \
+        while read -r ref; do \
+            case "$ref" in ""|\\#*) continue;; esac; \
+            if flatpak info "$ref" >/dev/null 2>&1; then \
+                echo "[purge] $ref"; \
+                flatpak uninstall -y --noninteractive "$ref" || true; \
+                purged=1; \
+            fi; \
+        done < "$purge"; \
+    fi; \
+    if [ "$purged" = "1" ]; then \
+        flatpak uninstall --unused -y --noninteractive || true; \
+    fi; \
     exit 0'
 StandardOutput=journal
 StandardError=journal
