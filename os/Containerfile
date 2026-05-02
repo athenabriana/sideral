@@ -11,26 +11,31 @@
 # CI build:       push to main → GH Actions → ghcr.io/<user>/sideral:latest
 # Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/sideral:latest
 #
-# RPM layer (sideral-rpms feature, 2026-04-29): sideral customizations live
-# under packages/<owner-package>/src/<absolute-image-path> and are built into
-# real RPMs inline during this image build. rpmbuild + rpm -Uvh + rpm -e of
-# the toolchain happen in one RUN layer so no rpmbuild artifacts bloat the
-# final image. RPMs exist only inside the image — there is no Copr project,
-# no external repo, no token. The image rebuild IS the upgrade.
+# Module layout (2026-05-02 refactor): every capability — shell, desktop,
+# containers, kubernetes, flatpaks, fonts, nvidia, signing — owns a single
+# directory under os/modules/<capability>/ holding its packages.txt,
+# build-time scripts, and rpm/<spec>+src/ tree. The orchestrator
+# (os/lib/build.sh) iterates the module list and applies each one's
+# build-time concerns. The inline rpmbuild step (os/lib/build-rpms.sh)
+# walks os/modules/*/rpm/*.spec to produce sideral-*.rpm.
+#
+# rpmbuild + rpm -Uvh + rpm -e of the toolchain happen in one RUN layer
+# so no rpmbuild artifacts bloat the final image. RPMs exist only inside
+# the image — there is no Copr project, no external repo, no token.
+# The image rebuild IS the upgrade.
 
 ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:43"
 
-# Stage 1: scratch carrier for build scripts + package sources — bind-mounted,
-# never embedded in final image.
+# Stage 1: scratch carrier for build scripts + module sources — bind-
+# mounted, never embedded in final image.
 FROM scratch AS ctx
-COPY build.sh /build.sh
-COPY features /features
-COPY packages /packages
+COPY lib /lib
+COPY modules /modules
 
 # Stage 2: the real image.
 FROM ${BASE_IMAGE}
 
-# Inherits build-time arg used by packages/build-rpms.sh to stamp version.
+# Inherits build-time arg used by lib/build-rpms.sh to stamp version.
 # CI overrides via --build-arg SIDERAL_VERSION=YYYYMMDD.<run>; local builds
 # default to 0.0.0.dev (sentinel for "this didn't come from CI").
 ARG SIDERAL_VERSION=0.0.0.dev
@@ -39,7 +44,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/build.sh && \
+    /ctx/lib/build.sh && \
     ostree container commit
 
 # Build sideral-* RPMs inline, install them, remove the build toolchain.
@@ -61,7 +66,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # Requires ublue-os-signing.
 #
 # Requires: podman-docker / podman-compose / podman must already be
-# installed (build.sh above did that via the container feature plus
+# installed (build.sh above did that via the containers module plus
 # silverblue-main's preinstalled podman); rpm -Uvh verifies presence
 # but won't fetch.
 #
@@ -76,7 +81,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
     dnf5 install -y rpm-build rpmdevtools && \
-    /ctx/packages/build-rpms.sh /ctx/packages /tmp/rpmbuild "${SIDERAL_VERSION}" && \
+    /ctx/lib/build-rpms.sh /ctx/modules /tmp/rpmbuild "${SIDERAL_VERSION}" && \
     rpm -e --nodeps ublue-os-signing && \
     rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/sideral-*.rpm && \
     rpm -e rpm-build rpmdevtools && \

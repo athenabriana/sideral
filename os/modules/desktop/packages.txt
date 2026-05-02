@@ -1,0 +1,19 @@
+# GNOME Shell extensions (RPM-layered) + theme / quality-of-life.
+# Runtime extensions installed via extensions.gnome.org are handled
+# by extensions.sh in this same module dir.
+
+# ── Shell extensions (Fedora main) ──
+gnome-shell-extension-appindicator
+gnome-shell-extension-dash-to-panel
+
+# ── App store: GNOME Software with rpm-ostree + flatpak plugins ──
+# gnome-software ships with silverblue-main:43; declaring it explicitly makes the
+# intent traceable and survives any future base swap. The flatpak plugin is built
+# into gnome-software itself on F43 (no separate sub-package).
+gnome-software
+gnome-software-rpm-ostree
+
+# ── Quality-of-life ──
+gnome-tweaks
+adw-gtk3-theme
+fastfetch

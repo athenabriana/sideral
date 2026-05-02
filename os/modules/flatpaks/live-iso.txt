@@ -1,0 +1,16 @@
+# Flatpaks preinstalled into the live ISO so the demo env has the
+# curated apps available without waiting for sideral-flatpak-install
+# to fire on the installed system. Source: sideral-flatpaks
+# manifest at packages/sideral-flatpaks/src/etc/flatpak-manifest.
+# Format: bare ref per line (titanoboa adds the flathub remote).
+
+# ── Browser ──
+app.zen_browser.zen
+
+# ── GNOME quality-of-life ──
+com.github.tchx84.Flatseal
+com.mattjakeman.ExtensionManager
+io.podman_desktop.PodmanDesktop
+com.ranfdev.DistroShelf
+net.nokyan.Resources
+it.mijorus.smile

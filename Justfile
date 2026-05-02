@@ -19,7 +19,7 @@ build:
 
 # Shellcheck every build script
 lint:
-    shellcheck os/*.sh os/features/*/post-install.sh
+    shellcheck os/lib/*.sh os/modules/*/*.sh
 
 # Rebase host to the locally-built image (requires reboot after)
 rebase:

@@ -1,0 +1,15 @@
+# bootc kargs for the sideral-nvidia variant. Applied to the bootloader
+# entry on `rpm-ostree upgrade` + reboot. Mirrors bluefin/bazzite-nvidia.
+#   • rd.driver.blacklist=nouveau, modprobe.blacklist=nouveau —
+#     keep nouveau out of both initramfs and the running kernel.
+#     /usr/lib/modprobe.d/nvidia.conf already does the modprobe-level
+#     blacklist, but the karg covers the early-userspace window before
+#     modprobe rules apply.
+#   • nvidia-drm.modeset=1 — required for Wayland on NVIDIA. Without
+#     it GNOME Wayland either falls back to llvmpipe or runs the
+#     desktop on the iGPU with NVIDIA as PRIME offload only. With it,
+#     GNOME drives the display directly through nvidia-drm.
+#   • initcall_blacklist=simpledrm_platform_driver_init — prevents
+#     simpledrm from binding the framebuffer at boot, so the handoff
+#     to nvidia-drm is clean.
+kargs = ["rd.driver.blacklist=nouveau", "modprobe.blacklist=nouveau", "nvidia-drm.modeset=1", "initcall_blacklist=simpledrm_platform_driver_init"]

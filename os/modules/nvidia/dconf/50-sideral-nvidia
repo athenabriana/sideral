@@ -1,0 +1,6 @@
+# Auto-applied at image build for the sideral-nvidia variant. Without
+# kms-modifiers, GNOME's Wayland compositor uses legacy mode-setting on
+# NVIDIA and produces visible tearing / partial frames even with
+# nvidia-drm.modeset=1 in the kargs.
+[org/gnome/mutter]
+experimental-features=['scale-monitor-framebuffer', 'kms-modifiers']
