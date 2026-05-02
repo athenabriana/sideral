@@ -4,7 +4,7 @@
 
   Common tasks (all via ujust):
     ujust                            list every recipe (sideral + ublue)
-    ujust chsh [bash|fish|zsh]       switch login shell (default: fish)
+    ujust chsh [bash|fish|zsh]       switch login shell (default: zsh)
     ujust chezmoi-init <repo-url>    initialize dotfiles from a chezmoi repo
     ujust update                     pull latest image + flatpak updates
 

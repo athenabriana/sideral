@@ -7,18 +7,21 @@
 # Run any recipe with `ujust <name>` (e.g. `ujust chsh fish`).
 # Run `ujust` (no args) to list all recipes.
 
-# Switch login shell. Defaults to fish (sideral's recommended interactive
-# shell). Pass `bash` or `zsh` to switch to those instead. Uses
-# `sudo usermod -s` because ublue-os/main removes setuid `chsh` as part
-# of its hardening pass — `usermod` is the equivalent root-only path.
+# Switch login shell. Defaults to zsh (sideral's recommended interactive
+# shell — fish-parity for highlighting + autosuggestions via the two
+# zsh-users plugins, plus bash-compatible syntax so your scripts and
+# one-liners work unchanged). Pass `bash` or `fish` for those instead.
+# Uses `sudo usermod -s` because ublue-os/main removes setuid `chsh`
+# as part of its hardening pass — `usermod` is the equivalent root-
+# only path.
 #
 # Examples:
-#   ujust chsh           # → /usr/bin/fish (default)
+#   ujust chsh           # → /usr/bin/zsh (default)
+#   ujust chsh zsh       # → /usr/bin/zsh
 #   ujust chsh fish      # → /usr/bin/fish
 #   ujust chsh bash      # → /bin/bash
-#   ujust chsh zsh       # → /usr/bin/zsh
 [group('System')]
-chsh shell="fish":
+chsh shell="zsh":
     #!/usr/bin/bash
     set -euo pipefail
     case "{{shell}}" in
