@@ -22,14 +22,14 @@ input {
 }
 
 layout {
-    gaps 16
+    gaps 28
     center-focused-column "always"
     preset-column-widths {
         proportion 0.333
         proportion 0.5
         proportion 0.667
     }
-    default-column-width { proportion 0.667; }
+    default-column-width { proportion 0.75; }
     focus-ring {
         width 2
     }
