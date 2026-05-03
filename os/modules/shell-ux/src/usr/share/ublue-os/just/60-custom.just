@@ -417,7 +417,7 @@ niri:
 
     ${B}NVIDIA variant${R}
       debug { disable-cursor-plane } — active by default (VRR cursor fix)
-      See os/modules/desktop-niri/README.md for full NVIDIA notes.
+      See os/modules/niri-defaults/README.md for full NVIDIA notes.
 
     EOF
     echo "    Source: $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"

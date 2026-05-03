@@ -35,7 +35,7 @@ for moddir in "$MOD_ROOT"/*/; do
     rpmdir="$moddir/rpm"
     src="$moddir/src"
 
-    [ -d "$rpmdir" ] || continue   # build-time-only modules (nvidia, fonts, shell-tools-as-build-only)
+    [ -d "$rpmdir" ] || continue   # build-time-only modules live under os/build/, not here
 
     shopt -s nullglob
     specs=("$rpmdir"/*.spec)

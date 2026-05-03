@@ -5,7 +5,7 @@
 # Requires: every sideral-* sub-package + transitive third-party deps
 #
 # What is NOT here anymore (post 2026-05-02 module refactor):
-#   • /etc/distrobox/distrobox.conf  → moved to sideral-services (containers module)
+#   • /etc/distrobox/distrobox.conf  → moved to sideral-services (services module)
 #   • /etc/yum.repos.d/kubernetes.repo + /etc/profile.d/sideral-kind-podman.sh
 #                                    → moved to sideral-kubernetes (kubernetes module)
 # Both moves are intentional — each capability now owns its own files
@@ -49,7 +49,7 @@ Owns: /etc/os-release (sideral identity) and /etc/yum.repos.d/
 {mise,vscode}.repo (kept enabled so rpm-ostree upgrade pulls mise and
 VS Code updates between image rebuilds). starship is not in any of
 these repos — it's baked into /usr/bin from the latest upstream binary
-at image build (see os/lib/build.sh + os/modules/shell-tools/
+at image build (see os/lib/build.sh + os/modules/cli-tools/
 starship-install.sh). Zen Browser ships as a Flathub flatpak
 (app.zen_browser.zen), preinstalled at image build alongside the
 rest of the curated flatpak set; updates flow via standard
@@ -82,7 +82,7 @@ cp -a etc %{buildroot}/
   dropped (no dconf consumers remain in the image).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-9
 - Module refactor: source tree moved from os/packages/sideral-base/src/
-  to os/modules/meta/src/. Spec name kept (sideral-base) for upgrade
+  to os/modules/base/src/. Spec name kept (sideral-base) for upgrade
   safety. Two file ownerships transferred to better-fitting sibling
   packages:
     • /etc/distrobox/distrobox.conf            → sideral-services

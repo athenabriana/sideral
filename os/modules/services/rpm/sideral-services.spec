@@ -51,7 +51,7 @@ cp -a usr %{buildroot}/
 
 %changelog
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
-- Module refactor: source tree now lives at os/modules/containers/src/.
+- Module refactor: source tree now lives at os/modules/services/src/.
   Adds /etc/distrobox/distrobox.conf to %files (moved from sideral-base
   alongside the containers-related concerns it belongs with). No file
   conflict on image build — the inline rpm -Uvh --replacefiles step in

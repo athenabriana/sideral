@@ -19,8 +19,7 @@
 # the comment next to MODULES for what depends on what.
 #
 # Modules without packages.txt or *.sh are silently skipped here (they
-# only contribute via the inline RPM build later — e.g. signing,
-# shell-init, meta).
+# only contribute via the inline RPM build later — e.g. base, shell-ux).
 
 set -euo pipefail
 
@@ -28,14 +27,14 @@ log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 MODULES_DIR="/ctx/modules"
 
-# Order: shell-tools first because sideral-cli-tools (built later in
-# the inline RPM step) Requires: every binary installed by shell-tools'
-# packages.txt. desktop and containers can come in any order. fonts
+# Order: cli-tools first because sideral-cli-tools (built later in
+# the inline RPM step) Requires: every binary installed by cli-tools'
+# packages.txt. niri-defaults and services can come in any order. fonts
 # late so the font cache rebuild post-script picks up everything that
 # was installed earlier. flatpaks near the end so all sideral RPM
 # requirements are present by the time we install the curated set.
 # nvidia last so the variant tweaks land on the final tree.
-MODULES=(shell-tools desktop-niri containers kubernetes fonts flatpaks nvidia)
+MODULES=(cli-tools niri-defaults services kubernetes fonts flatpaks nvidia)
 
 # ── 1. Remove inherited base packages we don't ship ─────────────────────
 # silverblue-{main,nvidia}:43 ship several packages by default that

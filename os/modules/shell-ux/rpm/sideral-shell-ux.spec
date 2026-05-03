@@ -1,14 +1,11 @@
 # sideral-shell-ux — interactive-shell hooks (CLI init wiring).
 #
-# Lives in the shell-init module. Spec name kept (sideral-shell-ux)
-# for upgrade safety; the module name "shell-init" is more accurate
-# but renaming the spec adds Obsoletes:/Provides: complexity for no
-# functional gain.
+# Lives in the shell-ux module.
 
 Name:           sideral-shell-ux
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral shell-init wiring for bash, zsh, and nushell
+Summary:        sideral shell wiring for bash, zsh, and nushell
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
@@ -19,7 +16,7 @@ Requires:       bash
 # default for users who `chsh -s /usr/bin/fish` after deployment.
 
 %description
-Ships shell-init wiring for bash, zsh, and nushell — same tools, same
+Ships shell wiring for bash, zsh, and nushell — same tools, same
 agent guard, same Ctrl+P quick-open — plus ujust recipes, user-motd,
 a system-wide mise config, and per-login shell maintenance scripts.
 
@@ -166,7 +163,7 @@ cp -a usr %{buildroot}/
   per-user with `chsh -s /usr/bin/fish` after deployment; both shells
   remain functional out of the box.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
-- Module refactor: source tree moved to os/modules/shell-init/src/.
+- Module refactor: source tree moved to os/modules/shell-ux/src/.
   /etc/profile.d/sideral-kind-podman.sh ownership transferred to
   sideral-kubernetes (kubernetes module owns its K8s-tooling-specific
   shell wiring). Spec name kept for upgrade safety. No file conflict
