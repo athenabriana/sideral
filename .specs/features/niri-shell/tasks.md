@@ -8,7 +8,7 @@
 - **Noctalia launch**: niri config uses `spawn-at-startup "noctalia-shell"` (the upstream-shipped wrapper that internally invokes `qs -c noctalia-shell`). Falls back to `qs -c noctalia-shell` if a future Terra noctalia-shell drops the wrapper.
 - **Noctalia config seed**: ship `/etc/skel/.config/noctalia/settings.json` (user-side seed) — do NOT overwrite `/etc/xdg/quickshell/noctalia-shell/` (RPM-owned by `noctalia-shell` from Terra). The design's `sideral-overrides.json` is dropped.
 - **matugen template for Noctalia**: NOT shipped. Noctalia has its own internal theming pipeline (Python template-processor + built-in matugen integration). `ujust theme` writes only ghostty + helix; Noctalia's recolor goes through its own wallpaper picker.
-- **Terra repo URL**: `https://repo.terra.fyralabs.com/fedora/$releasever/$basearch`, gpgkey `https://repo.terra.fyralabs.com/RPM-GPG-KEY-terra`.
+- **Terra repo URL**: `https://repos.fyralabs.com/terra$releasever`, gpgkey `https://repos.fyralabs.com/terra$releasever/key.asc`. (Original URL `repo.terra.fyralabs.com` was NXDOMAIN — corrected 2026-05-03 after CI failure.)
 - **SilentSDDM tag**: pinned to **v1.4.2** (latest stable as of 2026-05-02).
 - **niri include directive**: design's `include "/etc/xdg/niri/config.d/*.kdl"` syntax (string-quoted glob) per niri ≥0.1.5 docs; Fedora-main `niri-26.04` supports it.
 - **niri.desktop wayland-session entry**: ship sideral's copy at `/usr/share/wayland-sessions/niri.desktop`. If Fedora-main `niri` RPM also ships it, `rpm -Uvh --replacefiles` reconciles ownership.

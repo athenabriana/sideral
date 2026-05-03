@@ -1,6 +1,6 @@
 [terra]
-name=Terra $releasever - $basearch
-baseurl=https://repo.terra.fyralabs.com/fedora/$releasever/$basearch
+name=Terra $releasever
+baseurl=https://repos.fyralabs.com/terra$releasever
 enabled=1
 gpgcheck=1
-gpgkey=https://repo.terra.fyralabs.com/RPM-GPG-KEY-terra
+gpgkey=https://repos.fyralabs.com/terra$releasever/key.asc
