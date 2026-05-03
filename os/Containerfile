@@ -1,10 +1,10 @@
 # sideral — a personal Fedora atomic desktop derived directly from
-# ublue-os/silverblue-main. Ships GNOME + tiling-shell, Zen Browser
-# (preinstalled Flatpak from Flathub), a curated flatpak set (GNOME
-# quality-of-life apps, preinstalled at image build), chezmoi-driven
-# user dotfile layer + sideral-cli-tools (mise, code, starship, atuin,
-# fzf, etc.), and a narrow RPM layer (rootless podman with docker
-# compatibility shims, gnome extensions + gnome-software, fonts).
+# ublue-os/silverblue-main. Ships niri compositor + Noctalia shell,
+# Zen Browser (preinstalled Flatpak from Flathub), a curated flatpak
+# set, chezmoi-driven user dotfile layer + sideral-cli-tools (mise,
+# code, starship, carapace-bin, nushell, zsh, atuin, fzf, etc.),
+# and a narrow RPM layer (rootless podman with docker compatibility
+# shims, kubernetes stack, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
@@ -15,25 +15,52 @@
 #   os/modules/<name>/ — RPM modules; each has rpm/<spec>+src/ tree plus
 #     optional packages.txt + *.sh for build-time package install/scripts.
 #   os/build/<name>/   — build-time-only (no RPM); just packages.txt + *.sh.
-#     Currently: fonts/ (Fedora + Adobe fonts), nvidia/ (variant overlay).
-# The orchestrator (os/lib/build.sh) processes both directories.
-# The inline rpmbuild step (os/lib/build-rpms.sh) walks os/modules/ only.
+#     Currently: fonts/ (Fedora fonts), nvidia/ (variant overlay).
+# The orchestrators walk both directories:
+#   install-packages.sh — Layer 1: package installs only
+#   build.sh            — Layer 2: scripts + initramfs regen
+# The inline rpmbuild step (build-rpms.sh) walks os/modules/ only.
 #
-# rpmbuild + rpm -Uvh + rpm -e of the toolchain happen in one RUN layer
-# so no rpmbuild artifacts bloat the final image. RPMs exist only inside
-# the image — there is no Copr project, no external repo, no token.
-# The image rebuild IS the upgrade.
+# Layer cache strategy:
+#   ctx-packages stage: only packages.txt + repo files + install-packages.sh.
+#   BuildKit keys Layer 1's cache on this stage, so editing scripts or spec
+#   files does not re-run the expensive dnf install pass.
+#   ctx stage: full tree — scripts, spec files, src trees.
+#
+# rpmbuild + rpm -Uvh + rpm -e of the toolchain happen in Layer 2 so no
+# rpmbuild artifacts bloat the final image. RPMs exist only inside the
+# image — there is no Copr project, no external repo, no token. The image
+# rebuild IS the upgrade.
 
 ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:44"
 
-# Stage 1: scratch carrier for build scripts + module sources — bind-
-# mounted, never embedded in final image.
+# ── Stage 1a: stable context ────────────────────────────────────────────
+# Only content that changes rarely: packages.txt + repo files + the
+# install-packages.sh orchestrator. BuildKit keys the package-install
+# layer on this stage — spec/script edits skip the expensive dnf pass.
+FROM scratch AS ctx-packages
+COPY lib/install-packages.sh /lib/install-packages.sh
+# packages.txt per module
+COPY modules/cli-tools/packages.txt    /modules/cli-tools/packages.txt
+COPY modules/niri-defaults/packages.txt /modules/niri-defaults/packages.txt
+COPY modules/services/packages.txt     /modules/services/packages.txt
+COPY modules/kubernetes/packages.txt   /modules/kubernetes/packages.txt
+COPY build/fonts/packages.txt          /build/fonts/packages.txt
+COPY build/nvidia/packages.txt         /build/nvidia/packages.txt
+# repo files (staged into /etc/yum.repos.d/ before any dnf call)
+COPY modules/base/src/etc/yum.repos.d/          /modules/base/src/etc/yum.repos.d/
+COPY modules/cli-tools/src/etc/yum.repos.d/     /modules/cli-tools/src/etc/yum.repos.d/
+COPY modules/niri-defaults/src/etc/yum.repos.d/ /modules/niri-defaults/src/etc/yum.repos.d/
+COPY modules/kubernetes/src/etc/yum.repos.d/    /modules/kubernetes/src/etc/yum.repos.d/
+
+# ── Stage 1b: full build context ────────────────────────────────────────
+# Scripts, spec files, src trees — everything build.sh and build-rpms.sh need.
 FROM scratch AS ctx
 COPY lib /lib
 COPY modules /modules
 COPY build /build
 
-# Stage 2: the real image.
+# ── Stage 2: real image ─────────────────────────────────────────────────
 FROM ${BASE_IMAGE}
 
 # Inherits build-time arg used by lib/build-rpms.sh to stamp version.
@@ -41,24 +68,24 @@ FROM ${BASE_IMAGE}
 # default to 0.0.0.dev (sentinel for "this didn't come from CI").
 ARG SIDERAL_VERSION=0.0.0.dev
 
-RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
+# Layer 1 — packages: remove inherited pkgs, stage repos, dnf install all
+# packages.txt. Cache is stable across script and spec file changes.
+RUN --mount=type=bind,from=ctx-packages,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
-    /ctx/lib/build.sh && \
+    /ctx/lib/install-packages.sh && \
     ostree container commit
 
-# Build sideral-* RPMs inline, install them, remove the build toolchain.
-# Single RUN layer = no rpmbuild scratch in the final image. RPMs exist only
-# inside this image.
+# Layer 2 — scripts + RPMs: run per-module *.sh scripts (hide-chromium,
+# nushell-plugins, flatpak preinstall, nvidia apply), then build and
+# install sideral-* RPMs inline.
 #
 # Several sideral files conflict with base-image packages on file
 # ownership (/etc/os-release vs fedora-release-common,
 # /etc/containers/policy.json vs containers-common, /etc/zshrc vs zsh).
 # rpm -Uvh --replacefiles transfers ownership cleanly — the standard
-# derivative-distro pattern. dnf install rejects file conflicts.
-# (The /etc/yum.repos.d/docker-ce.repo conflict went away 2026-05-02
-# when the docker stack was swapped for rootless podman.)
+# derivative-distro pattern.
 #
 # `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:44 ships
 # ublue-os-signing pre-installed, and sideral-base declares Conflicts:
@@ -67,21 +94,15 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # predecessor explicitly. --nodeps is safe here because nothing else in
 # the base image Requires ublue-os-signing.
 #
-# Requires: podman-docker / podman-compose / podman must already be
-# installed (build.sh above did that via the containers module plus
-# silverblue-main's preinstalled podman); rpm -Uvh verifies presence
-# but won't fetch.
-#
-# `rpm -e` (not `dnf remove`) for the toolchain teardown: dnf would
-# auto-remove ~73 transitively-pulled packages (cpio, diffutils, elfutils,
-# file, …), several of which are part of the silverblue base. rpm -e
-# removes only the two packages we asked for; the now-orphaned deps stay
-# put. Net image size impact is near zero on silverblue-main where those
-# packages were already present.
+# `rpm -e` (not `dnf remove`) for toolchain teardown: dnf would
+# auto-remove ~73 transitively-pulled packages, several of which are
+# part of the silverblue base. rpm -e removes only the two packages we
+# asked for; the orphaned deps stay put.
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
     --mount=type=cache,dst=/var/log \
     --mount=type=tmpfs,dst=/tmp \
+    /ctx/lib/build.sh && \
     dnf5 install -y rpm-build rpmdevtools && \
     /ctx/lib/build-rpms.sh /ctx/modules /tmp/rpmbuild "${SIDERAL_VERSION}" && \
     rpm -e --nodeps ublue-os-signing && \
