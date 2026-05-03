@@ -24,12 +24,13 @@ input {
 
 layout {
     gaps 32
-    // Extra horizontal padding at screen edges via struts (niri 25.11 has
-    // no per-axis gaps; struts only widen left/right margins, not the
-    // gap between columns).
+    // Uniform extra screen-edge padding via struts (niri 25.11 needs
+    // per-side; no single-value form). Stacks on top of `gaps 32`.
     struts {
-        left 16
-        right 16
+        left 17
+        right 17
+        top 17
+        bottom 17
     }
     center-focused-column "always"
     preset-column-widths {
