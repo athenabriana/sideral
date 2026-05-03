@@ -24,8 +24,8 @@ input {
 layout {
     gaps 16
     struts {
-        left 32
-        right 32
+        left 96
+        right 96
     }
     center-focused-column "always"
     preset-column-widths {
