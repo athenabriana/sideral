@@ -6,6 +6,7 @@
 #   • Fedora 44 main:         chezmoi, atuin, fzf, bat, eza, ripgrep,
 #                             zoxide, gh, git-lfs, gcc, make, cmake,
 #                             helix, zsh
+#   • copr:atim/nushell:      nushell
 #   • mise.jdx.dev/rpm:       mise          (repo shipped via sideral-base)
 #   • packages.microsoft.com: code          (repo shipped via sideral-base)
 #   • repo.terra.fyralabs.com: starship     (repo shipped via sideral-niri-defaults)
@@ -28,6 +29,7 @@ Requires:       chezmoi
 Requires:       mise
 Requires:       code
 Requires:       starship
+Requires:       nushell
 Requires:       carapace-bin
 Requires:       atuin
 Requires:       fzf
@@ -66,8 +68,13 @@ cp -a etc %{buildroot}/
 
 %files
 /etc/yum.repos.d/carapace.repo
+/etc/yum.repos.d/nushell.repo
 
 %changelog
+* Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-12
+- Restore nushell via atim/nushell COPR (not in Fedora 44 main or Terra).
+  Ship /etc/yum.repos.d/nushell.repo (gpg-signed COPR) so rpm-ostree
+  upgrade keeps nushell current between image rebuilds.
 * Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-11
 - Drop Requires: nushell again — not in Fedora 44 or Terra repos.
   F44 bump mistakenly re-added it; reverting to pre-0.0.0-10 state.
