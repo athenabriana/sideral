@@ -15,7 +15,7 @@ env:
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
   R2_BUCKET: sideral
   R2_PUBLIC_BASE: https://sideral.athenabriana.com
-  ISO_KEY: Sideral x86_64.iso
+  ISO_KEY: sideral_x86_64.iso
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -233,9 +233,6 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="v${{ steps.dryrun.outputs.next_version }}"
-          # Filename has a space ("Sideral x86_64.iso"), so URL-encode for
-          # the public download links and shell-quote for the curl/dd
-          # commands shown in the release notes.
           ISO_KEY_ENC="$(jq -rn --arg s "${{ env.ISO_KEY }}" '$s|@uri')"
           ISO_URL="${{ env.R2_PUBLIC_BASE }}/${ISO_KEY_ENC}"
           SUM_URL="${{ env.R2_PUBLIC_BASE }}/${ISO_KEY_ENC}.sha256"

@@ -17,16 +17,16 @@ Two ways to try sideral.
 ### Boot from USB (try before installing)
 
 <p align="center">
-  <a href="https://sideral.athenabriana.com/sideral.iso"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20ISO-latest-3584e4?style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a" alt="Download ISO" height="44"></a>
+  <a href="https://sideral.athenabriana.com/sideral_x86_64.iso"><img src="https://img.shields.io/badge/%E2%AC%87%20Download%20ISO-latest-3584e4?style=for-the-badge&logo=fedora&logoColor=white&labelColor=1a2a4a" alt="Download ISO" height="44"></a>
 </p>
 
 The button starts the download immediately — single ~5 GiB ISO, hosted on Cloudflare R2. Verify the checksum and flash:
 
 ```bash
-curl -LO https://sideral.athenabriana.com/sideral.iso
-curl -LO https://sideral.athenabriana.com/sideral.iso.sha256
-sha256sum -c sideral.iso.sha256
-sudo dd if=sideral.iso of=/dev/sdX bs=4M status=progress oflag=sync
+curl -LO https://sideral.athenabriana.com/sideral_x86_64.iso
+curl -LO https://sideral.athenabriana.com/sideral_x86_64.iso.sha256
+sha256sum -c sideral_x86_64.iso.sha256
+sudo dd if=sideral_x86_64.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
 Or use Etcher / Impression / GNOME Disks. Boot the USB and the preloaded Anaconda installer walks you through writing sideral to disk.
@@ -148,7 +148,7 @@ Want to run your own variant?
    ```bash
    gh repo create sideral --public --source . --remote origin --push
    ```
-2. Wait ~30 min for the `build-sideral` workflow. It builds two bootc OCI image variants in parallel (`sideral` open-source and `sideral-nvidia` proprietary-drivers), runs semantic-release (which cuts a GitHub Release with changelog), builds a single installer ISO with titanoboa that auto-detects GPU at install time and pulls the matching variant from ghcr.io, and uploads the ISO to your Cloudflare R2 bucket under a constant `Sideral x86_64.iso` key.
+2. Wait ~30 min for the `build-sideral` workflow. It builds two bootc OCI image variants in parallel (`sideral` open-source and `sideral-nvidia` proprietary-drivers), runs semantic-release (which cuts a GitHub Release with changelog), builds a single installer ISO with titanoboa that auto-detects GPU at install time and pulls the matching variant from ghcr.io, and uploads the ISO to your Cloudflare R2 bucket under a constant `sideral_x86_64.iso` key.
 3. From then on, every push to `main` cuts a new versioned release; every night the workflow rebases on the latest Silverblue base and republishes if anything changed.
 
 What lands in CI:
