@@ -14,16 +14,23 @@ set -euo pipefail
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 log "Installing latest carapace binary from upstream releases"
-base="https://github.com/carapace-sh/carapace-bin/releases/latest/download"
+
+# carapace-bin switched to versioned filenames (e.g. carapace-bin_1.6.5_linux_amd64.tar.gz).
+# Resolve the latest tag, strip the leading 'v', then build asset names.
+TAG=$(curl -fsSL https://api.github.com/repos/carapace-sh/carapace-bin/releases/latest \
+    | grep '"tag_name"' | cut -d'"' -f4)
+VERSION="${TAG#v}"
+
+base="https://github.com/carapace-sh/carapace-bin/releases/download/${TAG}"
+tarball="carapace-bin_${VERSION}_linux_amd64.tar.gz"
+checksums="carapace-bin_${VERSION}_checksums.txt"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-curl -fsSL -o "$tmp/carapace-bin_linux_amd64.tar.gz" "$base/carapace-bin_linux_amd64.tar.gz"
-curl -fsSL -o "$tmp/carapace_checksums.txt"          "$base/carapace_checksums.txt"
-# Extract the sha256 line for the tarball we downloaded; cd so sha256sum
-# finds the file by name (same as starship pattern).
-grep "carapace-bin_linux_amd64.tar.gz" "$tmp/carapace_checksums.txt" > "$tmp/SHA256SUMS"
+curl -fsSL -o "$tmp/$tarball"    "$base/$tarball"
+curl -fsSL -o "$tmp/$checksums"  "$base/$checksums"
+grep "$tarball" "$tmp/$checksums" > "$tmp/SHA256SUMS"
 ( cd "$tmp" && sha256sum -c SHA256SUMS )
-tar -xzf "$tmp/carapace-bin_linux_amd64.tar.gz" -C /usr/bin carapace
+tar -xzf "$tmp/$tarball" -C /usr/bin carapace
 chown root:root /usr/bin/carapace
 chmod 755 /usr/bin/carapace
