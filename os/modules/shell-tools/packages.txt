@@ -29,11 +29,9 @@ cmake
 # Set as $EDITOR by sideral-cli-init.{sh,zsh} so git, sudoedit, mise
 # edit, etc. drop into it by default.
 helix
-# nushell — structured-data-first interactive shell (third shell option).
-# Default shell stays zsh; switch via `ujust chsh nu`. Sideral ships
-# vendor autoload at /usr/share/nushell/vendor/autoload/sideral-cli-init.nu
-# and a boot-time seeding service for ~/.config/nushell/{env,config}.nu.
-nushell
+# nushell — installed via nushell-install.sh (upstream binary; not in
+# Fedora main repos). nushell-plugins-install.sh runs after and picks up
+# the bundled nu_plugin_* binaries placed in /usr/bin by that script.
 # zsh — default interactive shell for sideral. Switch via `ujust chsh zsh`
 # (or bash/nu for alternatives). Sideral's /etc/zshrc +
 # /etc/zsh/sideral-cli-init.zsh wire it up with all CLI tools.

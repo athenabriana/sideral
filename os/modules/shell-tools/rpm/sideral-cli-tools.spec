@@ -6,12 +6,14 @@
 # Tools split by source:
 #   • Fedora main:           chezmoi, atuin, fzf, bat, eza, ripgrep,
 #                            zoxide, gh, git-lfs, gcc, make, cmake,
-#                            helix, nushell, zsh
+#                            helix, zsh
 #   • mise.jdx.dev/rpm:      mise          (persistent repo, see sideral-base)
 #   • packages.microsoft.com: code         (persistent repo, see sideral-base)
 #   • upstream binary:       starship      (pinned tarball baked into
 #                                           /usr/bin by build.sh — not RPM-tracked)
 #                            carapace      (pinned tarball baked into
+#                                           /usr/bin by build.sh — not RPM-tracked)
+#                            nushell       (pinned tarball baked into
 #                                           /usr/bin by build.sh — not RPM-tracked)
 #
 # The RPM tools above are dnf-installed in build.sh before the inline
@@ -46,7 +48,6 @@ Requires:       make
 Requires:       cmake
 Requires:       code
 Requires:       helix
-Requires:       nushell
 Requires:       zsh
 Requires:       zsh-syntax-highlighting
 Requires:       zsh-autosuggestions
@@ -71,6 +72,12 @@ package's Requires: because no RPM owns those files.
 # Intentionally empty — meta-package, no payload.
 
 %changelog
+* Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-9
+- Drop Requires: nushell — nushell is not in Fedora main repos and is
+  now installed via nushell-install.sh (upstream binary tarball baked
+  into /usr/bin, same pattern as starship/carapace). No RPM owns the
+  binary so Requires would never resolve. nu_plugin_* are placed in
+  /usr/bin by the same script for nushell-plugins-install.sh to find.
 * Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
 - Replace Requires: fish with Requires: nushell. Fish removed from
   sideral; nushell is the third interactive shell. Switch via
