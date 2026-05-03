@@ -1,0 +1,3 @@
+{
+  "_comment": "sideral default Noctalia settings seed — copied to ~/.config/noctalia/settings.json on user creation. Noctalia layers user JSON > default JSON > hardcoded; sideral keeps this file minimal so future Noctalia upstream defaults flow through. Override per-user via chezmoi or by editing this file post-deployment."
+}

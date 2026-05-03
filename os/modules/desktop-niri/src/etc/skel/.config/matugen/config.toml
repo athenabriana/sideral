@@ -1,0 +1,16 @@
+# Per-user seed of the matugen config — copied to ~/.config/matugen/
+# config.toml on user creation. Identical content to /etc/xdg/matugen/
+# config.toml; either layer is overridable by chezmoi.
+
+[config]
+reload_apps = true
+custom_colors = {}
+
+[templates.ghostty]
+input_path = "~/.config/matugen/templates/ghostty"
+output_path = "~/.config/ghostty/config-matugen"
+post_hook = "pkill -USR1 ghostty 2>/dev/null || true"
+
+[templates.helix]
+input_path = "~/.config/matugen/templates/helix.toml"
+output_path = "~/.config/helix/themes/sideral.toml"

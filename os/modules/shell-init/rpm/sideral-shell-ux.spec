@@ -74,6 +74,16 @@ cp -a usr %{buildroot}/
 /usr/lib/systemd/user/rclone-gdrive.service
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-10
+- Add /etc/user-motd row for `ujust niri` (niri+Noctalia cheatsheet).
+- Add `ujust theme <wallpaper>` recipe to 60-custom.just: runs matugen,
+  seeds per-user config from /etc/xdg on first use, signals ghostty
+  via SIGUSR1, writes ghostty palette to config-matugen and helix theme
+  to ~/.config/helix/themes/sideral.toml.
+- Add `ujust niri` recipe to 60-custom.just: niri+Noctalia keybind
+  cheatsheet with theming instructions and config override paths.
+  Modeled on existing `ujust tools` shape (libformatting.sh, OSC-8
+  Urllinks, B/D/R styling).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-9
 - Add `ujust gdrive-remove` recipe — counterpart to gdrive-setup.
   Disables + stops the rclone-gdrive systemd user unit, defensively

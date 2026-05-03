@@ -1,0 +1,100 @@
+// sideral default niri config — system-default fallback (also seeded
+// to /etc/skel/.config/niri/config.kdl for new users; chezmoi templates
+// can override either layer).
+//
+// Reference: https://github.com/YaLTeR/niri/wiki/Configuration:-Overview
+//
+// Keep this file as-is for cross-variant base behavior. The nvidia
+// drop-in lives at /etc/xdg/niri/config.d/sideral-nvidia.kdl and is
+// pulled in via the include directive at the bottom of this file —
+// installed only on the nvidia variant by os/modules/nvidia/apply.sh.
+
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+    }
+    touchpad {
+        tap
+        natural-scroll
+    }
+    focus-follows-mouse
+}
+
+layout {
+    gaps 8
+    center-focused-column "never"
+    preset-column-widths {
+        proportion 0.333
+        proportion 0.5
+        proportion 0.667
+    }
+    default-column-width { proportion 0.5; }
+    focus-ring {
+        width 2
+    }
+}
+
+prefer-no-csd
+
+// Helpers: kanshi for multi-monitor profiles, fcitx5 for IME, cliphist
+// watcher for clipboard history (paired with `cliphist list | fuzzel`
+// at the user level). noctalia-shell is the Quickshell-based shell —
+// the upstream wrapper invokes `qs -c noctalia-shell` internally.
+spawn-at-startup "kanshi"
+spawn-at-startup "fcitx5"
+spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store"
+spawn-at-startup "noctalia-shell"
+
+binds {
+    Mod+T          { spawn "/usr/bin/ghostty"; }
+    Mod+Q          { close-window; }
+
+    // Scrolling axis navigation (PaperWM-style).
+    Mod+Left       { focus-column-left; }
+    Mod+Right      { focus-column-right; }
+    Mod+Up         { focus-window-up; }
+    Mod+Down       { focus-window-down; }
+    Mod+Shift+Left { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+
+    // Workspace switching.
+    Mod+1          { focus-workspace 1; }
+    Mod+2          { focus-workspace 2; }
+    Mod+3          { focus-workspace 3; }
+    Mod+4          { focus-workspace 4; }
+    Mod+5          { focus-workspace 5; }
+    Mod+6          { focus-workspace 6; }
+    Mod+7          { focus-workspace 7; }
+    Mod+8          { focus-workspace 8; }
+    Mod+9          { focus-workspace 9; }
+    Mod+Shift+1    { move-column-to-workspace 1; }
+    Mod+Shift+2    { move-column-to-workspace 2; }
+    Mod+Shift+3    { move-column-to-workspace 3; }
+    Mod+Shift+4    { move-column-to-workspace 4; }
+    Mod+Shift+5    { move-column-to-workspace 5; }
+    Mod+Shift+6    { move-column-to-workspace 6; }
+    Mod+Shift+7    { move-column-to-workspace 7; }
+    Mod+Shift+8    { move-column-to-workspace 8; }
+    Mod+Shift+9    { move-column-to-workspace 9; }
+
+    // Screenshot — region into clipboard / full-screen into clipboard.
+    Print            { spawn "bash" "-c" "grim -g \"$(slurp)\" - | wl-copy"; }
+    Shift+Print      { spawn "bash" "-c" "grim - | wl-copy"; }
+
+    // Audio — wpctl ships with pipewire-utils (inherited from base).
+    XF86AudioRaiseVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%+"; }
+    XF86AudioLowerVolume { spawn "wpctl" "set-volume" "@DEFAULT_AUDIO_SINK@" "5%-"; }
+    XF86AudioMute        { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SINK@" "toggle"; }
+    XF86AudioMicMute     { spawn "wpctl" "set-mute" "@DEFAULT_AUDIO_SOURCE@" "toggle"; }
+
+    // Brightness (laptops).
+    XF86MonBrightnessUp   { spawn "brightnessctl" "set" "5%+"; }
+    XF86MonBrightnessDown { spawn "brightnessctl" "set" "5%-"; }
+}
+
+// Variant-specific drop-ins (currently used by sideral-nvidia for
+// `debug { disable-cursor-plane }`). On the open-source variant the
+// glob has no matches and niri silently skips the include.
+include "/etc/xdg/niri/config.d/*.kdl"

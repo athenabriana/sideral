@@ -1,0 +1,13 @@
+// niri NVIDIA drop-in — installed only on the nvidia variant by
+// os/modules/nvidia/apply.sh (gated on `rpm -q kmod-nvidia`).
+// Pulled in by the `include "/etc/xdg/niri/config.d/*.kdl"` directive
+// at the bottom of the system niri config.
+//
+// disable-cursor-plane — workaround for cursor stuttering against VRR
+//   with NVIDIA 590+ (niri-wm/niri#3095). Forces the cursor to be
+//   composited into the frame rather than using the dedicated HW plane.
+//   Slight compositing overhead; eliminates the VRR cursor-lag class.
+
+debug {
+    disable-cursor-plane
+}

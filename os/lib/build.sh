@@ -35,7 +35,7 @@ MODULES_DIR="/ctx/modules"
 # was installed earlier. flatpaks near the end so all sideral RPM
 # requirements are present by the time we install the curated set.
 # nvidia last so the variant tweaks land on the final tree.
-MODULES=(shell-tools desktop containers kubernetes fonts flatpaks nvidia)
+MODULES=(shell-tools desktop-niri containers kubernetes fonts flatpaks nvidia)
 
 # ── 1. Remove inherited base packages we don't ship ─────────────────────
 # silverblue-{main,nvidia}:43 ship several packages by default that
@@ -54,7 +54,11 @@ MODULES=(shell-tools desktop containers kubernetes fonts flatpaks nvidia)
 log "Removing inherited base packages we don't ship"
 to_remove=()
 for pkg in firefox firefox-langpacks dconf-editor \
-           gnome-software gnome-software-rpm-ostree; do
+           gnome-software gnome-software-rpm-ostree \
+           gdm gnome-shell gnome-session mutter \
+           gnome-control-center gnome-settings-daemon \
+           gnome-shell-extension-appindicator \
+           gnome-shell-extension-dash-to-panel; do
     rpm -q "$pkg" >/dev/null 2>&1 && to_remove+=("$pkg")
 done
 if [ ${#to_remove[@]} -gt 0 ]; then

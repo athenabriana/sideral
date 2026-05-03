@@ -89,10 +89,5 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     rm -rf /tmp/rpmbuild && \
     ostree container commit
 
-# Compile dconf local DB from /etc/dconf/db/local.d snippets so GNOME reads them.
-# Runs after the RPM install above so sideral-dconf's snippets are present.
-RUN dconf update && \
-    ostree container commit
-
 # Final bootc sanity check.
 RUN bootc container lint

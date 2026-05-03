@@ -1,7 +1,7 @@
 <h1 align="center">sideral</h1>
 
 <p align="center">
-  <em>Personal Fedora atomic desktop — GNOME + tiling-shell, Zen Browser, chezmoi-driven dotfiles, mise toolchain.</em>
+  <em>Personal Fedora atomic desktop — niri scrollable-tiling compositor, Noctalia shell, Zen Browser, chezmoi-driven dotfiles, mise toolchain.</em>
 </p>
 
 <p align="center">
@@ -45,50 +45,97 @@ sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral-n
 systemctl reboot
 ```
 
-After reboot the image is fully wired — Zen Browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code are all on `$PATH`. The curated flatpak set (Zen + 7 GNOME quality-of-life apps) is preinstalled at image build, so it's there immediately — no first-boot download wait. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
+After reboot the image is fully wired — niri session in SDDM, Noctalia bar/launcher/lock, Zen Browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code all on `$PATH`. The curated flatpak set is preinstalled at image build. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
 
 ---
 
-Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships GNOME + tiling-shell with a curated flatpak set (preinstalled at image build), a `sideral-cli-tools` meta-RPM that pulls 14 day-to-day CLI tools + VS Code, Zen Browser as the default browser (Flatpak from Flathub), and docker-ce for day-to-day dev. User dotfiles are managed by [chezmoi](https://chezmoi.io) — sideral provides the binary; you provide the dotfiles repo.
+Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships the [niri](https://github.com/YaLTeR/niri) scrollable-tiling compositor with [Noctalia](https://github.com/noctalia-dev/noctalia-shell) as the desktop shell, a `sideral-cli-tools` meta-RPM with 14 day-to-day CLI tools + VS Code, Zen Browser (Flathub), rootless podman with docker compatibility shims, and matugen-driven wallpaper theming. User dotfiles are managed by [chezmoi](https://chezmoi.io).
 
 ## What's in the image
 
 | Layer | Contents |
 | --- | --- |
 | **Base** | `ghcr.io/ublue-os/silverblue-main:43` (open-source GPU); `silverblue-nvidia:43` for the `sideral-nvidia` variant. ISO installer reads `lspci` and pulls the matching variant at install time. |
-| **Desktop** | GNOME Shell (default from base) + 4 extensions: appindicator, dash-to-panel, tilingshell, rounded-window-corners |
-| **App store** | GNOME Software with `gnome-software-rpm-ostree` plugin (rpm-ostree updates) and the built-in flatpak plugin. Defaults bias toward flatpak via `org.gnome.software.packaging-format-preference`. |
-| **Browser** | [Zen Browser](https://zen-browser.app) (`app.zen_browser.zen` from Flathub). Preinstalled at image build; new releases pulled by the standard `flatpak update` cadence. |
-| **Editor** | `code` (VS Code) via Microsoft RPM repo at `packages.microsoft.com/yumrepos/vscode` — Remote-SSH and Remote-Containers extensions install from the marketplace on first launch |
-| **Containers** | `docker-ce` stack (podman inherited from base) |
-| **CLI toolset** | `sideral-cli-tools` meta-RPM pulls: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`. `starship` is baked into `/usr/bin` from the latest upstream release at image build (no Fedora RPM). All present at `$PATH` after rebase. |
-| **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh` (shipped by `sideral-shell-ux`) sources starship, atuin, zoxide, mise, and fzf integrations into every interactive bash shell. Each line is `command -v`-guarded. |
-| **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub) |
+| **Compositor** | [niri](https://github.com/YaLTeR/niri) (Fedora main `niri-26.04`) — Rust-based scrollable-tiling Wayland compositor. PaperWM-style column navigation. No GNOME/Mutter. |
+| **Shell** | [Noctalia](https://github.com/noctalia-dev/noctalia-shell) via Terra (`noctalia-shell 4.7.6`, runtime `noctalia-qs`). Bar, notification overlay, app launcher, lock screen, idle handler, control center, and wallpaper — all in one Quickshell-based package. |
+| **Greeter** | SDDM with [SilentSDDM](https://github.com/uiriansan/SilentSDDM) `v1.4.2` theme. |
+| **Terminal** | [ghostty](https://ghostty.org) via Terra — niri config binds `Mod+T`. |
+| **Theming** | matugen (Fedora main `rust-matugen`). `ujust theme <wallpaper>` regenerates Material 3 palette → ghostty + helix. Noctalia drives its own bar/launcher/notification recolor via its built-in wallpaper picker. |
+| **Browser** | [Zen Browser](https://zen-browser.app) (`app.zen_browser.zen` from Flathub). Preinstalled at image build. |
+| **Editor** | `code` (VS Code) via Microsoft RPM repo. `hx` (Helix) from `sideral-cli-tools`. |
+| **Containers** | Rootless podman + podman-docker shim + podman-compose. `docker` CLI resolves to podman. No daemon. |
+| **CLI toolset** | `sideral-cli-tools` meta-RPM: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`, `helix`, `fish`, `zsh`, `rclone`. `starship` baked from upstream binary at image build. |
+| **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh`, `/etc/fish/conf.d/`, `/etc/zsh/` — starship, atuin, zoxide, mise, fzf in bash + fish + zsh. `command -v`-guarded. |
+| **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub). |
 | **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
-| **Flatpaks (preinstalled at image build)** | Zen Browser, Flatseal, Warehouse, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile (all from Flathub). Single curated remote: `flathub`. |
+| **Flatpaks (preinstalled)** | Zen Browser, Flatseal, Warehouse, Podman Desktop, DistroShelf, Resources, Smile, Bazaar, Pika Backup, Junction, Web App Hub (all from Flathub). Single curated remote: `flathub`. |
+
+## Default niri keybinds
+
+| Key | Action |
+|---|---|
+| `Mod+T` | ghostty terminal |
+| `Mod+D` | Noctalia launcher |
+| `Mod+L` | lock screen |
+| `Mod+Q` | close window |
+| `Mod+Left / Right` | focus column left / right |
+| `Mod+Up / Down` | focus window up / down |
+| `Mod+Shift+Left / Right` | move column left / right |
+| `Mod+1–9` | switch workspace |
+| `Mod+Shift+1–9` | move window to workspace |
+| `Print` | screenshot region → clipboard |
+| `Shift+Print` | full-screen screenshot → clipboard |
+
+Run `ujust niri` for the full cheatsheet. Override keybinds in `~/.config/niri/config.kdl` (chezmoi template recommended).
+
+## Theming
+
+```bash
+ujust theme ~/Pictures/wallpaper.jpg
+```
+
+Regenerates a Material 3 palette from the wallpaper and writes:
+- `~/.config/ghostty/config-matugen` — add `config-file = ~/.config/ghostty/config-matugen` to your ghostty config
+- `~/.config/helix/themes/sideral.toml` — set `theme = "sideral"` in `~/.config/helix/config.toml`
+
+For the bar / launcher / notifications: use Noctalia's built-in wallpaper picker — it drives its own matugen pipeline.
+
+## What changed from the GNOME-era sideral image
+
+GNOME, tiling-shell, and all GNOME extensions were removed. The full GNOME stack (`gnome-shell`, `gnome-session`, `mutter`, `gnome-control-center`, `gnome-settings-daemon`, `gdm`) is pruned from the image. SDDM replaces GDM.
+
+Everything else carries over: `sideral-cli-tools`, three-shell parity, `ujust` recipes (`chsh`, `chezmoi-init`, `gdrive-setup`, `gdrive-remove`, `tools`, `update`), `/etc/user-motd`, `rclone-gdrive.service`, rootless podman, kubernetes module. The new recipes are `ujust niri` and `ujust theme`.
+
+**To roll back** if niri doesn't fit: reboot and pick the previous deployment at the bootloader, or:
+```bash
+rpm-ostree rollback
+systemctl reboot
+```
+That returns you to the last GNOME-era deployment stored on disk. For a permanent fork-and-revert, use `git checkout <pre-niri-sha>` in a fork of this repo.
 
 ## Repo layout
 
 ```
 sideral/
-├── Justfile                         # build / rebase
+├── Justfile                         # build / rebase / lint
 ├── os/                              # everything that lands in the OCI image
 │   ├── Containerfile                # image recipe (FROM silverblue-main:43)
-│   ├── build.sh                     # orchestrator: register persistent repos + per-feature install loop
-│   ├── features/
-│   │   ├── cli/              packages.txt → 12 Fedora-main CLI tools (chezmoi, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake); starship is fetched as a binary in build.sh
-│   │   ├── gnome/            packages.txt → gnome-software + extensions + adw-gtk3-theme + fastfetch
-│   │   ├── gnome-extensions/ post-install.sh → tilingshell + rounded-window-corners from extensions.gnome.org
-│   │   ├── container/        packages.txt → docker-ce + containerd.io + buildx + compose
-│   │   └── fonts/            packages.txt + post-install.sh → Fedora font RPMs + Source Serif 4 / Sans 3
-│   └── packages/                    # sideral-* RPM sources (built inline by build-rpms.sh)
-│       ├── sideral-base       → /etc/os-release, distrobox.conf, yum.repos.d/{docker-ce,mise,vscode}.repo
-│       ├── sideral-cli-tools  → meta-RPM: Requires: 13 RPM-packaged CLI tools + code (starship binary baked separately)
-│       ├── sideral-dconf      → /etc/dconf/db/local.d/* + profile/user
-│       ├── sideral-flatpaks   → flatpak remotes + manifest + every-boot self-heal service
-│       ├── sideral-services   → placeholder for future systemd units
-│       ├── sideral-shell-ux   → /etc/profile.d/sideral-cli-init.sh + sideral-onboarding.sh
-│       └── sideral-signing    → /etc/containers/policy.json
+│   ├── lib/
+│   │   ├── build.sh                 # orchestrator: prune GNOME, register repos, per-module install loop
+│   │   └── build-rpms.sh            # inline rpmbuild: walks os/modules/*/rpm/*.spec
+│   └── modules/                     # each capability owns one directory
+│       ├── desktop-niri/    packages.txt (niri, Noctalia, ghostty…) + sddm-silent-install.sh + src/
+│       │                    rpm/sideral-niri-defaults.spec
+│       ├── shell-tools/     starship-install.sh + packages.txt (CLI binaries)
+│       ├── shell-init/      src/ (profile.d, fish/conf.d, zsh, user-motd, 60-custom.just)
+│       │                    rpm/sideral-shell-ux.spec
+│       ├── meta/            src/ (/etc/os-release, yum.repos.d)  rpm/sideral-base.spec
+│       ├── containers/      packages.txt (podman-docker, podman-compose)
+│       ├── kubernetes/      packages.txt + profile.d snippet  rpm/sideral-kubernetes.spec
+│       ├── flatpaks/        remotes.sh + packages.txt  rpm/sideral-flatpaks.spec
+│       ├── fonts/           packages.txt + font-install.sh
+│       ├── nvidia/          apply.sh (kargs + modprobe + app-profiles + env + niri drop-in)
+│       └── signing/         src/ (/etc/containers/policy.json)  rpm/sideral-signing.spec
 ├── iso/                             # live-installer assets consumed by titanoboa
 └── .github/workflows/build.yml      # CI: build, tag, push to ghcr.io, cosign keyless
 ```

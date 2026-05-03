@@ -1,0 +1,6 @@
+# nvidia variant extra packages (Fedora main).
+# Installed on all builds (libva-nvidia-driver has no hard Requires on
+# kmod-nvidia; it loads only when NVIDIA hardware is present). Listed
+# explicitly so sideral doesn't depend on ublue's transitive pull.
+libva-nvidia-driver
+libva-utils

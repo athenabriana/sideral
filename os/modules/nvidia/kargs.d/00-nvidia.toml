@@ -5,11 +5,10 @@
 #     /usr/lib/modprobe.d/nvidia.conf already does the modprobe-level
 #     blacklist, but the karg covers the early-userspace window before
 #     modprobe rules apply.
-#   • nvidia-drm.modeset=1 — required for Wayland on NVIDIA. Without
-#     it GNOME Wayland either falls back to llvmpipe or runs the
-#     desktop on the iGPU with NVIDIA as PRIME offload only. With it,
-#     GNOME drives the display directly through nvidia-drm.
+#   • nvidia-drm.modeset=1 — required for Wayland DRM/KMS path.
+#   • nvidia-drm.fbdev=1 — fbdev emulation; required on kernel ≥6.11 to
+#     avoid TTY black-screens (default since driver 570, explicit is safer).
 #   • initcall_blacklist=simpledrm_platform_driver_init — prevents
 #     simpledrm from binding the framebuffer at boot, so the handoff
 #     to nvidia-drm is clean.
-kargs = ["rd.driver.blacklist=nouveau", "modprobe.blacklist=nouveau", "nvidia-drm.modeset=1", "initcall_blacklist=simpledrm_platform_driver_init"]
+kargs = ["rd.driver.blacklist=nouveau", "modprobe.blacklist=nouveau", "nvidia-drm.modeset=1", "nvidia-drm.fbdev=1", "initcall_blacklist=simpledrm_platform_driver_init"]

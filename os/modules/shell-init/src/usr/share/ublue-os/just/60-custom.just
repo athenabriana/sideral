@@ -275,3 +275,121 @@ chezmoi-init repo="":
         exit 1
     fi
     chezmoi init --apply "$target"
+
+# Apply a wallpaper and regenerate the Material 3 palette for ghostty +
+# helix via matugen. Noctalia's own wallpaper picker handles the bar /
+# launcher / notification recolor through its built-in matugen pipeline;
+# this recipe handles the terminal and editor side.
+#
+# What it does:
+#   1. Run `matugen image <wallpaper>` — reads ~/.config/matugen/config.toml
+#      (seeded from /etc/skel on first login), renders ghostty palette to
+#      ~/.config/ghostty/config-matugen and helix theme to
+#      ~/.config/helix/themes/sideral.toml.
+#   2. Signal ghostty to reload its config (SIGUSR1).
+#   3. Print where the files landed and remind about Noctalia recolor.
+#
+# The ghostty palette file is config-matugen (not the main config) so
+# the user can include it from their main config without overwriting
+# any manual settings.
+#
+# Examples:
+#   ujust theme ~/Pictures/wallpaper.jpg
+#   ujust theme /usr/share/wallpapers/sideral/default.jpg
+[group('Desktop')]
+theme wallpaper="":
+    #!/usr/bin/bash
+    set -euo pipefail
+    target="{{wallpaper}}"
+    if [ -z "$target" ]; then
+        echo "Usage: ujust theme <path-to-image>" >&2
+        echo "Example: ujust theme ~/Pictures/wallpaper.jpg" >&2
+        exit 1
+    fi
+    if [ ! -f "$target" ]; then
+        echo "File not found: $target" >&2
+        exit 1
+    fi
+    if ! command -v matugen >/dev/null 2>&1; then
+        echo "matugen not found — should ship via sideral-niri-defaults" >&2
+        exit 1
+    fi
+    # Seed the per-user matugen config from the system default if absent.
+    if [ ! -f "$HOME/.config/matugen/config.toml" ]; then
+        mkdir -p "$HOME/.config/matugen/templates"
+        if [ -f /etc/xdg/matugen/config.toml ]; then
+            cp /etc/xdg/matugen/config.toml "$HOME/.config/matugen/config.toml"
+            cp -r /etc/xdg/matugen/templates/. "$HOME/.config/matugen/templates/"
+        fi
+    fi
+    echo "Running matugen on $target..."
+    matugen image "$target"
+    # Reload ghostty (SIGUSR1 triggers live config reload without restart).
+    pkill -USR1 ghostty 2>/dev/null || true
+    echo
+    echo "Done. ghostty palette written to ~/.config/ghostty/config-matugen"
+    echo "      helix theme written to ~/.config/helix/themes/sideral.toml"
+    echo
+    echo "For the bar / launcher / notifications: use Noctalia's wallpaper"
+    echo "picker (or its built-in ujust/keybind) — Noctalia drives its own"
+    echo "matugen pipeline separately."
+    echo
+    echo "To activate ghostty palette, add to ~/.config/ghostty/config:"
+    echo "  config-file = ~/.config/ghostty/config-matugen"
+    echo "To activate helix theme, add to ~/.config/helix/config.toml:"
+    echo '  [editor]'
+    echo '  theme = "sideral"'
+
+# Niri + Noctalia desktop cheatsheet — default keybinds, theming,
+# and chezmoi override paths. Modeled on `ujust tools`.
+[group('Help')]
+niri:
+    #!/usr/bin/bash
+    source /usr/lib/ujust/libformatting.sh
+    B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
+    cat <<EOF
+
+    ${B}niri — scrollable-tiling Wayland compositor${R}
+    ${D}Modifier key is Super (Win/Cmd). Keybinds from /etc/xdg/niri/config.kdl.${R}
+
+    ${B}Session${R}
+      Mod+T           open ghostty terminal
+      Mod+D           open Noctalia launcher (app search + run)
+      Mod+L           lock screen (Noctalia lock screen)
+      Mod+Q           close focused window
+
+    ${B}Scrollable tiling navigation${R}
+      Mod+Left / Right   focus column left / right
+      Mod+Up / Down      focus window up / down within a column
+      Mod+Shift+Left / Right   move column left / right
+      Mod+1…9         switch to workspace 1–9
+      Mod+Shift+1…9   move focused column to workspace 1–9
+      ${D}Windows tile side-by-side in scrollable columns (PaperWM-style).${R}
+      ${D}There is no "floating" mode — every window lives in the tiling grid.${R}
+
+    ${B}Screenshots${R}
+      Print             region → clipboard (drag to select)
+      Shift+Print       full screen → clipboard
+
+    ${B}Audio${R}
+      XF86AudioRaiseVolume / LowerVolume / Mute / MicMute
+
+    ${B}Theming${R}
+      ujust theme <image>   regenerate Material 3 palette from a wallpaper
+                            (ghostty + helix; Noctalia bar/launcher/notifs
+                            use Noctalia's built-in wallpaper picker)
+
+    ${B}Config override paths${R} (chezmoi templates override system defaults)
+      ~/.config/niri/config.kdl              niri keybinds + layout
+      ~/.config/matugen/config.toml          matugen template targets
+      ~/.config/noctalia/settings.json       Noctalia settings
+      /etc/xdg/quickshell/noctalia-shell/    Noctalia QML (RPM-owned;
+                                             override per-user via chezmoi)
+
+    ${B}NVIDIA variant${R}
+      debug { disable-cursor-plane } — active by default (VRR cursor fix)
+      See os/modules/desktop-niri/README.md for full NVIDIA notes.
+
+    EOF
+    echo "    Source: $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"
+    echo

@@ -22,13 +22,13 @@ BuildArch:      noarch
 
 # Sub-packages (all required by default; users can rpm-ostree override
 # remove sideral-flatpaks etc. for granular opt-out).
-Requires:       sideral-services    = %{version}-%{release}
-Requires:       sideral-flatpaks    = %{version}-%{release}
-Requires:       sideral-dconf       = %{version}-%{release}
-Requires:       sideral-shell-ux    = %{version}-%{release}
-Requires:       sideral-signing     = %{version}-%{release}
-Requires:       sideral-cli-tools   = %{version}-%{release}
-Requires:       sideral-kubernetes  = %{version}-%{release}
+Requires:       sideral-services       = %{version}-%{release}
+Requires:       sideral-flatpaks       = %{version}-%{release}
+Requires:       sideral-niri-defaults  = %{version}-%{release}
+Requires:       sideral-shell-ux       = %{version}-%{release}
+Requires:       sideral-signing        = %{version}-%{release}
+Requires:       sideral-cli-tools      = %{version}-%{release}
+Requires:       sideral-kubernetes     = %{version}-%{release}
 
 # Third-party deps (Fedora main):
 #   podman-docker  — docker → podman wrapper
@@ -67,6 +67,13 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/vscode.repo
 
 %changelog
+* Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-10
+- Replace Requires: sideral-dconf with Requires: sideral-niri-defaults.
+  sideral-dconf (GNOME dconf snippets) is retired alongside the desktop/
+  module. sideral-niri-defaults owns Terra repo, niri config, matugen
+  templates, SDDM theme selection, and Noctalia settings seed. The
+  Containerfile's dconf update + ostree container commit block is also
+  dropped (no dconf consumers remain in the image).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-9
 - Module refactor: source tree moved from os/packages/sideral-base/src/
   to os/modules/meta/src/. Spec name kept (sideral-base) for upgrade

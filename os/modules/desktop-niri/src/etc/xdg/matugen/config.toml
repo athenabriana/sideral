@@ -1,0 +1,23 @@
+# matugen system-default config (also seeded to /etc/skel for new users).
+# Maps each template under ./templates/ to its render destination in the
+# user's home. `ujust theme <wallpaper>` runs `matugen image <wallpaper>`,
+# which reads this file and writes to each template's output_path.
+#
+# Noctalia is intentionally NOT listed here. Noctalia ships its own
+# matugen integration (Python template-processor + built-in wallpaper
+# picker that drives matugen internally); sideral writing its own
+# Noctalia palette would conflict with that pipeline. Use Noctalia's
+# wallpaper picker for the bar/launcher/notifications recolor.
+
+[config]
+reload_apps = true
+custom_colors = {}
+
+[templates.ghostty]
+input_path = "~/.config/matugen/templates/ghostty"
+output_path = "~/.config/ghostty/config-matugen"
+post_hook = "pkill -USR1 ghostty 2>/dev/null || true"
+
+[templates.helix]
+input_path = "~/.config/matugen/templates/helix.toml"
+output_path = "~/.config/helix/themes/sideral.toml"
