@@ -1,7 +1,7 @@
 # Fonts layered from Fedora main.
-# Source Serif 4 + Source Sans 3 are fetched from Adobe GitHub releases
-# in post-install.sh (the Fedora RPMs ship older v3 "Pro" variants).
 cascadia-code-fonts
 jetbrains-mono-fonts-all
 adwaita-fonts-all
 opendyslexic-fonts
+adobe-source-serif-pro-fonts
+adobe-source-sans-pro-fonts

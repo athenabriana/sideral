@@ -1,7 +1,8 @@
-# sideral-base — meta-package + system identity files.
+# sideral-base — meta-package + system identity + container trust policy.
 #
 # Owns:    /etc/os-release
 #          /etc/yum.repos.d/{mise,vscode}.repo
+#          /etc/containers/policy.json  (absorbed from sideral-signing)
 # Requires: every sideral-* sub-package + transitive third-party deps
 #
 # What is NOT here anymore (post 2026-05-02 module refactor):
@@ -27,9 +28,14 @@ Requires:       sideral-flatpaks          = %{version}-%{release}
 Requires:       sideral-niri-defaults     = %{version}-%{release}
 Requires:       sideral-shell-ux          = %{version}-%{release}
 Requires:       sideral-chezmoi-defaults  = %{version}-%{release}
-Requires:       sideral-signing           = %{version}-%{release}
 Requires:       sideral-cli-tools         = %{version}-%{release}
 Requires:       sideral-kubernetes        = %{version}-%{release}
+
+# Conflicts with ublue-os-signing — both own /etc/containers/policy.json.
+# The Containerfile removes ublue-os-signing before rpm -Uvh so this never
+# triggers at install time; the Conflicts: declaration prevents accidental
+# re-install on a running system.
+Conflicts:      ublue-os-signing
 
 # Third-party deps (Fedora main):
 #   podman-docker  — docker → podman wrapper
@@ -66,8 +72,15 @@ cp -a etc %{buildroot}/
 /etc/os-release
 /etc/yum.repos.d/mise.repo
 /etc/yum.repos.d/vscode.repo
+/etc/containers/policy.json
 
 %changelog
+* Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-12
+- Absorb sideral-signing: own /etc/containers/policy.json directly and
+  declare Conflicts: ublue-os-signing. Eliminates the one-file signing
+  module; the Containerfile's rpm -e --nodeps ublue-os-signing step
+  remains (still needed before rpm -Uvh to satisfy the Conflicts).
+  UPGRADE.md moved to os/modules/base/UPGRADE.md.
 * Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-11
 - Add Requires: sideral-chezmoi-defaults. New package ships
   /usr/share/sideral/chezmoi/ (10 dotfiles) and the first-login

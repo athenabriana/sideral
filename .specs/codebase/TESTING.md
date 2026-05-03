@@ -51,4 +51,4 @@ Only run when explicitly validating a full pass:
 - `bootc container lint` is the last step of `just build`; reading failures earlier (dnf, post-install) is faster than waiting for lint.
 - File-conflict errors during the inline `rpm -Uvh --replacefiles` step usually mean a sideral spec ships a path that the base image already owns and `--replacefiles` couldn't reconcile — the conflicting package is in the error message; either remove it from the base via the prune step in `os/lib/build.sh` or drop the conflicting file from the sideral spec.
 - `set -o pipefail` + `var=$(... | grep ...)` is a hidden landmine if grep finds nothing. Capture the response into a variable, then `grep ... || true`, then validate.
-- `rpm -e --nodeps ublue-os-signing` MUST run before the inline RPM install — sideral-signing.spec declares `Conflicts:` against it and `--replacefiles` doesn't bypass package-level Conflicts.
+- `rpm -e --nodeps ublue-os-signing` MUST run before the inline RPM install — sideral-base declares `Conflicts: ublue-os-signing` (both own /etc/containers/policy.json) and `--replacefiles` doesn't bypass package-level Conflicts.
