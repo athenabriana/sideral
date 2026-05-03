@@ -85,3 +85,5 @@ binds {
 }
 
 include "/etc/xdg/niri/config.d/sideral-nvidia.kdl"
+
+include "./noctalia.kdl"
