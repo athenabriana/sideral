@@ -22,6 +22,8 @@ Requires:       noctalia-qs
 Requires:       ghostty
 Requires:       matugen
 Requires:       kanshi
+Requires:       swaybg
+Requires:       brightnessctl
 Requires:       fcitx5
 Requires:       fcitx5-configtool
 Requires:       grim

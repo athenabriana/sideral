@@ -16,6 +16,8 @@ niri
 greetd
 greetd-tuigreet
 kanshi
+swaybg
+brightnessctl
 fcitx5
 fcitx5-configtool
 grim
