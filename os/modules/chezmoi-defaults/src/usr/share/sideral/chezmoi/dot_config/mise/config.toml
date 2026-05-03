@@ -1,0 +1,29 @@
+# ~/.config/mise/config.toml — user mise toolchain.
+# Merges with /etc/mise/config.toml (system settings). Override versions
+# here or add tools. Per-project .mise.toml takes highest priority.
+# Run `mise install` to eagerly install everything, or just use the tool
+# and mise auto-installs it on first invocation.
+
+[tools]
+
+# ── JavaScript / TypeScript ───────────────────────────────────
+node = "lts"
+bun  = "latest"
+pnpm = "latest"
+
+# ── Python ────────────────────────────────────────────────────
+python = "latest"
+uv     = "latest"
+
+# ── JVM ───────────────────────────────────────────────────────
+java   = "temurin-lts"
+kotlin = "latest"
+gradle = "latest"
+
+# ── Systems languages ─────────────────────────────────────────
+go   = "latest"
+rust = "stable"
+zig  = "latest"
+
+# ── CI / automation ───────────────────────────────────────────
+act = "latest"

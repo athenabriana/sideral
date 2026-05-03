@@ -123,7 +123,8 @@ tools:
 
     ${B}Other ujust recipes${R}
       ujust                       list every recipe (sideral + ublue stock)
-      ujust chezmoi-init          bootstrap dotfiles from a chezmoi git repo
+      ujust chezmoi               chezmoi cheatsheet (personal dotfiles + image defaults)
+      ujust apply-defaults        pull in new image defaults after rpm-ostree upgrade
       ujust gdrive-setup          set up Google Drive auto-mount at ~/gdrive
                                   (one-time; mounts on every login after)
       ujust gdrive-remove         disable auto-mount; optionally wipe config
@@ -133,18 +134,6 @@ tools:
     echo "    Source: $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"
     echo
 
-# Initialize dotfiles from a chezmoi git repo. Wraps `chezmoi init
-# --apply <url>`. On first run chezmoi clones the repo to
-# ~/.local/share/chezmoi/ and applies its templates to $HOME.
-# Subsequent updates: `chezmoi update`.
-#
-# Replaces the per-shell onboarding hint that used to print on first
-# login — that hint became noise once the recipe existed (and was bash-
-# only; this works for any login shell).
-#
-# Examples:
-#   ujust chezmoi-init https://github.com/yourname/dotfiles
-#   ujust chezmoi-init git@github.com:yourname/dotfiles.git
 # One-command Google Drive setup. Idempotent — safe to run multiple
 # times. Combines what used to be three separate recipes (init / mount
 # / unmount) into a single auto-mount-on-login flow:
@@ -250,31 +239,71 @@ gdrive-setup:
         exit 1
     fi
 
+# Pull in updated image defaults after rpm-ostree upgrade.
+# chezmoi compares /usr/share/sideral/chezmoi/ (source) against $HOME
+# (destination). Clean files (unchanged since last apply) update silently.
+# Files you've customized get a diff prompt so you decide what to keep.
 [group('Setup')]
-chezmoi-init repo="":
+apply-defaults:
+    chezmoi apply --source /usr/share/sideral/chezmoi
+
+# chezmoi cheatsheet — personal dotfiles and image defaults.
+#
+# sideral ships two independent chezmoi source trees:
+#   /usr/share/sideral/chezmoi/   image defaults (applied automatically
+#                                 on first login; update with apply-defaults)
+#   ~/.local/share/chezmoi/       your personal dotfiles (optional; init
+#                                 from your own git repo with chezmoi init)
+#
+# The two sources are fully independent. chezmoi --source only reads
+# from the path you give it; your personal repo is never touched by
+# apply-defaults (and vice versa). If both manage the same file,
+# last-applied wins.
+[group('Help')]
+chezmoi:
     #!/usr/bin/bash
-    set -euo pipefail
-    target="{{repo}}"
-    if [ -z "$target" ]; then
-        # No URL passed — confirm the user actually wants this prompt
-        # since it's irreversible on a fresh $HOME (chezmoi apply
-        # overwrites tracked files).
-        echo "ujust chezmoi-init bootstraps your dotfiles from a chezmoi git repo."
-        echo "Example: https://github.com/yourname/dotfiles"
-        echo
-        ugum confirm "Proceed?" || exit 0
-        echo -n "Repo URL: "
-        read -r target
-    fi
-    if [ -z "$target" ]; then
-        echo "No repo URL — aborting." >&2
-        exit 1
-    fi
-    if [ ! -x /usr/bin/chezmoi ]; then
-        echo "chezmoi not found — should ship via sideral-cli-tools" >&2
-        exit 1
-    fi
-    chezmoi init --apply "$target"
+    source /usr/lib/ujust/libformatting.sh
+    B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
+    cat <<EOF
+
+    ${B}chezmoi — dotfile manager${R}
+    ${D}Manages your personal dotfiles from a git repo.${R}
+    ${D}See https://chezmoi.io for full docs.${R}
+
+    ${B}Image defaults${R} — shipped at /usr/share/sideral/chezmoi/
+      ujust apply-defaults    pull in new defaults after rpm-ostree upgrade.
+                              Clean files update silently; files you've
+                              customized get a diff prompt so you decide.
+      ${D}Image defaults are also applied automatically on first login — no${R}
+      ${D}manual step needed for a fresh account.${R}
+
+    ${B}Personal dotfiles${R} — your own git repo
+      chezmoi init --apply <repo>   bootstrap from your dotfiles repo.
+                                    Clones to ~/.local/share/chezmoi/ and
+                                    applies all managed files to \$HOME.
+      chezmoi update                pull latest from your repo + apply.
+                                    Prompts on conflicts.
+      chezmoi diff                  show what would change before applying.
+      chezmoi apply                 apply current source state to \$HOME.
+      chezmoi add <file>            start tracking a file in your repo.
+      chezmoi edit <file>           edit source for a tracked file (\$EDITOR).
+      chezmoi cd                    open a shell in ~/.local/share/chezmoi/.
+
+    ${B}How the two sources interact${R}
+      apply-defaults reads /usr/share/sideral/chezmoi/ only — it does not
+      touch ~/.local/share/chezmoi/. Your personal repo is independent.
+      If both manage the same file (e.g. ~/.bashrc), whichever you ran
+      last wins. chezmoi diff before applying to review the delta.
+
+    ${B}Examples${R}
+      chezmoi init --apply https://github.com/yourname/dotfiles
+      chezmoi init --apply git@github.com:yourname/dotfiles.git
+      chezmoi add ~/.config/ghostty/config
+      chezmoi edit ~/.bashrc
+
+    EOF
+    echo "    Source: $(Urllink "https://chezmoi.io" "chezmoi.io") | $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"
+    echo
 
 # Apply a wallpaper and regenerate the Material 3 palette for ghostty +
 # helix via matugen. Noctalia's own wallpaper picker handles the bar /

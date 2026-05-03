@@ -1,4 +1,4 @@
-# sideral-shell-ux — interactive-shell hooks (CLI init wiring + onboarding tip).
+# sideral-shell-ux — interactive-shell hooks (CLI init wiring).
 #
 # Lives in the shell-init module. Spec name kept (sideral-shell-ux)
 # for upgrade safety; the module name "shell-init" is more accurate
@@ -21,7 +21,7 @@ Requires:       bash
 %description
 Ships shell-init wiring for bash, zsh, and nushell — same tools, same
 agent guard, same Ctrl+P quick-open — plus ujust recipes, user-motd,
-a system-wide mise config, and a boot-time shell seeding service.
+a system-wide mise config, and per-login shell maintenance scripts.
 
 Bash — /etc/profile.d/sideral-cli-init.sh:
   Wires starship, atuin, zoxide, mise (shims + activate), fzf, carapace.
@@ -36,19 +36,23 @@ Zsh — /etc/zsh/sideral-cli-init.zsh + /etc/zshrc:
 Nushell — /usr/share/nushell/vendor/autoload/sideral-cli-init.nu:
   Vendor autoload wires starship, atuin, zoxide, `view` command, agent
   detection, EDITOR/VISUAL. No eza/bat aliases (nushell has structured
-  `ls`). mise, keybindings, and carapace completer live in seeded config.nu.
+  `ls`). mise, keybindings, and carapace completer live in chezmoi-seeded
+  config.nu (see sideral-chezmoi-defaults).
 
-Seeding — /usr/libexec/sideral-shell-seed + systemd user service:
-  Boot-time service seeds ~/.bashrc, ~/.zshrc, ~/.config/nushell/{env,
-  config}.nu, and ~/.config/mise/config.toml if missing. Auto-migrates
-  users with a broken login shell (e.g. fish removed) to /usr/bin/zsh.
+Shell maintenance — /etc/profile.d/ login-time scripts:
+  sideral-shell-migrate.sh: auto-migrates users whose login shell binary
+  no longer exists (e.g. fish removed) to /usr/bin/zsh (sudo -n, safe).
+  sideral-nushell-plugins.sh: registers /usr/lib/nushell/plugins/ into
+  the user's plugin.msgpackz on first encounter; no-op once registered.
 
 mise config — /etc/mise/config.toml:
   System-wide settings (trusted_config_paths, not_found_auto_install,
-  etc.). Tools declared in user-level ~/.config/mise/config.toml (seeded).
+  etc.). Tools declared in user-level ~/.config/mise/config.toml (seeded
+  by sideral-chezmoi-defaults on first login).
 
 ujust recipes — /usr/share/ublue-os/just/60-custom.just:
-  chsh [bash|zsh|nu], chezmoi-init, gdrive-setup, gdrive-remove, tools.
+  chsh [bash|zsh|nu], chezmoi, apply-defaults, gdrive-setup, gdrive-remove,
+  tools, theme, niri.
 
 %prep
 %setup -q
@@ -60,6 +64,8 @@ cp -a usr %{buildroot}/
 
 %files
 /etc/profile.d/sideral-cli-init.sh
+/etc/profile.d/sideral-shell-migrate.sh
+/etc/profile.d/sideral-nushell-plugins.sh
 /etc/zsh/sideral-cli-init.zsh
 /etc/zshrc
 /etc/user-motd
@@ -67,10 +73,15 @@ cp -a usr %{buildroot}/
 /usr/share/nushell/vendor/autoload/sideral-cli-init.nu
 /usr/share/ublue-os/just/60-custom.just
 /usr/lib/systemd/user/rclone-gdrive.service
-/usr/lib/systemd/user/sideral-shell-seed.service
-%attr(0755,root,root) /usr/libexec/sideral-shell-seed
 
 %changelog
+* Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-13
+- Remove sideral-shell-seed.service + /usr/libexec/sideral-shell-seed.
+  Dotfile seeding replaced by sideral-chezmoi-defaults (profile.d auto-
+  apply on first login). Extract two surviving behaviors into profile.d:
+  sideral-shell-migrate.sh (broken-login-shell → zsh; sudo -n for safety)
+  and sideral-nushell-plugins.sh (register /usr/lib/nushell/plugins/ into
+  user plugin.msgpackz on first encounter).
 * Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-12
 - Fish → Nushell migration. Remove /etc/fish/conf.d/sideral-cli-init.fish.
   Add /usr/share/nushell/vendor/autoload/sideral-cli-init.nu (env-phase

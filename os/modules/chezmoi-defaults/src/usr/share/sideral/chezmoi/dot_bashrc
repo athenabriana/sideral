@@ -1,0 +1,5 @@
+# ~/.bashrc — user bash config.
+# /etc/profile.d/sideral-cli-init.sh is sourced by the system for login
+# shells; this file is for your own customisations on top.
+# shellcheck source=/dev/null
+[ -f /etc/bashrc ] && source /etc/bashrc

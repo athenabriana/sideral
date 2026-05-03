@@ -45,7 +45,7 @@ sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/athenabriana/sideral-n
 systemctl reboot
 ```
 
-After reboot the image is fully wired — niri session in SDDM, Noctalia bar/launcher/lock, Zen Browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code all on `$PATH`. The curated flatpak set is preinstalled at image build. Bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
+After reboot the image is fully wired — niri session in SDDM, Noctalia bar/launcher/lock, Zen Browser, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code all on `$PATH`. The curated flatpak set is preinstalled at image build. Default shell and compositor configs are applied on first login. Optionally bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
 
 ---
 
@@ -67,7 +67,7 @@ Built directly on `ghcr.io/ublue-os/silverblue-main:43`. Ships the [niri](https:
 | **CLI toolset** | `sideral-cli-tools` meta-RPM: `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`, `helix`, `fish`, `zsh`, `rclone`. `starship` baked from upstream binary at image build. |
 | **Shell-init wiring** | `/etc/profile.d/sideral-cli-init.sh`, `/etc/fish/conf.d/`, `/etc/zsh/` — starship, atuin, zoxide, mise, fzf in bash + fish + zsh. `command -v`-guarded. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic (Fedora main) + Source Serif 4, Source Sans 3 (Adobe GitHub). |
-| **User dotfiles** | Bring your own with `chezmoi init --apply <your-repo>` — see below. sideral ships no default dotfiles tree. |
+| **User dotfiles** | Image defaults (niri, Noctalia, matugen, shell configs) applied on first login via chezmoi. Bring your own personal dotfiles with `chezmoi init --apply <your-repo>` — see below. |
 | **Flatpaks (preinstalled)** | Zen Browser, Flatseal, Warehouse, Podman Desktop, DistroShelf, Resources, Smile, Bazaar, Pika Backup, Junction, Web App Hub (all from Flathub). Single curated remote: `flathub`. |
 
 ## Default niri keybinds
@@ -104,7 +104,7 @@ For the bar / launcher / notifications: use Noctalia's built-in wallpaper picker
 
 GNOME, tiling-shell, and all GNOME extensions were removed. The full GNOME stack (`gnome-shell`, `gnome-session`, `mutter`, `gnome-control-center`, `gnome-settings-daemon`, `gdm`) is pruned from the image. SDDM replaces GDM.
 
-Everything else carries over: `sideral-cli-tools`, three-shell parity, `ujust` recipes (`chsh`, `chezmoi-init`, `gdrive-setup`, `gdrive-remove`, `tools`, `update`), `/etc/user-motd`, `rclone-gdrive.service`, rootless podman, kubernetes module. The new recipes are `ujust niri` and `ujust theme`.
+Everything else carries over: `sideral-cli-tools`, three-shell parity, `ujust` recipes (`chsh`, `chezmoi`, `apply-defaults`, `gdrive-setup`, `gdrive-remove`, `tools`, `update`), `/etc/user-motd`, `rclone-gdrive.service`, rootless podman, kubernetes module. The new recipes are `ujust niri` and `ujust theme`.
 
 **To roll back** if niri doesn't fit: reboot and pick the previous deployment at the bootloader, or:
 ```bash
@@ -173,7 +173,18 @@ just rollback   # back to the previous deployment
 
 ## Set up dotfiles
 
-sideral ships [chezmoi](https://chezmoi.io) but no default dotfiles tree — you bring your own. After your first login, point chezmoi at your dotfiles repo:
+sideral ships a default dotfile set at `/usr/share/sideral/chezmoi/` — niri config, Noctalia settings, matugen config + templates, shell configs for bash/zsh/nushell, and a mise toolchain. These are applied automatically on your first login. After `rpm-ostree upgrade`, pull in any new defaults:
+
+```bash
+ujust apply-defaults
+```
+
+chezmoi compares the image source against your `$HOME`. Files you haven't customized update silently; files you've changed get a diff prompt so you decide what to keep.
+
+### Bring your own dotfiles
+
+You can also manage your own dotfiles from a personal git repo — completely independent of the image defaults:
+
 
 ```bash
 chezmoi init --apply https://github.com/<you>/dotfiles

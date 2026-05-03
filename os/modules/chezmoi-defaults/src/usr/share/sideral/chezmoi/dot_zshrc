@@ -1,0 +1,4 @@
+# ~/.zshrc — user zsh config.
+# /etc/zshrc (system) is loaded before this file and wires all sideral
+# tools (starship, atuin, zoxide, mise, fzf, carapace, eza/bat aliases).
+# Add your own customisations below.
