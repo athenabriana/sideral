@@ -18,7 +18,6 @@ input {
         tap
         natural-scroll
     }
-    focus-follows-mouse
 }
 
 layout {
@@ -33,7 +32,7 @@ layout {
         proportion 0.5
         proportion 0.667
     }
-    default-column-width { proportion 0.75; }
+    default-column-width { proportion 0.8; }
     focus-ring {
         width 2
     }
