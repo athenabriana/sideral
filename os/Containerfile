@@ -11,13 +11,13 @@
 # CI build:       push to main → GH Actions → ghcr.io/<user>/sideral:latest
 # Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/sideral:latest
 #
-# Module layout (2026-05-02 refactor): every capability — shell, desktop,
-# containers, kubernetes, flatpaks, fonts, nvidia, signing — owns a single
-# directory under os/modules/<capability>/ holding its packages.txt,
-# build-time scripts, and rpm/<spec>+src/ tree. The orchestrator
-# (os/lib/build.sh) iterates the module list and applies each one's
-# build-time concerns. The inline rpmbuild step (os/lib/build-rpms.sh)
-# walks os/modules/*/rpm/*.spec to produce sideral-*.rpm.
+# Module layout:
+#   os/modules/<name>/ — RPM modules; each has rpm/<spec>+src/ tree plus
+#     optional packages.txt + *.sh for build-time package install/scripts.
+#   os/build/<name>/   — build-time-only (no RPM); just packages.txt + *.sh.
+#     Currently: fonts/ (Fedora + Adobe fonts), nvidia/ (variant overlay).
+# The orchestrator (os/lib/build.sh) processes both directories.
+# The inline rpmbuild step (os/lib/build-rpms.sh) walks os/modules/ only.
 #
 # rpmbuild + rpm -Uvh + rpm -e of the toolchain happen in one RUN layer
 # so no rpmbuild artifacts bloat the final image. RPMs exist only inside
@@ -31,6 +31,7 @@ ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:43"
 FROM scratch AS ctx
 COPY lib /lib
 COPY modules /modules
+COPY build /build
 
 # Stage 2: the real image.
 FROM ${BASE_IMAGE}
@@ -60,11 +61,11 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # when the docker stack was swapped for rootless podman.)
 #
 # `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:43 ships
-# ublue-os-signing pre-installed, and sideral-signing declares Conflicts:
-# against it (different sigstore policy targets). rpm -Uvh refuses package-
-# level Conflicts even with --replacefiles, so we remove the predecessor
-# explicitly. --nodeps is safe here because nothing else in the base image
-# Requires ublue-os-signing.
+# ublue-os-signing pre-installed, and sideral-base declares Conflicts:
+# against it (both own /etc/containers/policy.json). rpm -Uvh refuses
+# package-level Conflicts even with --replacefiles, so we remove the
+# predecessor explicitly. --nodeps is safe here because nothing else in
+# the base image Requires ublue-os-signing.
 #
 # Requires: podman-docker / podman-compose / podman must already be
 # installed (build.sh above did that via the containers module plus

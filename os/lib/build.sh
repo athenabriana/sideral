@@ -26,15 +26,18 @@ set -euo pipefail
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 
 MODULES_DIR="/ctx/modules"
+BUILD_DIR="/ctx/build"
 
-# Order: cli-tools first because sideral-cli-tools (built later in
-# the inline RPM step) Requires: every binary installed by cli-tools'
-# packages.txt. niri-defaults and services can come in any order. fonts
-# late so the font cache rebuild post-script picks up everything that
-# was installed earlier. flatpaks near the end so all sideral RPM
+# RPM-module build order: cli-tools first (sideral-cli-tools Requires every
+# binary that cli-tools' packages.txt installs). niri-defaults and services
+# can come in any order. flatpaks near the end so all sideral RPM
 # requirements are present by the time we install the curated set.
-# nvidia last so the variant tweaks land on the final tree.
-MODULES=(cli-tools niri-defaults services kubernetes fonts flatpaks nvidia)
+MODULES=(cli-tools niri-defaults services kubernetes flatpaks)
+
+# Build-only modules (os/build/): no RPM spec, just packages.txt + scripts.
+# fonts before flatpaks so fc-cache runs on the complete font set.
+# nvidia last — variant overlay; apply.sh is a no-op on the base variant.
+BUILD=(fonts nvidia)
 
 # ── 1. Remove inherited base packages we don't ship ─────────────────────
 # silverblue-{main,nvidia}:43 ship several packages by default that
@@ -78,32 +81,39 @@ done
 shopt -u nullglob
 
 # ── 3. Per-module loop ──────────────────────────────────────────────────
-for module in "${MODULES[@]}"; do
-    module_dir="$MODULES_DIR/$module"
-    [ -d "$module_dir" ] || { log "[$module] no module dir at $module_dir, skipping"; continue; }
+_run_module_dir() {
+    local label="$1" module_dir="$2"
+    [ -d "$module_dir" ] || { log "[$label] no dir at $module_dir, skipping"; return; }
 
-    pkg_file="$module_dir/packages.txt"
+    local pkg_file="$module_dir/packages.txt"
     if [ -f "$pkg_file" ]; then
+        local packages
         packages=$(grep -vE '^\s*(#|$)' "$pkg_file" | tr '\n' ' ')
         if [ -n "$packages" ]; then
-            log "[$module] installing"
+            log "[$label] installing"
             echo "  $packages"
             dnf5 install -y --setopt=install_weak_deps=False $packages
         fi
     fi
 
-    # Run any *.sh scripts in lexical order. install.sh / *-install.sh /
-    # apply.sh / post.sh / extensions.sh — the convention is one script
-    # per concern within a module, named for what it does. Scripts must
-    # be committed with the executable bit set (git update-index
-    # --chmod=+x); /ctx is bind-mounted read-only here so we can't
-    # chmod at runtime.
+    # Run any *.sh scripts in lexical order. Scripts must be committed with
+    # the executable bit set (git update-index --chmod=+x); /ctx is bind-
+    # mounted read-only so we can't chmod at runtime.
     shopt -s nullglob
     for script in "$module_dir"/*.sh; do
-        log "[$module] running $(basename "$script")"
+        log "[$label] running $(basename "$script")"
         "$script"
     done
     shopt -u nullglob
+}
+
+for module in "${MODULES[@]}"; do
+    _run_module_dir "$module" "$MODULES_DIR/$module"
+done
+
+# ── 3b. Build-only modules (os/build/) ─────────────────────────────────
+for module in "${BUILD[@]}"; do
+    _run_module_dir "$module" "$BUILD_DIR/$module"
 done
 
 # ── 4. Regenerate initramfs ────────────────────────────────────────────

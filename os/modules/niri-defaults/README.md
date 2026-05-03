@@ -67,7 +67,7 @@ Same pattern for matugen templates (`~/.config/matugen/templates/ghostty`, `~/.c
 
 ## NVIDIA known issues + workarounds (niri-26.04 + proprietary driver, F43)
 
-The `sideral-nvidia` variant ships niri from day one with the full bluefin/bazzite-grade NVIDIA hardening layer (`os/modules/nvidia/`). The configuration applied by `apply.sh` covers: kargs, modprobe NVreg options, VRAM-leak app profile, Wayland env vars, and the `debug { disable-cursor-plane }` niri drop-in. **Desktop-class workflows (terminal, browser, VS Code, Noctalia rendering, video playback) are expected to work**. The issues below are edge-case or hardware-specific.
+The `sideral-nvidia` variant ships niri from day one with the full bluefin/bazzite-grade NVIDIA hardening layer (`os/build/nvidia/`). The configuration applied by `apply.sh` covers: kargs, modprobe NVreg options, VRAM-leak app profile, Wayland env vars, and the `debug { disable-cursor-plane }` niri drop-in. **Desktop-class workflows (terminal, browser, VS Code, Noctalia rendering, video playback) are expected to work**. The issues below are edge-case or hardware-specific.
 
 ### Cursor stuttering / VRR + NVIDIA
 
