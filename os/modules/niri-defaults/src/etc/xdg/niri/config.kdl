@@ -38,6 +38,13 @@ layout {
 
 prefer-no-csd
 
+// Global rounded corners on every window. clip-to-geometry crops content
+// to the rounded shape so app pixels don't bleed past the radius.
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 // Helpers: kanshi for multi-monitor profiles, fcitx5 for IME, cliphist
 // watcher for clipboard history (paired with `cliphist list | fuzzel`
 // at the user level). noctalia-shell is the Quickshell-based shell —

@@ -37,6 +37,11 @@ layout {
 
 prefer-no-csd
 
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 spawn-at-startup "kanshi"
 spawn-at-startup "fcitx5"
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store"
