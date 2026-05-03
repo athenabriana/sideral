@@ -5,7 +5,7 @@
 # Tools split by source:
 #   • Fedora 44 main:         chezmoi, atuin, fzf, bat, eza, ripgrep,
 #                             zoxide, gh, git-lfs, gcc, make, cmake,
-#                             helix, zsh, nushell
+#                             helix, zsh
 #   • mise.jdx.dev/rpm:       mise          (repo shipped via sideral-base)
 #   • packages.microsoft.com: code          (repo shipped via sideral-base)
 #   • repo.terra.fyralabs.com: starship     (repo shipped via sideral-niri-defaults)
@@ -28,7 +28,6 @@ Requires:       chezmoi
 Requires:       mise
 Requires:       code
 Requires:       starship
-Requires:       nushell
 Requires:       carapace-bin
 Requires:       atuin
 Requires:       fzf
@@ -69,6 +68,9 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/carapace.repo
 
 %changelog
+* Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-11
+- Drop Requires: nushell again — not in Fedora 44 or Terra repos.
+  F44 bump mistakenly re-added it; reverting to pre-0.0.0-10 state.
 * Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-10
 - F44 bump: add Requires for nushell (Fedora 44 main), starship (Terra),
   carapace-bin (fury.io). Add Requires: code (was installed by deleted

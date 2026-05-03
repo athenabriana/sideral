@@ -3,7 +3,7 @@
 # Sources:
 #   • Fedora 44 main:        chezmoi, atuin, fzf, bat, eza, ripgrep,
 #                            zoxide, gh, git-lfs, gcc, make, cmake, helix,
-#                            zsh, nushell, chromium + zsh plugins
+#                            zsh, chromium + zsh plugins
 #   • mise.jdx.dev/rpm:      mise     (repo shipped via sideral-base)
 #   • packages.microsoft.com: code    (repo shipped via sideral-base)
 #   • repo.terra.fyralabs.com: starship (repo shipped via sideral-niri-defaults)
@@ -13,10 +13,6 @@ chezmoi
 mise
 code
 starship
-# nushell — third interactive shell (Fedora 44 main); switch via `ujust chsh nu`.
-# Bundled nu_plugin_{query,formats,gstat} ship alongside it; nushell-plugins-
-# install.sh picks them up and also cargo-builds highlight/rpm/explore.
-nushell
 # carapace-bin — multi-shell tab-completion bridge (fury.io repo).
 # Wires up bash, zsh, and nushell completions for 1000+ CLI tools.
 carapace-bin
