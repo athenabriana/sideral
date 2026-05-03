@@ -2,7 +2,8 @@
 #
 # Source split:
 #   • Fedora main: niri, greetd, greetd-tuigreet, kanshi, wdisplays, ddcutil,
-#     fcitx5, fcitx5-configtool, grim, slurp, wl-clipboard
+#     brightnessctl, fastfetch, wlsunset, fprintd, fcitx5, fcitx5-configtool,
+#     grim, slurp, wl-clipboard
 #   • Terra (via /etc/yum.repos.d/terra.repo, staged by build.sh's
 #     persistent-repo step before this install runs):
 #     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen
@@ -18,7 +19,9 @@ greetd-tuigreet
 kanshi
 wdisplays
 ddcutil
-swaybg
+fastfetch
+wlsunset
+fprintd
 brightnessctl
 fcitx5
 fcitx5-configtool

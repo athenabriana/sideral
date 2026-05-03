@@ -25,7 +25,9 @@ Requires:       matugen
 Requires:       kanshi
 Requires:       wdisplays
 Requires:       ddcutil
-Requires:       swaybg
+Requires:       fastfetch
+Requires:       wlsunset
+Requires:       fprintd
 Requires:       brightnessctl
 Requires:       fcitx5
 Requires:       fcitx5-configtool
