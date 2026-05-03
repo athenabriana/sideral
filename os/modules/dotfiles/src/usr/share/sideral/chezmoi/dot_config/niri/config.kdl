@@ -18,17 +18,10 @@ input {
         tap
         natural-scroll
     }
-    focus-follows-mouse
 }
 
 layout {
     gaps 32
-    struts {
-        left 17
-        right 17
-        top 17
-        bottom 17
-    }
     center-focused-column "always"
     preset-column-widths {
         proportion 0.333
