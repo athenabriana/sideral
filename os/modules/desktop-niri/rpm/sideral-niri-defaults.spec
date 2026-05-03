@@ -89,6 +89,7 @@ cp -a usr %{buildroot}/
 /usr/share/wayland-sessions/niri.desktop
 %dir /usr/share/wallpapers/sideral
 /usr/share/wallpapers/sideral/README.md
+/usr/share/wallpapers/sideral/default.jpg
 
 %changelog
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
