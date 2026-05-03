@@ -23,7 +23,14 @@ input {
 }
 
 layout {
-    gaps 28
+    gaps 16
+    // niri 25.11 has no per-axis gap; struts add extra horizontal screen-
+    // edge padding so the outer gap reads as ~28px while between-column
+    // gaps stay at 16. Per-axis between-column gaps land in 26.x.
+    struts {
+        left 12
+        right 12
+    }
     center-focused-column "always"
     preset-column-widths {
         proportion 0.333
