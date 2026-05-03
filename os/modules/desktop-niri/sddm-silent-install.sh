@@ -23,7 +23,7 @@ SDDM_DEST="/usr/share/sddm/themes/silent"
 
 # Pinned upstream-tarball sha256. Bump alongside SDDM_TAG.
 # Compute fresh: curl -fsSL "$tarball_url" | sha256sum
-SDDM_SHA256="REPLACE_AT_FIRST_BUILD"
+SDDM_SHA256="058dd0326dad06f23906bd8d42572126339ec90c1053d2d52a1b9ac3f0bea991"
 
 # Idempotent skip if already installed and tag matches.
 if [ -f "$SDDM_DEST/.sideral-tag" ] \
