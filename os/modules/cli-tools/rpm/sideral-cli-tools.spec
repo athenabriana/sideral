@@ -1,33 +1,24 @@
 # sideral-cli-tools — meta-package pulling the day-to-day CLI tooling.
-#
-# No files of its own; just Requires:. Installs alongside sideral-base so
-# `rpm-ostree override remove sideral-cli-tools` lets users opt out per-deployment.
+# Also ships /etc/yum.repos.d/carapace.repo so rpm-ostree upgrade continues
+# resolving carapace-bin updates on a running system.
 #
 # Tools split by source:
-#   • Fedora main:           chezmoi, atuin, fzf, bat, eza, ripgrep,
-#                            zoxide, gh, git-lfs, gcc, make, cmake,
-#                            helix, zsh
-#   • mise.jdx.dev/rpm:      mise          (persistent repo, see sideral-base)
-#   • packages.microsoft.com: code         (persistent repo, see sideral-base)
-#   • upstream binary:       starship      (pinned tarball baked into
-#                                           /usr/bin by build.sh — not RPM-tracked)
-#                            carapace      (pinned tarball baked into
-#                                           /usr/bin by build.sh — not RPM-tracked)
-#                            nushell       (pinned tarball baked into
-#                                           /usr/bin by build.sh — not RPM-tracked)
+#   • Fedora 44 main:         chezmoi, atuin, fzf, bat, eza, ripgrep,
+#                             zoxide, gh, git-lfs, gcc, make, cmake,
+#                             helix, zsh, nushell
+#   • mise.jdx.dev/rpm:       mise          (repo shipped via sideral-base)
+#   • packages.microsoft.com: code          (repo shipped via sideral-base)
+#   • repo.terra.fyralabs.com: starship     (repo shipped via sideral-niri-defaults)
+#   • yum.fury.io/rsteube:    carapace-bin  (repo shipped by this package)
 #
-# The RPM tools above are dnf-installed in build.sh before the inline
-# rpmbuild step; rpm -Uvh of this package then verifies they're in the
-# rpmdb. starship and carapace are NOT listed in Requires: because no RPM
-# owns them. helix is set as $EDITOR by sideral-shell-ux's cli-init.{sh,zsh}
-# so git, sudoedit, mise, etc. spawn it by default. nushell + zsh are
-# opt-in shells; switch via `ujust chsh {nu,zsh}` (sideral-shell-ux ships
-# parallel init under /etc/profile.d/ + /etc/zsh/ + vendor autoload).
+# helix is set as $EDITOR; code is VISUAL. nushell + zsh are opt-in shells
+# via `ujust chsh {nu,zsh}`. All three shells wire up via parallel init
+# files in sideral-shell-ux (profile.d, zsh/, nushell vendor autoload).
 
 Name:           sideral-cli-tools
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral CLI toolset (chezmoi + 15 small RPMs + mise + code; starship baked separately)
+Summary:        sideral CLI toolset (chezmoi, nushell, starship, carapace-bin, mise, code + 15 Fedora RPMs)
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
@@ -35,6 +26,10 @@ BuildArch:      noarch
 
 Requires:       chezmoi
 Requires:       mise
+Requires:       code
+Requires:       starship
+Requires:       nushell
+Requires:       carapace-bin
 Requires:       atuin
 Requires:       fzf
 Requires:       bat
@@ -46,7 +41,6 @@ Requires:       git-lfs
 Requires:       gcc
 Requires:       make
 Requires:       cmake
-Requires:       code
 Requires:       helix
 Requires:       zsh
 Requires:       zsh-syntax-highlighting
@@ -58,20 +52,30 @@ Requires:       fuse3
 Meta-package: depends on the RPM-packaged CLI tools sideral wires into
 the user shell via parallel init files for bash, zsh, and nushell
 (/etc/profile.d/sideral-cli-init.sh, /etc/zsh/sideral-cli-init.zsh,
-/usr/share/nushell/vendor/autoload/sideral-cli-init.nu). Plus VS Code
-(`code`) as the GUI editor (VISUAL), Helix (`hx`) as the default
-terminal editor (EDITOR), and nushell + zsh as opt-in alternatives to
-bash (per-user opt-in via `ujust chsh {nu,zsh}`). starship and carapace
-ship as pinned upstream binaries baked into /usr/bin — outside this
-package's Requires: because no RPM owns those files.
+/usr/share/nushell/vendor/autoload/sideral-cli-init.nu). VS Code (`code`)
+is the GUI editor (VISUAL); Helix (`hx`) is the default terminal editor
+(EDITOR). nushell + zsh are opt-in shells via `ujust chsh {nu,zsh}`.
+Also ships /etc/yum.repos.d/carapace.repo so post-install `dnf upgrade`
+keeps carapace-bin current between image rebuilds.
 
 %prep
 %setup -q
 
+%install
+mkdir -p %{buildroot}
+cp -a etc %{buildroot}/
+
 %files
-# Intentionally empty — meta-package, no payload.
+/etc/yum.repos.d/carapace.repo
 
 %changelog
+* Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-10
+- F44 bump: add Requires for nushell (Fedora 44 main), starship (Terra),
+  carapace-bin (fury.io). Add Requires: code (was installed by deleted
+  mise-code-install.sh). Ship /etc/yum.repos.d/carapace.repo so
+  carapace-bin upgrades flow via rpm-ostree upgrade on running systems.
+  Delete starship-install.sh, nushell-install.sh, carapace-install.sh,
+  mise-code-install.sh (all replaced by packages.txt + dnf).
 * Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-9
 - Drop Requires: nushell — nushell is not in Fedora main repos and is
   now installed via nushell-install.sh (upstream binary tarball baked

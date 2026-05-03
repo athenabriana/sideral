@@ -41,10 +41,10 @@ jobs:
       matrix:
         include:
           - variant: base
-            base_image: ghcr.io/ublue-os/silverblue-main:43
+            base_image: ghcr.io/ublue-os/silverblue-main:44
             image_name: sideral
           - variant: nvidia
-            base_image: ghcr.io/ublue-os/silverblue-nvidia:43
+            base_image: ghcr.io/ublue-os/silverblue-nvidia:44
             image_name: sideral-nvidia
 
     steps:

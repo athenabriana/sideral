@@ -1,0 +1,5 @@
+[carapace-bin]
+name=Carapace tab-completion binary
+baseurl=https://yum.fury.io/rsteube/
+enabled=1
+gpgcheck=0

@@ -69,7 +69,7 @@ for moddir in "$MOD_ROOT"/*/; do
         rpmbuild -bb \
             --define "_topdir $TOPDIR" \
             --define "_sideral_version $VERSION" \
-            --define "dist .fc43" \
+            --define "dist .fc44" \
             "$TOPDIR/SPECS/$spec_name.spec" >&2
     done
 done

@@ -1,19 +1,25 @@
-# CLI tools layer — Fedora-main RPMs that satisfy sideral-cli-tools' Requires.
+# CLI tools layer — all packages that satisfy sideral-cli-tools' Requires.
 #
-# Installed at image build time so the inline rpmbuild + `rpm -Uvh
-# sideral-cli-tools.rpm` step (run later in Containerfile) finds all 12
-# packages already present in the rpmdb.
-#
-# Sourced separately (see build.sh, after the FEATURES loop):
-#   • mise     — mise.jdx.dev/rpm     (persistent repo)
-#   • code     — packages.microsoft.com (persistent repo)
-#   • starship — pinned upstream binary tarball, baked into /usr/bin
-#                (no Fedora RPM, atim/starship COPR avoided to remove the
-#                third-party-packager hop)
-#   • carapace — pinned upstream binary tarball, baked into /usr/bin
-#                (static Go binary from carapace-sh/carapace-bin releases)
+# Sources:
+#   • Fedora 44 main:        chezmoi, atuin, fzf, bat, eza, ripgrep,
+#                            zoxide, gh, git-lfs, gcc, make, cmake, helix,
+#                            zsh, nushell, chromium + zsh plugins
+#   • mise.jdx.dev/rpm:      mise     (repo shipped via sideral-base)
+#   • packages.microsoft.com: code    (repo shipped via sideral-base)
+#   • repo.terra.fyralabs.com: starship (repo shipped via sideral-niri-defaults)
+#   • yum.fury.io/rsteube:   carapace-bin (repo shipped via sideral-cli-tools)
 
 chezmoi
+mise
+code
+starship
+# nushell — third interactive shell (Fedora 44 main); switch via `ujust chsh nu`.
+# Bundled nu_plugin_{query,formats,gstat} ship alongside it; nushell-plugins-
+# install.sh picks them up and also cargo-builds highlight/rpm/explore.
+nushell
+# carapace-bin — multi-shell tab-completion bridge (fury.io repo).
+# Wires up bash, zsh, and nushell completions for 1000+ CLI tools.
+carapace-bin
 atuin
 fzf
 bat
@@ -29,9 +35,6 @@ cmake
 # Set as $EDITOR by sideral-cli-init.{sh,zsh} so git, sudoedit, mise
 # edit, etc. drop into it by default.
 helix
-# nushell — installed via nushell-install.sh (upstream binary; not in
-# Fedora main repos). nushell-plugins-install.sh runs after and picks up
-# the bundled nu_plugin_* binaries placed in /usr/bin by that script.
 # zsh — default interactive shell for sideral. Switch via `ujust chsh zsh`
 # (or bash/nu for alternatives). Sideral's /etc/zshrc +
 # /etc/zsh/sideral-cli-init.zsh wire it up with all CLI tools.

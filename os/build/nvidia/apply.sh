@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Apply NVIDIA-variant tweaks if we're building on top of silverblue-
-# nvidia:43. Runs inside the orchestrator's per-module loop; both base
+# nvidia:44. Runs inside the orchestrator's per-module loop; both base
 # and nvidia builds invoke it, but only the nvidia build does anything
 # (variant detection by `rpm -q kmod-nvidia`).
 #

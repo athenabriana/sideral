@@ -24,7 +24,7 @@
 # the image — there is no Copr project, no external repo, no token.
 # The image rebuild IS the upgrade.
 
-ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:43"
+ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:44"
 
 # Stage 1: scratch carrier for build scripts + module sources — bind-
 # mounted, never embedded in final image.
@@ -60,7 +60,7 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
 # (The /etc/yum.repos.d/docker-ce.repo conflict went away 2026-05-02
 # when the docker stack was swapped for rootless podman.)
 #
-# `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:43 ships
+# `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:44 ships
 # ublue-os-signing pre-installed, and sideral-base declares Conflicts:
 # against it (both own /etc/containers/policy.json). rpm -Uvh refuses
 # package-level Conflicts even with --replacefiles, so we remove the
