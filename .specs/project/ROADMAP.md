@@ -22,6 +22,20 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Queued — next 1–2 features
 
+### `nushell` — replace fish with nushell + inshellisense
+
+**Scope**: drop fish, add nushell (Fedora main `nu` package) as the third interactive shell option alongside bash and zsh. Wire full sideral tool suite into `/usr/share/nushell/vendor/autoload/sideral-cli-init.nu` (starship, atuin, zoxide, mise, fzf, eza/bat aliases, agent detection, Ctrl-P/Alt-S/Ctrl-G keybindings). Add a systemd user service (`sideral-nushell-seed`) that seeds `~/.config/nushell/{env.nu,config.nu}` on every session if missing. Add inshellisense (`nodejs` + `npm install -g @microsoft/inshellisense` at build time) and wire Ctrl-I keybinding in bash, zsh, and nushell.
+
+**Locked decisions**:
+- D-01 = nushell replaces fish entirely; no parallel fish support
+- D-02 = config seeding is an always-check idempotent user service (same pattern as flatpak self-heal)
+- D-03 = inshellisense delivered via `nodejs` (Fedora main) + npm global install at build time; no standalone binary exists
+- D-04 = carapace rejected (not in Fedora main or Terra)
+
+**Spec**: `.specs/features/nushell/spec.md` — 18 requirements, ready for `/spec-run`.
+
+**Entry criterion**: spec complete 2026-05-02. Small/Medium feature — skip `/spec-design`, go straight to `/spec-run nushell`.
+
 ### `niri-shell` — migrate off GNOME to niri + Wayland shell + matugen
 
 **Scope**: replace the current GNOME + tiling-shell + Mutter desktop with a niri-based scrollable-tiling Wayland session and **Noctalia** (Quickshell-based shell from Terra), themed dynamically from wallpaper via matugen. Includes: SDDM + SilentSDDM theme, niri compositor (Fedora main), Noctalia + noctalia-qs (Terra), ghostty terminal (Terra), kanshi multi-monitor, fcitx5 IME, grim/slurp/wl-clipboard/cliphist for screenshot+clipboard, bluefin/bazzite-grade NVIDIA hardening on the nvidia variant, and the wiring to make sideral's existing chezmoi-driven dotfile / sideral-cli-tools / ujust / motd surface still work the same. Final repo set: Fedora main + Terra. No third-party COPRs.

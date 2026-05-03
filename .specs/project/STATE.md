@@ -4,7 +4,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current focus
 - **No feature in flight.** `chezmoi-home` (the most recently-spec'd feature) effectively shipped on 2026-05-02 — every commit since the 2026-05-01 source-tree landing has gone through the `build-sideral` CI workflow (matrix amd64 × {open, nvidia}, ending in `bootc container lint`), and the major post-spec changes (module refactor, docker→podman, NVIDIA variant, kubernetes module, flatpak grow-out) all required `just build`-equivalent CI passes to merge. T15's "needs a host with podman + shellcheck" gate is met by CI itself.
-- Next candidate: **`niri-shell`** — migration off GNOME (tiling-shell + dash-to-panel + Mutter) to niri + a Wayland shell (Noctalia or DankMaterialShell) + dynamic Material 3 theming via matugen. Spec drafting in progress under `.specs/features/niri-shell/`. Open gray areas in `context.md` need locking before `/spec-design`.
+- Next candidates: **`niri-shell`** (fully spec'd, ready for `/spec-design`) and **`nushell`** (spec'd 2026-05-02, ready for `/spec-run`). Can proceed in either order; `nushell` is smaller and independent.
 
 ## Past features (shipped)
 
