@@ -1,8 +1,8 @@
 # desktop-niri — niri compositor + Noctalia shell + supporting tools.
 #
 # Source split:
-#   • Fedora main: niri, sddm, kanshi, fcitx5, fcitx5-configtool, grim,
-#     slurp, wl-clipboard
+#   • Fedora main: niri, greetd, greetd-tuigreet, kanshi, fcitx5,
+#     fcitx5-configtool, grim, slurp, wl-clipboard
 #   • Terra (via /etc/yum.repos.d/terra.repo, staged by build.sh's
 #     persistent-repo step before this install runs):
 #     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen
@@ -11,13 +11,10 @@
 # noctalia-qs Conflicts: quickshell + Provides: quickshell — it's the
 # Quickshell hard-fork that Noctalia targets exclusively starting v4.6.0.
 # Sideral does not ship upstream Quickshell.
-#
-# SilentSDDM (the SDDM theme) is NOT in this list — it's fetched at image
-# build by sddm-silent-install.sh (no Fedora RPM, no COPR) and extracted
-# to /usr/share/sddm/themes/silent/.
 
 niri
-sddm
+greetd
+greetd-tuigreet
 kanshi
 fcitx5
 fcitx5-configtool

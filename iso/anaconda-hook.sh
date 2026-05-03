@@ -5,6 +5,22 @@ set -eoux pipefail
 IMAGE_REF="ghcr.io/athenabriana/sideral"
 IMAGE_TAG="latest"
 
+# ── Live user ───────────────────────────────────────────────────────
+# Passwordless wheel user; greetd autologins directly into niri-session.
+useradd -m -G wheel liveuser
+passwd -d liveuser
+
+# Override greetd config for autologin — no greeter, straight to desktop.
+mkdir -p /etc/greetd
+cat > /etc/greetd/config.toml <<'GREETD'
+[terminal]
+vt = 1
+
+[default_session]
+command = "niri-session"
+user = "liveuser"
+GREETD
+
 # ── Disable services that don't apply in the installer env ──────────
 for unit in \
     rpm-ostreed-automatic.timer \
