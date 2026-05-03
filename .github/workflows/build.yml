@@ -186,6 +186,7 @@ jobs:
           compression: squashfs
           hook-post-rootfs: ${{ github.workspace }}/iso/anaconda-hook.sh
           flatpaks-list: ${{ github.workspace }}/iso/flatpaks.txt
+          livesys: false
 
       - name: Stage ISO under output/
         if: steps.dryrun.outputs.skip == 'false'
