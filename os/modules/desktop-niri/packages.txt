@@ -2,10 +2,11 @@
 #
 # Source split:
 #   • Fedora main: niri, sddm, kanshi, fcitx5, fcitx5-configtool, grim,
-#     slurp, wl-clipboard, cliphist, rust-matugen
+#     slurp, wl-clipboard
 #   • Terra (via /etc/yum.repos.d/terra.repo, staged by build.sh's
 #     persistent-repo step before this install runs):
-#     noctalia-shell, noctalia-qs, ghostty
+#     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen
+#     (rust-matugen is the source RPM name; binary package is matugen)
 #
 # noctalia-qs Conflicts: quickshell + Provides: quickshell — it's the
 # Quickshell hard-fork that Noctalia targets exclusively starting v4.6.0.
@@ -24,7 +25,7 @@ grim
 slurp
 wl-clipboard
 cliphist
-rust-matugen
+matugen
 noctalia-shell
 noctalia-qs
 ghostty

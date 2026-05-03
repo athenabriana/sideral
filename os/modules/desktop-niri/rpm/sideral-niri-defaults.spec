@@ -24,7 +24,7 @@ Requires:       sddm
 Requires:       noctalia-shell
 Requires:       noctalia-qs
 Requires:       ghostty
-Requires:       rust-matugen
+Requires:       matugen
 Requires:       kanshi
 Requires:       fcitx5
 Requires:       fcitx5-configtool
