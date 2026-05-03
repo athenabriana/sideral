@@ -1,0 +1,3 @@
+// Placeholder — overwritten by os/build/nvidia/apply.sh on NVIDIA builds.
+// Ships as an empty file on the open-source variant so the explicit
+// `include` in config.kdl works on niri <26.04 (which has no glob support).

@@ -1,8 +1,8 @@
 # desktop-niri — niri compositor + Noctalia shell + supporting tools.
 #
 # Source split:
-#   • Fedora main: niri, greetd, greetd-tuigreet, kanshi, fcitx5,
-#     fcitx5-configtool, grim, slurp, wl-clipboard
+#   • Fedora main: niri, greetd, greetd-tuigreet, kanshi, wdisplays, ddcutil,
+#     fcitx5, fcitx5-configtool, grim, slurp, wl-clipboard
 #   • Terra (via /etc/yum.repos.d/terra.repo, staged by build.sh's
 #     persistent-repo step before this install runs):
 #     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen
@@ -16,6 +16,8 @@ niri
 greetd
 greetd-tuigreet
 kanshi
+wdisplays
+ddcutil
 swaybg
 brightnessctl
 fcitx5

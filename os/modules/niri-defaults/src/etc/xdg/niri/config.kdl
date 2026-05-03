@@ -46,7 +46,7 @@ spawn-at-startup "kanshi"
 spawn-at-startup "fcitx5"
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store"
 spawn-at-startup "swaybg" "-i" "/usr/share/wallpapers/sideral/default.jpg" "-m" "fill"
-spawn-at-startup "noctalia-shell"
+spawn-at-startup "qs" "-c" "noctalia-shell"
 
 binds {
     Mod+T          { spawn "/usr/bin/ghostty"; }
@@ -96,6 +96,7 @@ binds {
 }
 
 // Variant-specific drop-ins (currently used by sideral-nvidia for
-// `debug { disable-cursor-plane }`). On the open-source variant the
-// glob has no matches and niri silently skips the include.
-include "/etc/xdg/niri/config.d/*.kdl"
+// `debug { disable-cursor-plane }`). The placeholder at config.d/ is
+// shipped by sideral-niri-defaults so the include resolves on both
+// variants; nvidia/apply.sh overwrites it with the real drop-in.
+include "/etc/xdg/niri/config.d/sideral-nvidia.kdl"

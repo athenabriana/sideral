@@ -23,6 +23,8 @@ Requires:       noctalia-qs
 Requires:       ghostty
 Requires:       matugen
 Requires:       kanshi
+Requires:       wdisplays
+Requires:       ddcutil
 Requires:       swaybg
 Requires:       brightnessctl
 Requires:       fcitx5
@@ -45,11 +47,13 @@ Conflicts:      sddm
 %description
 Ships sideral's niri compositor and Noctalia shell defaults:
   - Terra yum repo (/etc/yum.repos.d/terra.repo)
-  - niri config.kdl at /etc/xdg/niri/ (system-default fallback)
+  - niri config.kdl at /etc/xdg/niri/ (system-default fallback); config.d/
+    placeholder shipped so the explicit include works on niri <26.04
   - matugen config + templates for ghostty + helix at /etc/xdg/;
     `ujust theme <wallpaper>` drives the pipeline
   - greetd config (/etc/greetd/config.toml) with tuigreet default login
   - systemd preset enabling greetd.service
+  - sysusers.d entry creating the greeter system user on every boot
   - IME env vars (/etc/profile.d/sideral-niri-ime.sh; fcitx5 wiring)
   - Wayland session entry (/usr/share/wayland-sessions/niri.desktop)
   - Wallpaper placeholder README (/usr/share/wallpapers/sideral/README.md)
@@ -70,6 +74,8 @@ cp -a usr %{buildroot}/
 %files
 /etc/yum.repos.d/terra.repo
 /etc/xdg/niri/config.kdl
+%dir /etc/xdg/niri/config.d
+/etc/xdg/niri/config.d/sideral-nvidia.kdl
 %dir /etc/xdg/matugen
 %dir /etc/xdg/matugen/templates
 /etc/xdg/matugen/config.toml
@@ -80,6 +86,7 @@ cp -a usr %{buildroot}/
 /etc/profile.d/sideral-niri-ime.sh
 /usr/share/wayland-sessions/niri.desktop
 /usr/lib/systemd/system-preset/50-sideral-greeter.preset
+/usr/lib/sysusers.d/greeter.conf
 %dir /usr/share/wallpapers/sideral
 /usr/share/wallpapers/sideral/README.md
 /usr/share/wallpapers/sideral/default.jpg
@@ -88,3 +95,6 @@ cp -a usr %{buildroot}/
 * Sat May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Replace SDDM with greetd + tuigreet. Ship greetd config and systemd
   preset. Add Conflicts: sddm.
+- Fix niri include: glob syntax requires niri >=26.04 (not yet in Fedora 43);
+  switch to explicit include of sideral-nvidia.kdl; ship placeholder in
+  config.d/ so the include resolves on open-source variant too.
