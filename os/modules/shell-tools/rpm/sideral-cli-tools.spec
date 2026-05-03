@@ -6,20 +6,21 @@
 # Tools split by source:
 #   • Fedora main:           chezmoi, atuin, fzf, bat, eza, ripgrep,
 #                            zoxide, gh, git-lfs, gcc, make, cmake,
-#                            helix, fish, zsh
+#                            helix, nushell, zsh
 #   • mise.jdx.dev/rpm:      mise          (persistent repo, see sideral-base)
 #   • packages.microsoft.com: code         (persistent repo, see sideral-base)
 #   • upstream binary:       starship      (pinned tarball baked into
 #                                           /usr/bin by build.sh — not RPM-tracked)
+#                            carapace      (pinned tarball baked into
+#                                           /usr/bin by build.sh — not RPM-tracked)
 #
-# The 17 RPM tools above are dnf-installed in build.sh before the inline
+# The RPM tools above are dnf-installed in build.sh before the inline
 # rpmbuild step; rpm -Uvh of this package then verifies they're in the
-# rpmdb. starship is NOT listed in Requires: because no RPM owns it.
-# helix is set as $EDITOR by sideral-shell-ux's cli-init.{sh,fish,zsh}
-# so git, sudoedit, mise, etc. spawn it by default. fish + zsh are
-# alternative interactive shells; per-user opt-in via `ujust chsh
-# {fish,zsh}` (sideral-shell-ux ships parallel init for all three
-# shells under /etc/profile.d/ + /etc/fish/conf.d/ + /etc/zsh/).
+# rpmdb. starship and carapace are NOT listed in Requires: because no RPM
+# owns them. helix is set as $EDITOR by sideral-shell-ux's cli-init.{sh,zsh}
+# so git, sudoedit, mise, etc. spawn it by default. nushell + zsh are
+# opt-in shells; switch via `ujust chsh {nu,zsh}` (sideral-shell-ux ships
+# parallel init under /etc/profile.d/ + /etc/zsh/ + vendor autoload).
 
 Name:           sideral-cli-tools
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
@@ -45,7 +46,7 @@ Requires:       make
 Requires:       cmake
 Requires:       code
 Requires:       helix
-Requires:       fish
+Requires:       nushell
 Requires:       zsh
 Requires:       zsh-syntax-highlighting
 Requires:       zsh-autosuggestions
@@ -53,17 +54,15 @@ Requires:       rclone
 Requires:       fuse3
 
 %description
-Meta-package: depends on the 17 RPM-packaged CLI tools sideral wires
-into the user shell via parallel init files for bash, fish, and zsh
-(/etc/profile.d/sideral-cli-init.sh, /etc/fish/conf.d/sideral-cli-
-init.fish, /etc/zsh/sideral-cli-init.zsh). Plus VS Code (`code`) as
-the GUI editor (VISUAL), Helix (`hx`) as the default terminal editor
-(EDITOR), and fish + zsh as alternatives to the default bash login
-shell (per-user opt-in via `ujust chsh {fish,zsh}`). starship ships
-alongside as a pinned upstream binary baked into /usr/bin (see
-build.sh) — outside this package's Requires: because no RPM owns
-the file. Replaces the home-manager `home.packages` list
-that nix-home would have shipped.
+Meta-package: depends on the RPM-packaged CLI tools sideral wires into
+the user shell via parallel init files for bash, zsh, and nushell
+(/etc/profile.d/sideral-cli-init.sh, /etc/zsh/sideral-cli-init.zsh,
+/usr/share/nushell/vendor/autoload/sideral-cli-init.nu). Plus VS Code
+(`code`) as the GUI editor (VISUAL), Helix (`hx`) as the default
+terminal editor (EDITOR), and nushell + zsh as opt-in alternatives to
+bash (per-user opt-in via `ujust chsh {nu,zsh}`). starship and carapace
+ship as pinned upstream binaries baked into /usr/bin — outside this
+package's Requires: because no RPM owns those files.
 
 %prep
 %setup -q
@@ -72,6 +71,11 @@ that nix-home would have shipped.
 # Intentionally empty — meta-package, no payload.
 
 %changelog
+* Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
+- Replace Requires: fish with Requires: nushell. Fish removed from
+  sideral; nushell is the third interactive shell. Switch via
+  `ujust chsh nu`. carapace added as sole tab-completion backend
+  for bash, zsh, and nushell (pre-built binary, see build.sh).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
 - Add Requires: rclone + fuse3. rclone is the CLI cloud-storage
   frontend (Google Drive, S3, B2, Dropbox, etc.); fuse3 is the

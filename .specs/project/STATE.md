@@ -74,7 +74,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 - **starship** — fetched as the latest upstream binary by `os/modules/shell-tools/starship-install.sh`, sha256-verified, baked into `/usr/bin`. Not RPM-tracked, NOT in `Requires:`. Detected at runtime via `command -v` so removing the binary doesn't break the init script.
 - **chromium** — installed via `os/modules/shell-tools/packages.txt` and hidden from the app grid (see Browser above).
 - **mise** via persistent `mise.jdx.dev/rpm/` repo; **VS Code** via persistent `packages.microsoft.com/yumrepos/vscode` repo; both shipped as `/etc/yum.repos.d/{mise,vscode}.repo` files in `sideral-base` so `rpm-ostree upgrade` keeps pulling updates between rebuilds.
-- User picks their own toolchain in their chezmoi'd `~/.config/mise/config.toml`. sideral does NOT ship a default mise config.
+- `/etc/mise/config.toml` ships settings only (`trusted_config_paths`, `not_found_auto_install`, `jobs`, etc.). Tools live in `~/.config/mise/config.toml` (seeded by `sideral-shell-seed.service` with the full default toolchain; chezmoi-trackable). User-level config merges with system config additively.
 
 ### Shells (2026-05-02)
 - **Three parallel shells**: bash (default), fish, zsh. Sideral ships parallel init for all three:
@@ -148,6 +148,7 @@ None.
   - **`set -o pipefail` makes `var=$(... | grep ...)` a hidden landmine** when the grep can find nothing. Capture into a variable first, then `grep ... || true`, then validate.
 
 ## Deferred
+- **Chezmoi default dotfiles repo** — create a `sideral-dotfiles` GitHub repo containing all seeded skeletons (`~/.bashrc`, `~/.zshrc`, `~/.config/nushell/{env.nu,config.nu}`, `~/.config/mise/config.toml`). Replace the `sideral-shell-seed` file-creation logic with `chezmoi init --apply github.com/athenabriana/sideral-dotfiles` (one-shot, only if `~/.local/share/chezmoi` is empty). Users who want their own dotfiles repo run `ujust chezmoi-init <their-repo>` to take over. Open question: GitHub-hosted (requires network on first login, users can `chezmoi update` for improvements) vs bundled in image at `/usr/share/sideral/chezmoi/` (offline-safe, updates ship with image rebuilds). Spec this as a follow-on to `nushell` once the seed service ships.
 - Tailscale daemon + GNOME indicator. (Niri migration may change the indicator angle.)
 - QCOW2 / raw bootc-image-builder outputs (ISO landed 2026-04-30; qcow2/raw still skipped).
 - Matrix builds (aarch64).

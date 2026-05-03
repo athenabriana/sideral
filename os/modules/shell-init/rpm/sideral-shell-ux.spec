@@ -8,7 +8,7 @@
 Name:           sideral-shell-ux
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral shell-init wiring + chezmoi onboarding hint
+Summary:        sideral shell-init wiring for bash, zsh, nushell + seeding service
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
@@ -19,42 +19,36 @@ Requires:       bash
 # default for users who `chsh -s /usr/bin/fish` after deployment.
 
 %description
-Ships shell-init wiring for bash, fish, and zsh — same tools, same
-agent guard, same Ctrl+P quick-open, same eza/bat aliases — plus
-ujust recipes and the user-motd banner.
+Ships shell-init wiring for bash, zsh, and nushell — same tools, same
+agent guard, same Ctrl+P quick-open — plus ujust recipes, user-motd,
+a system-wide mise config, and a boot-time shell seeding service.
 
-Bash side — /etc/profile.d/sideral-cli-init.sh:
-  Central wiring for starship, atuin, zoxide, mise, fzf. Plus
-  EDITOR=hx / VISUAL=code, eza/bat aliases (skipped on AI-agent
-  shells), and Ctrl+P → fzf quick-open. Each integration is
-  `command -v`-guarded so `rpm-ostree override remove` of any one
-  tool doesn't break the rest.
+Bash — /etc/profile.d/sideral-cli-init.sh:
+  Wires starship, atuin, zoxide, mise (shims + activate), fzf, carapace.
+  EDITOR=hx / VISUAL=code. eza/bat aliases (skipped on AI-agent shells).
+  Ctrl+P fzf quick-open. Each tool is `command -v`-guarded.
 
-Fish side — /etc/fish/conf.d/sideral-cli-init.fish:
-  Fish port. Fish brings syntax highlighting + autosuggestions +
-  smarter tab completion built-in.
+Zsh — /etc/zsh/sideral-cli-init.zsh + /etc/zshrc:
+  Same wiring in zsh syntax. The shipped /etc/zshrc replaces Fedora's
+  stock stub via rpm -Uvh --replacefiles. carapace is the sole tab-
+  completion backend; zsh-syntax-highlighting + zsh-autosuggestions kept.
 
-Zsh side — /etc/zsh/sideral-cli-init.zsh + /etc/zshrc:
-  Zsh port (same shape, zsh syntax). The shipped /etc/zshrc replaces
-  Fedora's stock 3-line stub via rpm -Uvh --replacefiles; it sets
-  umask and sources sideral-cli-init.zsh.
+Nushell — /usr/share/nushell/vendor/autoload/sideral-cli-init.nu:
+  Vendor autoload wires starship, atuin, zoxide, `view` command, agent
+  detection, EDITOR/VISUAL. No eza/bat aliases (nushell has structured
+  `ls`). mise, keybindings, and carapace completer live in seeded config.nu.
 
-User-facing UX — /etc/user-motd:
-  Welcome banner displayed on every interactive login by ublue-os-
-  just's /etc/profile.d/user-motd.sh. Lists the most-used `ujust`
-  recipes (chsh, chezmoi-init, update). Per-user opt-out via
-  `touch ~/.config/no-show-user-motd`. Replaces the previous
-  one-shot sideral-onboarding.sh (was bash-only and tied to first-
-  shell; the motd works for any login shell and any session).
+Seeding — /usr/libexec/sideral-shell-seed + systemd user service:
+  Boot-time service seeds ~/.bashrc, ~/.zshrc, ~/.config/nushell/{env,
+  config}.nu, and ~/.config/mise/config.toml if missing. Auto-migrates
+  users with a broken login shell (e.g. fish removed) to /usr/bin/zsh.
+
+mise config — /etc/mise/config.toml:
+  System-wide settings (trusted_config_paths, not_found_auto_install,
+  etc.). Tools declared in user-level ~/.config/mise/config.toml (seeded).
 
 ujust recipes — /usr/share/ublue-os/just/60-custom.just:
-  Fills the ublue-os-just `import? "60-custom.just"` extension slot.
-  Provides `chsh [bash|fish|zsh]` (sudo usermod wrapper) and
-  `chezmoi-init <repo>` (chezmoi init --apply wrapper).
-
-(sideral-kind-podman.sh moved to sideral-kubernetes 2026-05-02 as part
-of the module refactor — that snippet is K8s-tooling-specific, not a
-generic shell-init concern.)
+  chsh [bash|zsh|nu], chezmoi-init, gdrive-setup, gdrive-remove, tools.
 
 %prep
 %setup -q
@@ -66,15 +60,29 @@ cp -a usr %{buildroot}/
 
 %files
 /etc/profile.d/sideral-cli-init.sh
-/etc/fish/conf.d/sideral-cli-init.fish
 /etc/zsh/sideral-cli-init.zsh
 /etc/zshrc
 /etc/user-motd
 /etc/mise/config.toml
+/usr/share/nushell/vendor/autoload/sideral-cli-init.nu
 /usr/share/ublue-os/just/60-custom.just
 /usr/lib/systemd/user/rclone-gdrive.service
+/usr/lib/systemd/user/sideral-shell-seed.service
+%attr(0755,root,root) /usr/libexec/sideral-shell-seed
 
 %changelog
+* Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-12
+- Fish → Nushell migration. Remove /etc/fish/conf.d/sideral-cli-init.fish.
+  Add /usr/share/nushell/vendor/autoload/sideral-cli-init.nu (env-phase
+  wiring: starship, atuin, zoxide, view command, agent detection,
+  EDITOR/VISUAL; no eza/bat aliases — nushell has structured ls).
+- Add sideral-shell-seed.service (systemd user unit, WantedBy=default.target)
+  + /usr/libexec/sideral-shell-seed script. Idempotent on every session:
+  auto-migrates broken login shell to /usr/bin/zsh, seeds ~/.bashrc,
+  ~/.zshrc, ~/.config/nushell/{env,config}.nu, ~/.config/mise/config.toml
+  if missing. Never overwrites existing files.
+- ujust chsh: replace fish with nu; picker now offers {zsh,nu,bash}.
+- ujust tools motd: updated shell section to reference nu instead of fish.
 * Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-11
 - Restore /etc/mise/config.toml (system-wide baseline toolchain lost in
   chezmoi-home migration). Ships 12 tools: node/bun/pnpm, python/uv,

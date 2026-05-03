@@ -10,6 +10,8 @@
 #   • starship — pinned upstream binary tarball, baked into /usr/bin
 #                (no Fedora RPM, atim/starship COPR avoided to remove the
 #                third-party-packager hop)
+#   • carapace — pinned upstream binary tarball, baked into /usr/bin
+#                (static Go binary from carapace-sh/carapace-bin releases)
 
 chezmoi
 atuin
@@ -24,17 +26,17 @@ gcc
 make
 cmake
 # helix — modal terminal editor (treesitter, LSP, multi-cursor by default).
-# Set as $EDITOR by sideral-cli-init.{sh,fish} so git, sudoedit, mise
+# Set as $EDITOR by sideral-cli-init.{sh,zsh} so git, sudoedit, mise
 # edit, etc. drop into it by default.
 helix
-# fish — friendly interactive shell. First-class syntax highlighting,
-# autosuggestions from history, and smarter tab completion than bash
-# all built in (no config). Sideral ships parallel bash/fish/zsh init
-# wiring (sideral-cli-init.{sh,fish,zsh}); switch via `ujust chsh fish`.
-fish
-# zsh — third interactive-shell option. Switch via `ujust chsh zsh`.
-# Sideral's /etc/zshrc + /etc/zsh/sideral-cli-init.zsh wire it up
-# the same as bash and fish.
+# nushell — structured-data-first interactive shell (third shell option).
+# Default shell stays zsh; switch via `ujust chsh nu`. Sideral ships
+# vendor autoload at /usr/share/nushell/vendor/autoload/sideral-cli-init.nu
+# and a boot-time seeding service for ~/.config/nushell/{env,config}.nu.
+nushell
+# zsh — default interactive shell for sideral. Switch via `ujust chsh zsh`
+# (or bash/nu for alternatives). Sideral's /etc/zshrc +
+# /etc/zsh/sideral-cli-init.zsh wire it up with all CLI tools.
 zsh
 # zsh-syntax-highlighting + zsh-autosuggestions — bring zsh to
 # parity with fish's two killer interactive features (red-on-invalid

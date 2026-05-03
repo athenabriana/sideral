@@ -4,7 +4,7 @@
 # `import? "/usr/share/ublue-os/just/60-custom.just"` line — the `?`
 # makes the import optional; this file fills the slot.
 #
-# Run any recipe with `ujust <name>` (e.g. `ujust chsh fish`).
+# Run any recipe with `ujust <name>` (e.g. `ujust chsh nu`).
 # Run `ujust` (no args) to list all recipes.
 
 # Switch login shell. With no argument, opens an interactive picker
@@ -14,8 +14,8 @@
 #
 # Examples:
 #   ujust chsh           # interactive picker (recommended)
-#   ujust chsh zsh       # → /usr/bin/zsh
-#   ujust chsh fish      # → /usr/bin/fish
+#   ujust chsh zsh       # → /usr/bin/zsh  (default)
+#   ujust chsh nu        # → /usr/bin/nu
 #   ujust chsh bash      # → /bin/bash
 [group('System')]
 chsh shell="":
@@ -25,14 +25,14 @@ chsh shell="":
     if [ -z "$selected" ]; then
         # ugum is the ublue gum-or-fzf wrapper; falls through to fzf
         # if gum isn't installed, which it isn't on sideral by default.
-        selected="$(ugum choose zsh fish bash)" || exit 0
+        selected="$(ugum choose zsh nu bash)" || exit 0
     fi
     case "$selected" in
         bash) target=/bin/bash ;;
-        fish) target=/usr/bin/fish ;;
+        nu)   target=/usr/bin/nu ;;
         zsh)  target=/usr/bin/zsh ;;
         *)
-            echo "Unknown shell: $selected (try: bash, fish, zsh)" >&2
+            echo "Unknown shell: $selected (try: bash, zsh, nu)" >&2
             exit 1
             ;;
     esac
@@ -114,12 +114,12 @@ tools:
       gh, chezmoi, git-lfs, gcc, make, cmake, kubectl, kind, helm,
       starship, fzf — install fine, work as you'd expect.
 
-    ${B}Shells${R} — bash is always present
-      ujust chsh        switch (default: zsh — bash-compat + highlight + autosuggest)
-      ujust chsh fish   alternative — non-POSIX syntax, cleanest interactive UX
+    ${B}Shells${R} — zsh is default; bash always present
+      ujust chsh        switch (default: zsh — highlight + autosuggest + carapace)
+      ujust chsh nu     nushell — structured-data-first, all tools wired
       ujust chsh bash   stay on bash
-      ${D}All three share the same starship/atuin/zoxide/mise/fzf wiring,${R}
-      ${D}same Ctrl+P, same eza/bat aliases, same agent-shell guard.${R}
+      ${D}All three share starship/atuin/zoxide/mise/fzf/carapace wiring${R}
+      ${D}and the same Ctrl+P quick-open + agent-shell guard.${R}
 
     ${B}Other ujust recipes${R}
       ujust                       list every recipe (sideral + ublue stock)

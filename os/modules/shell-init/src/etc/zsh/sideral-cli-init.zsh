@@ -36,6 +36,13 @@ if (( ${+commands[fzf]} )); then
     source <(fzf --zsh)
 fi
 
+# ── carapace — static tab-completion backend for 839+ CLIs ─────────────
+# Calls compinit internally; do NOT call compinit separately (double-init
+# breaks completion). Must load before zsh-syntax-highlighting (last rule).
+if (( ${+commands[carapace]} )); then
+    source <(carapace _carapace zsh)
+fi
+
 # ── Fish-parity plugins ─────────────────────────────────────────────────
 # zsh-autosuggestions: greyed-out completion from history as you type,
 # accept the rest of the suggestion with → (or End). Same UX as fish.

@@ -68,6 +68,13 @@ if command -v fzf >/dev/null 2>&1; then
     source <(fzf --bash)
 fi
 
+# carapace — static tab-completion backend for 839+ CLIs (replaces
+# bash-completion for sideral's tool set). Calls compgen internally.
+if command -v carapace >/dev/null 2>&1; then
+    # shellcheck disable=SC1090
+    source <(carapace _carapace bash)
+fi
+
 # Ctrl-P — VS-Code-style quick-open. Pick a file with fzf, open in
 # editor. Uses `rg --files` when available (respects .gitignore + is
 # fast on big repos); falls back to find. Editor pick order: $VISUAL,

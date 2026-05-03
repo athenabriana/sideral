@@ -34,8 +34,8 @@ Only run when explicitly validating a full pass:
    - `kubectl version --client` + `kind version` + `helm version` → all resolve
    - On nvidia variant: `cat /usr/lib/bootc/kargs.d/00-nvidia.toml` → 4 kargs incl. `nvidia-drm.modeset=1`; `gsettings get org.gnome.mutter experimental-features` → contains `kms-modifiers`
    - `rpm-ostree status` → sideral current, previous deployment preserved (ATH-08)
-   - `ujust chsh fish && exec fish -l` → fish init script loads; starship + atuin + zoxide + mise + fzf integrations active
-   - `ujust chsh zsh && exec zsh -l` → zsh init script loads; same integrations + zsh-syntax-highlighting + zsh-autosuggestions
+   - `ujust chsh nu && exec nu -l` → nushell opens; starship prompt + atuin + zoxide + view command available; `which fish` returns empty
+   - `ujust chsh zsh && exec zsh -l` → zsh init loads; same integrations + zsh-syntax-highlighting + zsh-autosuggestions + carapace completions
    - **Distrobox check**: `distrobox create --image fedora:42 t && distrobox enter t -- echo hello` → succeeds (no `/nix` mount expectation post chezmoi-home)
 
 ## Task-level gate matrix
