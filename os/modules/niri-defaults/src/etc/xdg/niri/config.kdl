@@ -60,6 +60,16 @@ binds {
     Mod+Shift+Left { move-column-left; }
     Mod+Shift+Right { move-column-right; }
 
+    // Vim-style hjkl mirrors of the arrow nav above.
+    Mod+H          { focus-column-left; }
+    Mod+L          { focus-column-right; }
+    Mod+K          { focus-window-up; }
+    Mod+J          { focus-window-down; }
+    Mod+Shift+H    { move-column-left; }
+    Mod+Shift+L    { move-column-right; }
+    Mod+Shift+K    { move-window-up; }
+    Mod+Shift+J    { move-window-down; }
+
     // Workspace switching.
     Mod+1          { focus-workspace 1; }
     Mod+2          { focus-workspace 2; }
