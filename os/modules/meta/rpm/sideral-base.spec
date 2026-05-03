@@ -22,13 +22,14 @@ BuildArch:      noarch
 
 # Sub-packages (all required by default; users can rpm-ostree override
 # remove sideral-flatpaks etc. for granular opt-out).
-Requires:       sideral-services       = %{version}-%{release}
-Requires:       sideral-flatpaks       = %{version}-%{release}
-Requires:       sideral-niri-defaults  = %{version}-%{release}
-Requires:       sideral-shell-ux       = %{version}-%{release}
-Requires:       sideral-signing        = %{version}-%{release}
-Requires:       sideral-cli-tools      = %{version}-%{release}
-Requires:       sideral-kubernetes     = %{version}-%{release}
+Requires:       sideral-services          = %{version}-%{release}
+Requires:       sideral-flatpaks          = %{version}-%{release}
+Requires:       sideral-niri-defaults     = %{version}-%{release}
+Requires:       sideral-shell-ux          = %{version}-%{release}
+Requires:       sideral-chezmoi-defaults  = %{version}-%{release}
+Requires:       sideral-signing           = %{version}-%{release}
+Requires:       sideral-cli-tools         = %{version}-%{release}
+Requires:       sideral-kubernetes        = %{version}-%{release}
 
 # Third-party deps (Fedora main):
 #   podman-docker  — docker → podman wrapper
@@ -67,6 +68,11 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/vscode.repo
 
 %changelog
+* Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-11
+- Add Requires: sideral-chezmoi-defaults. New package ships
+  /usr/share/sideral/chezmoi/ (10 dotfiles) and the first-login
+  profile.d auto-apply script; omitting it from the meta-package
+  would silently skip dotfile seeding on every fresh install.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-10
 - Replace Requires: sideral-dconf with Requires: sideral-niri-defaults.
   sideral-dconf (GNOME dconf snippets) is retired alongside the desktop/

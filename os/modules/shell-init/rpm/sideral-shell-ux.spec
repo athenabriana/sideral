@@ -8,7 +8,7 @@
 Name:           sideral-shell-ux
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral shell-init wiring for bash, zsh, nushell + seeding service
+Summary:        sideral shell-init wiring for bash, zsh, and nushell
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
