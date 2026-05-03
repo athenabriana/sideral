@@ -27,7 +27,10 @@ if (( ${+commands[zoxide]} )); then
     eval "$(zoxide init zsh)"
 fi
 if (( ${+commands[mise]} )); then
-    eval "$(mise activate zsh)"
+    export PATH="$HOME/.local/share/mise/shims:$PATH"
+    if [[ -o interactive ]]; then
+        eval "$(mise activate zsh)"
+    fi
 fi
 if (( ${+commands[fzf]} )); then
     source <(fzf --zsh)

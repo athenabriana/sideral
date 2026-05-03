@@ -70,10 +70,21 @@ cp -a usr %{buildroot}/
 /etc/zsh/sideral-cli-init.zsh
 /etc/zshrc
 /etc/user-motd
+/etc/mise/config.toml
 /usr/share/ublue-os/just/60-custom.just
 /usr/lib/systemd/user/rclone-gdrive.service
 
 %changelog
+* Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-11
+- Restore /etc/mise/config.toml (system-wide baseline toolchain lost in
+  chezmoi-home migration). Ships 12 tools: node/bun/pnpm, python/uv,
+  java-temurin-lts/kotlin/gradle, go/rust/zig, act. not_found_auto_install
+  enables lazy install on first use (type `node`, mise auto-installs).
+  trusted_config_paths=["/"] suppresses per-project trust prompts.
+- Fix mise activation in bash + zsh: add ~/.local/share/mise/shims to
+  PATH unconditionally; guard `mise activate` for interactive shells only.
+  Resolves "command not found" for mise-managed tools before first prompt
+  render and in non-interactive contexts (scripts, SSH exec).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-10
 - Add /etc/user-motd row for `ujust niri` (niri+Noctalia cheatsheet).
 - Add `ujust theme <wallpaper>` recipe to 60-custom.just: runs matugen,

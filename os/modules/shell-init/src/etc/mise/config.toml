@@ -1,0 +1,30 @@
+# sideral — system-wide mise settings.
+#
+# Applies to all users. Tools live in ~/.config/mise/config.toml
+# (seeded by sideral-shell-seed.service) so they are user-owned
+# and chezmoi-trackable. This file handles behavior only.
+
+[settings]
+
+experimental = true
+
+# No "do you trust this .mise.toml?" prompt when cd-ing into projects
+trusted_config_paths = ["/"]
+
+# Auto-install on first use — `node` works immediately without `mise install`
+not_found_auto_install = true
+
+# Respect legacy version files (.nvmrc, .python-version, .go-version, etc.)
+idiomatic_version_file_enable_tools = ["node", "python", "java", "ruby", "go", "rust"]
+
+# Faster parallel installs
+jobs = 8
+
+# Safety margin for slow networks
+http_timeout = "60s"
+
+# Quieter cd-into-project output
+[settings.status]
+missing_tools = "if_other_versions_installed"
+show_env      = false
+show_tools    = false

@@ -51,9 +51,15 @@ if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash)"
 fi
 
-# mise — runtime version manager activation
+# mise — runtime version manager
+# Shims on PATH for non-interactive shells (scripts, SSH exec, etc.) where the
+# prompt hook never fires. `mise activate` removes shims and sets up hook-driven
+# PATH for interactive shells — the two modes are mutually exclusive by design.
 if command -v mise >/dev/null 2>&1; then
-    eval "$(mise activate bash)"
+    export PATH="$HOME/.local/share/mise/shims:$PATH"
+    if [[ $- == *i* ]]; then
+        eval "$(mise activate bash)"
+    fi
 fi
 
 # fzf — Ctrl-R / Ctrl-T / Alt-C key bindings (fzf 0.48+ pattern)
