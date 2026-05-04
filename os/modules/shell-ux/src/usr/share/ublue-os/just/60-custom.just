@@ -51,67 +51,6 @@ chsh shell="":
     echo "Done. Log out and back in for the change to take effect,"
     echo "or run \`exec $target -l\` to swap your current session now."
 
-# Toggle SDDM autologin into the niri session, paired with a Noctalia
-# lock-on-start so the boot flow is: power on → niri starts → lockscreen
-# → password → unlocked desktop. Skips the SDDM greeter entirely.
-#
-# enable:  writes /etc/sddm.conf.d/autologin.conf with the current $USER
-#          as the autologin user, and creates the
-#          ~/.config/sideral/autologin-lock marker file that the niri
-#          spawn-at-startup checks for.
-# disable: removes /etc/sddm.conf.d/autologin.conf and the marker; the
-#          SilentSDDM greeter then shows again on boot.
-#
-# Examples:
-#   ujust autologin           # show current state
-#   ujust autologin enable
-#   ujust autologin disable
-[group('System')]
-autologin action="":
-    #!/usr/bin/bash
-    set -euo pipefail
-    selected="{{action}}"
-    marker="$HOME/.config/sideral/autologin-lock"
-    sddm_autologin=/etc/sddm.conf.d/autologin.conf
-    if [ -z "$selected" ]; then
-        if [ -f "$sddm_autologin" ]; then
-            echo "Autologin: enabled (auto-logs into niri then shows lockscreen)"
-        else
-            echo "Autologin: disabled (SilentSDDM greeter shows on boot)"
-        fi
-        echo
-        echo "Usage: ujust autologin enable|disable"
-        exit 0
-    fi
-    case "$selected" in
-        enable)
-            echo "Configuring SDDM to auto-login as $USER into niri..."
-            sudo tee "$sddm_autologin" >/dev/null <<EOF
-    [Autologin]
-    User=$USER
-    Session=niri
-    EOF
-            mkdir -p "$(dirname "$marker")"
-            touch "$marker"
-            echo "Created marker $marker (niri locks Noctalia on session start)."
-            echo
-            echo "Done. Reboot to test, or restart SDDM:"
-            echo "  sudo systemctl restart sddm"
-            ;;
-        disable)
-            echo "Disabling SDDM autologin..."
-            sudo rm -f "$sddm_autologin"
-            rm -f "$marker"
-            echo "Removed $sddm_autologin and lock-on-start marker."
-            echo
-            echo "Done. Reboot to test."
-            ;;
-        *)
-            echo "Unknown action: $selected (try: enable, disable)" >&2
-            exit 1
-            ;;
-    esac
-
 # Cheatsheet of behavior differences vs. a stock Fedora install — what
 # you actually need to know after installing sideral. Skips the
 # drop-in-replacement tools (eza, bat, rg, podman) past one summary
