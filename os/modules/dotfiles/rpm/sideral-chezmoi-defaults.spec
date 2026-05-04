@@ -49,6 +49,8 @@ cp -a usr %{buildroot}/
 %dir /usr/share/sideral/chezmoi/dot_config/niri
 /usr/share/sideral/chezmoi/dot_config/niri/config.kdl
 /usr/share/sideral/chezmoi/dot_config/niri/noctalia.kdl
+%dir /usr/share/sideral/chezmoi/dot_config/ghostty
+/usr/share/sideral/chezmoi/dot_config/ghostty/config
 %dir /usr/share/sideral/chezmoi/dot_config/noctalia
 /usr/share/sideral/chezmoi/dot_config/noctalia/settings.json
 %dir /usr/share/sideral/chezmoi/dot_config/matugen
