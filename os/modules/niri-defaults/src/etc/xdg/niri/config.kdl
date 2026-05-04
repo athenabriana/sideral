@@ -80,12 +80,12 @@ binds {
     Mod+Shift+K    { move-window-up; }
     Mod+Shift+J    { move-window-down; }
 
-    // Column width control: R cycles presets (0.5 ↔ 1.0),
-    // F maximizes, Minus/Equal nudge by 25%.
+    // Column width control: R / Equal cycle presets forward (0.5 → 1.0),
+    // Minus cycles backward, F maximizes.
     Mod+R          { switch-preset-column-width; }
     Mod+F          { maximize-column; }
-    Mod+Minus      { set-column-width "-25%"; }
-    Mod+Equal      { set-column-width "+25%"; }
+    Mod+Minus      { switch-preset-column-width-back; }
+    Mod+Equal      { switch-preset-column-width; }
 
     // Workspace switching.
     Mod+1          { focus-workspace 1; }
