@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Toggle niri's center-focused-column between "always" and "never" in the
+# user's niri config. niri's file watcher picks up the change and reloads
+# the config automatically (no IPC call needed).
+
+set -euo pipefail
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/niri/config.kdl"
+
+if [[ ! -f "$config" ]]; then
+    echo "niri config not found at $config" >&2
+    exit 1
+fi
+
+if grep -q 'center-focused-column "always"' "$config"; then
+    sed -i 's/center-focused-column "always"/center-focused-column "never"/' "$config"
+elif grep -q 'center-focused-column "never"' "$config"; then
+    sed -i 's/center-focused-column "never"/center-focused-column "always"/' "$config"
+else
+    echo "center-focused-column not found in $config" >&2
+    exit 1
+fi

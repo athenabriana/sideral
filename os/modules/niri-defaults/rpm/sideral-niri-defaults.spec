@@ -87,6 +87,7 @@ cp -a usr %{buildroot}/
 /etc/greetd/config.toml
 /etc/profile.d/sideral-niri-ime.sh
 /usr/share/wayland-sessions/niri.desktop
+%attr(0755,root,root) /usr/libexec/sideral-niri-toggle-center
 /usr/lib/systemd/system-preset/50-sideral-greeter.preset
 /usr/lib/sysusers.d/greeter.conf
 %dir /usr/share/wallpapers/sideral
