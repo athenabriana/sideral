@@ -1,10 +1,13 @@
 # sideral OS — system-wide zsh config.
 #
-# Replaces Fedora's stock /etc/zshrc (taken via rpm -Uvh --replacefiles
-# in the Containerfile). Stock content was a 3-line umask + path-to-
-# profile.d sourcing stub; we keep the umask and source our own zsh
-# init instead of /etc/profile.d (which is bash syntax).
+# Replaces Fedora's stock /etc/zshrc (via rpm -Uvh --replacefiles in the
+# Containerfile). Stock /etc/zshrc sources /etc/profile.d/*.sh in bash
+# syntax, which can break on zsh-incompatible bashisms — we drop that
+# and rely on /etc/zprofile (login shells) to populate env from
+# /etc/profile.d. Interactive non-login terminals inherit env from
+# their parent login shell.
+#
+# All sideral interactive-shell wiring lives in ~/.zshrc, managed by
+# chezmoi (source: /usr/share/sideral/chezmoi/dot_zshrc).
 
 umask 022
-
-[ -r /etc/zsh/sideral-cli-init.zsh ] && source /etc/zsh/sideral-cli-init.zsh

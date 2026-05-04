@@ -2,12 +2,9 @@
 # Build and install nushell plugins to /usr/lib/nushell/plugins/.
 #
 # Plugin set: query, formats, gstat (bundled in Fedora nushell package),
-# file (pre-built binary), highlight / rpm / explore (cargo-built from
-# crates.io). Cargo is installed, used, and removed in one pass so no
-# Rust toolchain bloats the final image.
-#
-# All failures are non-fatal (warn + continue) except nu_plugin_highlight,
-# which is required for the `view` command shipped in sideral-cli-init.nu.
+# file (pre-built binary), rpm / explore (cargo-built from crates.io).
+# Cargo is installed, used, and removed in one pass so no Rust toolchain
+# bloats the final image. All failures are non-fatal (warn + continue).
 
 set -euo pipefail
 
@@ -99,7 +96,6 @@ _build_plugin() {
     fi
 }
 
-_build_plugin nu_plugin_highlight
 _build_plugin nu_plugin_rpm
 
 # nu_plugin_explore: build then verify protocol compatibility with
