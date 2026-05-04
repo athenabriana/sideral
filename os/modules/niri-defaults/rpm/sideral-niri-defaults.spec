@@ -98,11 +98,20 @@ cp -a usr %{buildroot}/
 /usr/lib/systemd/system/sideral-kanata.service
 /usr/lib/systemd/system-preset/50-sideral-greeter.preset
 /usr/lib/systemd/system-preset/51-sideral-kanata.preset
+/usr/lib/tmpfiles.d/sideral-display-manager.conf
 %dir /usr/share/wallpapers/sideral
 /usr/share/wallpapers/sideral/README.md
 /usr/share/wallpapers/sideral/default.jpg
 
 %changelog
+* Mon May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
+- Add /usr/lib/tmpfiles.d/sideral-display-manager.conf — pins
+  /etc/systemd/system/display-manager.service → sddm.service on every
+  boot via systemd-tmpfiles. Fixes a class of boot failures where the
+  symlink, preserved across rpm-ostree rebases by /etc 3-way merge,
+  pointed at greetd.service from a pre-0.0.0-2 image whose unit file
+  no longer exists in the current image. self-heals on every boot
+  without intervention.
 * Sat May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
 - Swap greetd + tuigreet → SDDM + SilentSDDM (vendored v1.4.2). Drop
   greetd config + greeter sysusers; ship /etc/sddm.conf.d/sideral.conf
