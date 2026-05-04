@@ -79,7 +79,7 @@ binds {
     Mod+Shift+K    { move-window-up; }
     Mod+Shift+J    { move-window-down; }
 
-    // Column width: Equal cycles presets forward (0.5 → 1.0),
+    // Column width: Equal cycles presets forward (0.5 → 0.75 → 1.0),
     // Minus cycles backward, F maximizes.
     Mod+F          { maximize-column; }
     Mod+Minus      { switch-preset-column-width-back; }
