@@ -31,6 +31,7 @@ Requires:       fprintd
 Requires:       brightnessctl
 Requires:       fcitx5
 Requires:       fcitx5-configtool
+Requires:       keyd
 Requires:       grim
 Requires:       slurp
 Requires:       wl-clipboard
@@ -85,9 +86,12 @@ cp -a usr %{buildroot}/
 /etc/xdg/matugen/templates/helix.toml
 %dir /etc/greetd
 /etc/greetd/config.toml
+%dir /etc/keyd
+/etc/keyd/default.conf
 /etc/profile.d/sideral-niri-ime.sh
 /usr/share/wayland-sessions/niri.desktop
 /usr/lib/systemd/system-preset/50-sideral-greeter.preset
+/usr/lib/systemd/system-preset/51-sideral-keyd.preset
 /usr/lib/sysusers.d/greeter.conf
 %dir /usr/share/wallpapers/sideral
 /usr/share/wallpapers/sideral/README.md

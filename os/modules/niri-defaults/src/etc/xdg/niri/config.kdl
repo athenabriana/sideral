@@ -55,6 +55,10 @@ spawn-at-startup "qs" "-c" "noctalia-shell"
 
 binds {
     Mod+T          { spawn "/usr/bin/ghostty"; }
+    // F13 is the synthetic key emitted by keyd when Super is tapped alone
+    // (see /etc/keyd/default.conf). Combined with the Mod+Space fallback
+    // for users who don't run keyd.
+    F13            { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
     Mod+Space      { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
     Mod+Q          { close-window; }
 
