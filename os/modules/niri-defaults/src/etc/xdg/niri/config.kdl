@@ -52,6 +52,9 @@ spawn-at-startup "kanshi"
 spawn-at-startup "fcitx5"
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store"
 spawn-at-startup "qs" "-c" "noctalia-shell"
+// Conditional lock-on-start, paired with `ujust autologin enable`. The
+// marker file is created by the recipe; without it this spawn is a no-op.
+spawn-at-startup "bash" "-c" "[ -f ~/.config/sideral/autologin-lock ] && sleep 3 && qs -c noctalia-shell ipc call lockScreen lock"
 
 binds {
     Mod+T          { spawn "/usr/bin/ghostty"; }

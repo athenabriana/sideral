@@ -45,6 +45,7 @@ spawn-at-startup "kanshi"
 spawn-at-startup "fcitx5"
 spawn-at-startup "bash" "-c" "wl-paste --watch cliphist store"
 spawn-at-startup "qs" "-c" "noctalia-shell"
+spawn-at-startup "bash" "-c" "[ -f ~/.config/sideral/autologin-lock ] && sleep 3 && qs -c noctalia-shell ipc call lockScreen lock"
 
 binds {
     Mod+T          { spawn "/usr/bin/ghostty"; }
