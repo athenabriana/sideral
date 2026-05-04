@@ -1,9 +1,9 @@
 # desktop-niri — niri compositor + Noctalia shell + supporting tools.
 #
 # Source split:
-#   • Fedora main: niri, greetd, greetd-tuigreet, kanshi, wdisplays, ddcutil,
-#     brightnessctl, fastfetch, wlsunset, fprintd, fcitx5, fcitx5-configtool,
-#     grim, slurp, wl-clipboard
+#   • Fedora main: niri, sddm, sddm-wayland-generic, kanshi, wdisplays,
+#     ddcutil, brightnessctl, fastfetch, wlsunset, fprintd, fcitx5,
+#     fcitx5-configtool, grim, slurp, wl-clipboard
 #   • Terra (via /etc/yum.repos.d/terra.repo, staged by build.sh's
 #     persistent-repo step before this install runs):
 #     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen, keyd
@@ -14,8 +14,8 @@
 # Sideral does not ship upstream Quickshell.
 
 niri
-greetd
-greetd-tuigreet
+sddm
+sddm-wayland-generic
 kanshi
 wdisplays
 ddcutil

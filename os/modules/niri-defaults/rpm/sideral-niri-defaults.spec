@@ -1,9 +1,9 @@
 # sideral-niri-defaults — niri compositor + Noctalia shell defaults.
 #
 # Ships: Terra yum repo, niri config (system XDG fallback), matugen
-# config + templates (system XDG fallback), greetd config, systemd
-# preset to enable greetd, fcitx5 IME profile.d snippet,
-# wayland-sessions entry, and wallpaper placeholder README.
+# config + templates (system XDG fallback), SDDM config + SilentSDDM
+# theme (vendored), systemd preset to enable sddm, fcitx5 IME profile.d
+# snippet, wayland-sessions entry, and wallpaper placeholder.
 # Per-user seeding is handled by sideral-chezmoi-defaults.
 
 Name:           sideral-niri-defaults
@@ -16,8 +16,8 @@ Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 Requires:       niri
-Requires:       greetd
-Requires:       greetd-tuigreet
+Requires:       sddm
+Requires:       sddm-wayland-generic
 Requires:       noctalia-shell
 Requires:       noctalia-qs
 Requires:       ghostty
@@ -44,8 +44,9 @@ Conflicts:      gnome-session
 Conflicts:      mutter
 Conflicts:      gnome-control-center
 Conflicts:      gnome-settings-daemon
-# SDDM replaced by greetd.
-Conflicts:      sddm
+# Other display managers — SDDM is the active one.
+Conflicts:      greetd
+Conflicts:      lightdm
 
 %description
 Ships sideral's niri compositor and Noctalia shell defaults:
@@ -54,17 +55,18 @@ Ships sideral's niri compositor and Noctalia shell defaults:
     placeholder shipped so the explicit include works on niri <26.04
   - matugen config + templates for ghostty + helix at /etc/xdg/;
     `ujust theme <wallpaper>` drives the pipeline
-  - greetd config (/etc/greetd/config.toml) with tuigreet default login
-  - systemd preset enabling greetd.service
-  - sysusers.d entry creating the greeter system user on every boot
+  - SDDM config (/etc/sddm.conf.d/sideral.conf) selecting the SilentSDDM
+    theme (vendored at /usr/share/sddm/themes/silent/, v1.4.2)
+  - systemd preset enabling sddm.service
+  - keyd config remapping leftmeta tap → Mod+Space (launcher trigger)
   - IME env vars (/etc/profile.d/sideral-niri-ime.sh; fcitx5 wiring)
   - Wayland session entry (/usr/share/wayland-sessions/niri.desktop)
-  - Wallpaper placeholder README (/usr/share/wallpapers/sideral/README.md)
+  - Wallpaper placeholder (/usr/share/wallpapers/sideral/)
 
 Per-user dotfile seeding (niri, Noctalia, matugen) is handled by
 sideral-chezmoi-defaults via /etc/profile.d/sideral-chezmoi-defaults.sh.
 
-Conflicts: against the full GNOME stack and sddm (sideral ships niri + greetd).
+Conflicts: against the full GNOME stack and other DMs (greetd, lightdm).
 
 %prep
 %setup -q
@@ -84,20 +86,26 @@ cp -a usr %{buildroot}/
 /etc/xdg/matugen/config.toml
 /etc/xdg/matugen/templates/ghostty
 /etc/xdg/matugen/templates/helix.toml
-%dir /etc/greetd
-/etc/greetd/config.toml
+%dir /etc/sddm.conf.d
+/etc/sddm.conf.d/sideral.conf
 %dir /etc/keyd
 /etc/keyd/default.conf
 /etc/profile.d/sideral-niri-ime.sh
 /usr/share/wayland-sessions/niri.desktop
+%dir /usr/share/sddm/themes/silent
+/usr/share/sddm/themes/silent/*
 /usr/lib/systemd/system-preset/50-sideral-greeter.preset
 /usr/lib/systemd/system-preset/51-sideral-keyd.preset
-/usr/lib/sysusers.d/greeter.conf
 %dir /usr/share/wallpapers/sideral
 /usr/share/wallpapers/sideral/README.md
 /usr/share/wallpapers/sideral/default.jpg
 
 %changelog
+* Sat May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
+- Swap greetd + tuigreet → SDDM + SilentSDDM (vendored v1.4.2). Drop
+  greetd config + greeter sysusers; ship /etc/sddm.conf.d/sideral.conf
+  selecting the silent theme. Conflicts: greetd, lightdm; remove sddm
+  from Conflicts.
 * Sat May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Replace SDDM with greetd + tuigreet. Ship greetd config and systemd
   preset. Add Conflicts: sddm.
