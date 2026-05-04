@@ -31,7 +31,6 @@ Requires:       fprintd
 Requires:       brightnessctl
 Requires:       fcitx5
 Requires:       fcitx5-configtool
-Requires:       keyd
 Requires:       grim
 Requires:       slurp
 Requires:       wl-clipboard
@@ -58,7 +57,6 @@ Ships sideral's niri compositor and Noctalia shell defaults:
   - SDDM config (/etc/sddm.conf.d/sideral.conf) selecting the SilentSDDM
     theme (vendored at /usr/share/sddm/themes/silent/, v1.4.2)
   - systemd preset enabling sddm.service
-  - keyd config remapping leftmeta tap → Mod+Space (launcher trigger)
   - IME env vars (/etc/profile.d/sideral-niri-ime.sh; fcitx5 wiring)
   - Wayland session entry (/usr/share/wayland-sessions/niri.desktop)
   - Wallpaper placeholder (/usr/share/wallpapers/sideral/)
@@ -88,14 +86,11 @@ cp -a usr %{buildroot}/
 /etc/xdg/matugen/templates/helix.toml
 %dir /etc/sddm.conf.d
 /etc/sddm.conf.d/sideral.conf
-%dir /etc/keyd
-/etc/keyd/default.conf
 /etc/profile.d/sideral-niri-ime.sh
 /usr/share/wayland-sessions/niri.desktop
 %dir /usr/share/sddm/themes/silent
 /usr/share/sddm/themes/silent/*
 /usr/lib/systemd/system-preset/50-sideral-greeter.preset
-/usr/lib/systemd/system-preset/51-sideral-keyd.preset
 %dir /usr/share/wallpapers/sideral
 /usr/share/wallpapers/sideral/README.md
 /usr/share/wallpapers/sideral/default.jpg

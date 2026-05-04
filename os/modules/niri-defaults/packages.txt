@@ -33,6 +33,3 @@ matugen
 noctalia-shell
 noctalia-qs
 ghostty
-# keyd — kernel-level key remapper. Used to give Super tap-vs-hold
-# semantics so pressing Super alone fires F13 → launcher.
-keyd
