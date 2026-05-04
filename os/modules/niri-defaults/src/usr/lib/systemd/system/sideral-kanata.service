@@ -1,0 +1,15 @@
+[Unit]
+Description=sideral kanata key remapper (Super tap → Super+Space)
+Documentation=https://github.com/jtroo/kanata
+After=systemd-user-sessions.service
+ConditionPathExists=/etc/kanata/sideral.kbd
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kanata --cfg /etc/kanata/sideral.kbd
+Restart=on-failure
+RestartSec=2
+Nice=-20
+
+[Install]
+WantedBy=multi-user.target

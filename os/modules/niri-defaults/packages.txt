@@ -6,7 +6,7 @@
 #     fcitx5-configtool, grim, slurp, wl-clipboard
 #   • Terra (via /etc/yum.repos.d/terra.repo, staged by build.sh's
 #     persistent-repo step before this install runs):
-#     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen, keyd
+#     noctalia-shell, noctalia-qs, ghostty, cliphist, matugen, kanata
 #     (rust-matugen is the source RPM name; binary package is matugen)
 #
 # noctalia-qs Conflicts: quickshell + Provides: quickshell — it's the
@@ -33,3 +33,6 @@ matugen
 noctalia-shell
 noctalia-qs
 ghostty
+# kanata — kernel-level key remapper (uinput). Used for Super tap-vs-hold:
+# tap → Mod+Space (launcher), hold → normal Super modifier.
+kanata
