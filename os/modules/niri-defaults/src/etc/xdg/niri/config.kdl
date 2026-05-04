@@ -59,6 +59,7 @@ binds {
     // Super+Space (see /etc/keyd/default.conf) so this same bind covers
     // both invocations.
     Mod+Space      { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+    Mod+Tab        { toggle-overview; }
     Mod+Q          { close-window; }
 
     // Scrolling axis navigation (PaperWM-style).

@@ -49,6 +49,7 @@ spawn-at-startup "qs" "-c" "noctalia-shell"
 binds {
     Mod+T          { spawn "/usr/bin/ghostty"; }
     Mod+Space      { spawn "qs" "-c" "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+    Mod+Tab        { toggle-overview; }
     Mod+Q          { close-window; }
 
     Mod+Left       { focus-column-left; }
