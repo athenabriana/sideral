@@ -135,9 +135,7 @@ sideral/
 │   ├── dotfiles/      home-manager module — xdg.configFile + home.file + programs.* enables
 │   └── nvidia/        gated NVIDIA stack — videoDrivers + kargs + modprobe + env + niri drop-in
 ├── pkgs/                              # in-tree derivations
-│   ├── noctalia-shell/                # noctalia-dev/noctalia-shell @ v4.7.6
-│   ├── noctalia-qs/                   # noctalia-dev/noctalia-qs @ v0.0.12
-│   └── silent-sddm/                   # uiriansan/SilentSDDM @ v1.4.0
+│   └── silent-sddm/                   # uiriansan/SilentSDDM @ v1.4.0 (not yet in nixpkgs)
 ├── iso/                               # calamares branding + wizard config + pre-install hook
 │   ├── calamares/branding/sideral/
 │   ├── calamares/modules/{partition,users,welcome,finished,shellprocess-sideral}.conf

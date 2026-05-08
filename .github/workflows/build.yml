@@ -49,9 +49,6 @@ jobs:
             experimental-features = nix-command flakes
             accept-flake-config = true
 
-      - name: Set up the magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v9
-
       - name: nix flake check
         run: nix flake check --accept-flake-config --no-build
 
@@ -91,9 +88,6 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
             accept-flake-config = true
-
-      - name: Set up the magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v9
 
       - name: Setup Node
         uses: actions/setup-node@v4

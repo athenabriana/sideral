@@ -4,8 +4,6 @@
   config,
   ...
 }: let
-  noctalia-shell = pkgs.callPackage ../../pkgs/noctalia-shell {};
-  noctalia-qs = pkgs.callPackage ../../pkgs/noctalia-qs {};
   silent-sddm = pkgs.callPackage ../../pkgs/silent-sddm {};
 
   sideralWallpaper = pkgs.runCommand "sideral-wallpapers" {} ''
