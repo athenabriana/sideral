@@ -1,5 +1,4 @@
 {
-  config,
   inputs,
   lib,
   pkgs,
@@ -32,14 +31,25 @@
 
   users.defaultUserShell = pkgs.zsh;
 
+  # Default user that ships with the image. Calamares can rename / replace
+  # this on install — the declarative entry exists so home-manager has a
+  # known target at flake-eval time. Mapping HM users dynamically from
+  # `config.users.users` triggers an assertions ↔ users.users recursion.
+  users.users.sideral = {
+    isNormalUser = true;
+    description = "sideral";
+    extraGroups = ["wheel" "networkmanager" "video" "audio" "input"];
+    shell = pkgs.zsh;
+  };
+
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
     backupFileExtension = "hm-backup";
     extraSpecialArgs = {inherit inputs;};
-    users = lib.mapAttrs (_name: _user: {
+    users.sideral = {
       imports = [../modules/dotfiles];
-    }) (lib.filterAttrs (_n: u: (u.isNormalUser or false)) config.users.users);
+    };
   };
 
   nix.settings = {
