@@ -1,7 +1,0 @@
-# Fonts layered from Fedora main.
-cascadia-code-fonts
-jetbrains-mono-fonts-all
-adwaita-fonts-all
-opendyslexic-fonts
-adobe-source-serif-pro-fonts
-adobe-source-sans-pro-fonts

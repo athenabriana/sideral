@@ -1,0 +1,65 @@
+/* sideral calamares stylesheet — light brand on top of the default
+ * calamares Qt widgets. Aligns sidebar/button color with the noctalia
+ * dark palette (kanagawa-ish). Kept under 80 lines per C-10. */
+
+QWidget {
+    background-color: #1f1f28;
+    color: #dcd7ba;
+    font-family: "JetBrains Mono", "Cascadia Code", monospace;
+}
+
+QPushButton {
+    background-color: #2a2a37;
+    color: #dcd7ba;
+    border: 1px solid #54546d;
+    border-radius: 4px;
+    padding: 6px 14px;
+    min-height: 24px;
+}
+
+QPushButton:hover {
+    background-color: #363646;
+    border-color: #7e9cd8;
+}
+
+QPushButton:pressed {
+    background-color: #54546d;
+}
+
+QPushButton:disabled {
+    color: #727169;
+    border-color: #2a2a37;
+}
+
+QLineEdit, QComboBox, QSpinBox {
+    background-color: #16161d;
+    color: #dcd7ba;
+    border: 1px solid #54546d;
+    border-radius: 3px;
+    padding: 4px 6px;
+    selection-background-color: #7e9cd8;
+    selection-color: #16161d;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border-color: #7e9cd8;
+}
+
+QProgressBar {
+    background-color: #16161d;
+    color: #dcd7ba;
+    border: 1px solid #54546d;
+    border-radius: 3px;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: #7e9cd8;
+    border-radius: 2px;
+}
+
+QCheckBox::indicator:checked,
+QRadioButton::indicator:checked {
+    background-color: #7e9cd8;
+    border-color: #7e9cd8;
+}

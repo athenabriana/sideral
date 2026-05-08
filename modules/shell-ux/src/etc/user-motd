@@ -1,0 +1,16 @@
+
+  ─────────────────────────────────────────────────────────────────
+  sideral OS — NixOS atomic desktop
+
+  Common tasks (all via njust):
+    njust                            list every recipe
+    njust niri                       niri + Noctalia keybinds + theming guide
+    njust tools                      cheatsheet of CLIs / aliases / keybinds
+    njust chsh [bash|nu|zsh]         switch login shell (default: zsh)
+    njust chezmoi-init <repo-url>    bootstrap dotfiles from your chezmoi repo
+    njust gdrive-setup               auto-mount Google Drive at ~/gdrive
+    njust theme <wallpaper>          regenerate Material 3 palette
+    njust update                     nixos-rebuild switch --upgrade
+
+  Hide this banner: touch ~/.config/no-show-user-motd
+  ─────────────────────────────────────────────────────────────────
