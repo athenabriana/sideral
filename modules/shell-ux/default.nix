@@ -18,11 +18,9 @@
 
   # zjstatus — WASM status-bar plugin for zellij (dj95/zjstatus).
   # Not yet packaged in nixpkgs; fetch the prebuilt wasm directly.
-  # First-build hash mismatch is expected — copy the real hash from
-  # the CI error and replace lib.fakeHash.
   zjstatus = pkgs.fetchurl {
     url = "https://github.com/dj95/zjstatus/releases/download/v0.23.0/zjstatus.wasm";
-    hash = lib.fakeHash;
+    hash = "sha256-4AaQEiNSQjnbYYAh5MxdF/gtxL+uVDKJW6QfA/E4Yf8=";
   };
 in {
   environment.systemPackages = [njust edit pkgs.just];
