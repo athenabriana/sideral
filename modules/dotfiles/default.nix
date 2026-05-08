@@ -25,12 +25,12 @@ in {
   programs = {
     bash = {
       enable = true;
-      bashrcExtra = builtins.readFile "${src}/bashrc";
+      bashrcExtra = builtins.readFile ./src/bashrc;
     };
 
     zsh = {
       enable = true;
-      initContent = builtins.readFile "${src}/zshrc";
+      initContent = builtins.readFile ./src/zshrc;
       syntaxHighlighting.enable = true;
       autosuggestion.enable = true;
     };
