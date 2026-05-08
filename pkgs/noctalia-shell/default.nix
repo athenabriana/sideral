@@ -15,7 +15,7 @@ stdenvNoCC.mkDerivation rec {
     owner = "noctalia-dev";
     repo = "noctalia-shell";
     rev = "v${version}";
-    hash = lib.fakeHash;
+    hash = "sha256-oGMYWsP0qthxQisirZc/r/vpdGTZrInwkh75AC714AE=";
   };
 
   dontBuild = true;

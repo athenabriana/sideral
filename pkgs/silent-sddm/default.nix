@@ -11,7 +11,7 @@ stdenvNoCC.mkDerivation rec {
     owner = "uiriansan";
     repo = "SilentSDDM";
     rev = "v${version}";
-    hash = lib.fakeHash;
+    hash = "sha256-znjp0gAxt+1wkxp/rqc0NPAnQGikbCAylgWGussZj0I=";
   };
 
   dontBuild = true;
