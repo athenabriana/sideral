@@ -3,24 +3,22 @@
   lib,
   pkgs,
   ...
-}: let
-  src = ./src;
-in {
+}: {
   home.stateVersion = "25.11";
 
   xdg.configFile = {
-    "niri/config.kdl".source = "${src}/config/niri/config.kdl";
-    "niri/noctalia.kdl".source = "${src}/config/niri/noctalia.kdl";
-    "matugen/config.toml".source = "${src}/config/matugen/config.toml";
-    "matugen/templates/ghostty".source = "${src}/config/matugen/templates/ghostty";
-    "matugen/templates/helix.toml".source = "${src}/config/matugen/templates/helix.toml";
-    "mise/config.toml".source = "${src}/config/mise/config.toml";
-    "ghostty/config".source = "${src}/config/ghostty/config";
-    "noctalia/settings.json".source = "${src}/config/noctalia/settings.json";
+    "niri/config.kdl".source = ./src/config/niri/config.kdl;
+    "niri/noctalia.kdl".source = ./src/config/niri/noctalia.kdl;
+    "matugen/config.toml".source = ./src/config/matugen/config.toml;
+    "matugen/templates/ghostty".source = ./src/config/matugen/templates/ghostty;
+    "matugen/templates/helix.toml".source = ./src/config/matugen/templates/helix.toml;
+    "mise/config.toml".source = ./src/config/mise/config.toml;
+    "ghostty/config".source = ./src/config/ghostty/config;
+    "noctalia/settings.json".source = ./src/config/noctalia/settings.json;
   };
 
   home.file.".local/share/nushell/vendor/autoload/sideral-cli-init.nu".source =
-    "${src}/local/share/nushell/vendor/autoload/sideral-cli-init.nu";
+    ./src/local/share/nushell/vendor/autoload/sideral-cli-init.nu;
 
   programs = {
     bash = {
@@ -37,8 +35,8 @@ in {
 
     nushell = {
       enable = true;
-      envFile.source = "${src}/config/nushell/env.nu";
-      configFile.source = "${src}/config/nushell/config.nu";
+      envFile.source = ./src/config/nushell/env.nu;
+      configFile.source = ./src/config/nushell/config.nu;
     };
 
     # Per-tool shell integration is handled manually inside the bash/zsh/nu
@@ -78,8 +76,8 @@ in {
   };
 
   home.activation.installNuPrompts = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if [ -x "${src}/install-nu-prompts.sh" ]; then
-      $DRY_RUN_CMD ${pkgs.bash}/bin/bash ${src}/install-nu-prompts.sh || true
+    if [ -x "${./src/install-nu-prompts.sh}" ]; then
+      $DRY_RUN_CMD ${pkgs.bash}/bin/bash ${./src/install-nu-prompts.sh} || true
     fi
   '';
 }
