@@ -4,26 +4,22 @@
   config,
   ...
 }: let
-  silent-sddm = pkgs.callPackage ../../pkgs/silent-sddm {};
-
   sideralWallpaper = pkgs.runCommand "sideral-wallpapers" {} ''
     mkdir -p $out/share/wallpapers
     cp -r ${./src/usr/share/wallpapers/sideral} $out/share/wallpapers/sideral
   '';
-
 in {
   programs.niri.enable = true;
 
-  services.displayManager.sddm = {
+  # greetd + regreet — Wayland-native login manager. regreet is a
+  # GTK4 greeter wrapped in cage (kiosk Wayland compositor). Reads
+  # session entries from /usr/share/wayland-sessions/.
+  services.greetd = {
     enable = true;
-    wayland.enable = true;
-    theme = "silent";
-    package = pkgs.kdePackages.sddm;
-    extraPackages = with pkgs.kdePackages; [
-      qtsvg
-      qtmultimedia
-      qtvirtualkeyboard
-    ];
+    settings.default_session = {
+      command = "${pkgs.cage}/bin/cage -s -m last -- ${pkgs.greetd.regreet}/bin/regreet";
+      user = "greeter";
+    };
   };
 
   services.kanata = {
@@ -46,28 +42,25 @@ in {
 
   programs.dconf.enable = true;
 
-  environment.systemPackages = with pkgs;
-    [
-      kanshi
-      wdisplays
-      ddcutil
-      brightnessctl
-      fastfetch
-      wlsunset
-      grim
-      slurp
-      wl-clipboard
-      cliphist
-      matugen
-      ghostty
-      noctalia-shell
-      noctalia-qs
-      silent-sddm
-      sideralWallpaper
-    ]
-    ++ (with pkgs.kdePackages; [qtsvg qtmultimedia]);
+  environment.systemPackages = with pkgs; [
+    kanshi
+    wdisplays
+    ddcutil
+    brightnessctl
+    fastfetch
+    wlsunset
+    grim
+    slurp
+    wl-clipboard
+    cliphist
+    matugen
+    ghostty
+    noctalia-shell
+    noctalia-qs
+    sideralWallpaper
+  ];
 
-  environment.pathsToLink = ["/share/sddm/themes" "/share/wallpapers" "/share/wayland-sessions"];
+  environment.pathsToLink = ["/share/wallpapers" "/share/wayland-sessions"];
 
   environment.sessionVariables = {
     XMODIFIERS = "@im=fcitx";

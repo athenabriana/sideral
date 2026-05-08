@@ -43,7 +43,7 @@ sudo nixos-rebuild switch --upgrade --flake github:athenabriana/sideral#sideral
 sudo nixos-rebuild switch --upgrade --flake github:athenabriana/sideral#sideral-nvidia
 ```
 
-After the switch the system is fully wired — niri session in SDDM, Noctalia bar/launcher/lock, Zen Browser flatpak, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code all on `$PATH`. The curated flatpak set is materialised declaratively by `nix-flatpak` at activation. Default shell and compositor configs are seeded by home-manager — no first-login bootstrap. Optionally bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
+After the switch the system is fully wired — niri session via greetd+regreet, Noctalia bar/launcher/lock, Zen Browser flatpak, starship prompt, mise, atuin, zoxide, fzf, gh, VS Code all on `$PATH`. The curated flatpak set is materialised declaratively by `nix-flatpak` at activation. Default shell and compositor configs are seeded by home-manager — no first-login bootstrap. Optionally bring your own dotfiles with `chezmoi init --apply <your-repo>` (see [Set up dotfiles](#set-up-dotfiles)).
 
 ---
 
@@ -55,8 +55,8 @@ Built directly on `nixpkgs/nixos-25.11`. Ships the [niri](https://github.com/YaL
 | --- | --- |
 | **Base** | `nixpkgs/nixos-25.11` stable channel (open-source GPU stack from kernel: amdgpu/i915/xe/nouveau). The `sideral-nvidia` host adds the proprietary NVIDIA driver. ISO installer reads `lspci` and bakes the matching host config into the target. |
 | **Compositor** | [niri](https://github.com/YaLTeR/niri) — Rust-based scrollable-tiling Wayland compositor. PaperWM-style column navigation. No GNOME/Mutter. |
-| **Shell** | [Noctalia](https://github.com/noctalia-dev/noctalia-shell) — Quickshell-based bar, notification overlay, app launcher, lock screen, idle handler, control center, and wallpaper picker. Pinned to upstream `4.7.6` / `noctalia-qs 0.0.12` (in-tree derivations under `pkgs/`). |
-| **Greeter** | SDDM with the [SilentSDDM](https://github.com/uiriansan/SilentSDDM) theme. |
+| **Shell** | [Noctalia](https://github.com/noctalia-dev/noctalia-shell) — Quickshell-based bar, notification overlay, app launcher, lock screen, idle handler, control center, and wallpaper picker. Pulled from nixpkgs (`pkgs.noctalia-shell` + `pkgs.noctalia-qs`). |
+| **Greeter** | [greetd](https://sr.ht/~kennylevinsen/greetd/) + [regreet](https://github.com/rharish101/ReGreet) — Wayland-native, GTK4 GUI, runs in cage. |
 | **Terminal** | [ghostty](https://ghostty.org) — niri config binds `Mod+T`. |
 | **Theming** | matugen (`pkgs.matugen`). `njust theme <wallpaper>` regenerates Material 3 palette → ghostty + helix. Noctalia drives its own bar/launcher/notification recolor via its built-in wallpaper picker. |
 | **Browser** | [Zen Browser](https://zen-browser.app) (`app.zen_browser.zen` from Flathub). Materialised declaratively by `nix-flatpak`. |
@@ -129,13 +129,11 @@ sideral/
 │   ├── fonts/         fonts.packages
 │   ├── services/      podman + dockerCompat + flatpak + distrobox
 │   ├── kubernetes/    kubectl + kind + helm + KIND_EXPERIMENTAL_PROVIDER env
-│   ├── niri-defaults/ niri + SDDM + matugen + ghostty + kanata + IME + SilentSDDM theme
+│   ├── niri-defaults/ niri + greetd/regreet + matugen + ghostty + kanata + IME
 │   ├── shell-ux/      /etc/zshrc + /etc/user-motd + njust wrapper + sideral.just + rclone-gdrive user unit
 │   ├── flatpaks/      11-entry curated set via nix-flatpak
 │   ├── dotfiles/      home-manager module — xdg.configFile + home.file + programs.* enables
 │   └── nvidia/        gated NVIDIA stack — videoDrivers + kargs + modprobe + env + niri drop-in
-├── pkgs/                              # in-tree derivations
-│   └── silent-sddm/                   # uiriansan/SilentSDDM @ v1.4.0 (not yet in nixpkgs)
 ├── iso/                               # calamares branding + wizard config + pre-install hook
 │   ├── calamares/branding/sideral/
 │   ├── calamares/modules/{partition,users,welcome,finished,shellprocess-sideral}.conf
