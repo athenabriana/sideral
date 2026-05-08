@@ -65,7 +65,40 @@
     eza.enable = true;
     git.enable = true;
     gh.enable = true;
-    helix.enable = true;
+
+    helix = {
+      enable = true;
+      settings = {
+        theme = "onedark";
+        editor = {
+          bufferline = "always";
+          cursorline = true;
+          color-modes = true;
+          true-color = true;
+          gutters = ["diagnostics" "spacer" "line-numbers" "spacer" "diff"];
+          indent-guides = {
+            render = true;
+            character = "│";
+          };
+          lsp = {
+            display-messages = true;
+            display-inlay-hints = true;
+            auto-signature-help = true;
+          };
+          cursor-shape = {
+            insert = "bar";
+            select = "underline";
+            normal = "block";
+          };
+          statusline = {
+            left = ["mode" "spinner"];
+            center = ["file-name"];
+            right = ["diagnostics" "selections" "register" "position" "file-encoding"];
+          };
+        };
+      };
+    };
+
     home-manager.enable = true;
   };
 }

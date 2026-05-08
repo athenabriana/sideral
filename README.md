@@ -47,7 +47,7 @@ After the switch the system is fully wired — niri session via greetd+regreet, 
 
 ---
 
-Built directly on `nixpkgs/nixos-25.11`. Ships the [niri](https://github.com/YaLTeR/niri) scrollable-tiling compositor with [Noctalia](https://github.com/noctalia-dev/noctalia-shell) as the desktop shell, a curated set of CLI tools sourced from nixpkgs (chezmoi, mise, atuin, fzf, bat, eza, ripgrep, zoxide, yazi, gh, git-lfs, helix, vscode, …), Zen Browser (Flathub via `nix-flatpak`), rootless podman with docker compatibility, and matugen-driven wallpaper theming. User dotfiles are seeded by [home-manager](https://github.com/nix-community/home-manager).
+Built directly on `nixpkgs/nixos-25.11`. Ships the [niri](https://github.com/YaLTeR/niri) scrollable-tiling compositor with [Noctalia](https://github.com/noctalia-dev/noctalia-shell) as the desktop shell, a curated set of CLI tools sourced from nixpkgs (chezmoi, mise, atuin, fzf, bat, eza, ripgrep, zoxide, yazi, television, zellij, lazygit, gh, git-lfs, helix, vscode, …), Zen Browser (Flathub via `nix-flatpak`), rootless podman with docker compatibility, and matugen-driven wallpaper theming. User dotfiles are seeded by [home-manager](https://github.com/nix-community/home-manager).
 
 ## What's in the image
 
@@ -62,7 +62,7 @@ Built directly on `nixpkgs/nixos-25.11`. Ships the [niri](https://github.com/YaL
 | **Browser** | [Zen Browser](https://zen-browser.app) (`app.zen_browser.zen` from Flathub). Materialised declaratively by `nix-flatpak`. |
 | **Editor** | `code` (VS Code) from nixpkgs (`allowUnfree = true`). `hx` (Helix) from nixpkgs. |
 | **Containers** | Rootless podman + `dockerCompat` + podman-compose. `docker` CLI resolves to podman. No daemon. |
-| **CLI toolset** | `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `yazi`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`, `helix`, `zsh`, `rclone`, `starship`, `vscode` — all from nixpkgs `nixos-25.11`. |
+| **CLI toolset** | `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `yazi`, `television`, `zellij`, `lazygit`, `gh`, `git-lfs`, `gcc`, `make`, `cmake`, `helix`, `zsh`, `rclone`, `starship`, `vscode` — all from nixpkgs `nixos-25.11`. |
 | **Shell-init wiring** | `programs.{starship,atuin,zoxide,fzf,bat,eza,yazi}.enable` via home-manager seed each user's shell with starship + atuin + zoxide + mise + fzf + yazi integrations. `~/.bashrc` / `~/.zshrc` carry the AI-agent-alias-suppression guard byte-identical to the Fedora flavor. |
 | **Fonts** | Cascadia Code, JetBrains Mono, Adwaita, OpenDyslexic, Source Serif, Source Sans, Noto + Noto-Emoji + Noto-CJK — all from nixpkgs. |
 | **User dotfiles** | Seeded by home-manager (`home.file` + `xdg.configFile`) at activation — no first-login bootstrap. Bring your own personal dotfiles with `chezmoi init --apply <your-repo>` — see below. |
@@ -125,7 +125,7 @@ sideral/
 │   └── sideral-iso.nix                # installer-only ISO host (calamares + branding)
 ├── modules/                           # each capability owns one directory
 │   ├── base/          /etc/os-release identity + containers/policy.json
-│   ├── cli-tools/     systemPackages: chezmoi/mise/atuin/eza/bat/rg/zoxide/yazi/gh/helix/...
+│   ├── cli-tools/     systemPackages: chezmoi/mise/atuin/eza/bat/rg/zoxide/yazi/tv/zellij/lazygit/gh/helix/...
 │   ├── fonts/         fonts.packages
 │   ├── services/      podman + dockerCompat + flatpak + distrobox
 │   ├── kubernetes/    kubectl + kind + helm + KIND_EXPERIMENTAL_PROVIDER env
@@ -213,7 +213,7 @@ Why home-manager + chezmoi as a hybrid? home-manager is the single-source-of-tru
 
 | Tool | Source |
 | --- | --- |
-| `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `yazi`, `gh`, `git-lfs`, `gcc`, `gnumake`, `cmake`, `helix`, `zsh`, `rclone`, `chromium`, `starship` | nixpkgs `nixos-25.11` (`environment.systemPackages` in `modules/cli-tools/default.nix`) |
+| `chezmoi`, `mise`, `atuin`, `fzf`, `bat`, `eza`, `ripgrep`, `zoxide`, `yazi`, `television`, `zellij`, `lazygit`, `gh`, `git-lfs`, `gcc`, `gnumake`, `cmake`, `helix`, `zsh`, `rclone`, `chromium`, `starship` | nixpkgs `nixos-25.11` (`environment.systemPackages` in `modules/cli-tools/default.nix`) |
 | `vscode` | nixpkgs (requires `allowUnfree = true`, set in `hosts/common.nix`) |
 | `carapace` | nixpkgs |
 

@@ -51,9 +51,10 @@ if (( ${+commands[mise]} )); then
         eval "$(mise activate zsh)"
     fi
 fi
-if (( ${+commands[fzf]} )); then
-    source <(fzf --zsh)
-fi
+# fzf binary stays installed for transitive consumers (zoxide's `zi`,
+# atuin internals, ad-hoc `cmd | fzf` pipes), but user-facing pickers
+# go through television. Skipping `source <(fzf --zsh)` means no
+# Ctrl+T / Alt+C / `**<TAB>` — by design.
 
 # carapace — 839+ CLI completions; needs compinit (above).
 # Must load before zsh-syntax-highlighting (last rule).
@@ -109,19 +110,11 @@ if [[ -z "$_sideral_agent_shell" ]]; then
 fi
 unset _sideral_agent_shell
 
-# ── Ctrl-P — VS-Code-style fzf quick-open ──────────────────────────────
-# zsh's ZLE (line editor) is the equivalent of bash's readline.
-# `zle -N` registers a widget; `bindkey '^P'` binds Ctrl-P.
-if (( ${+commands[fzf]} )); then
-    _sideral_fzf_quick_open() {
-        local file
-        if (( ${+commands[rg]} )); then
-            file=$(rg --files --hidden --follow --glob '!.git' 2>/dev/null \
-                   | fzf --height 40% --reverse --prompt 'Open: ')
-        else
-            file=$(find . -type f -not -path '*/.git/*' 2>/dev/null \
-                   | fzf --height 40% --reverse --prompt 'Open: ')
-        fi
+# ── Ctrl-P — VS-Code-style tv quick-open ──────────────────────────────
+# Pick a file via television's `files` channel, open in $VISUAL/$EDITOR.
+if (( ${+commands[tv]} )); then
+    _sideral_quick_open() {
+        local file=$(tv files)
         [[ -z "$file" ]] && return
         local editor="${VISUAL:-${EDITOR:-}}"
         if [[ -z "$editor" ]]; then
@@ -130,8 +123,8 @@ if (( ${+commands[fzf]} )); then
         $editor "$file"
         zle reset-prompt 2>/dev/null
     }
-    zle -N _sideral_fzf_quick_open
-    bindkey '^P' _sideral_fzf_quick_open
+    zle -N _sideral_quick_open
+    bindkey '^P' _sideral_quick_open
 fi
 
 # ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
@@ -150,25 +143,39 @@ _sideral_toggle_sudo() {
 zle -N _sideral_toggle_sudo
 bindkey '^[s' _sideral_toggle_sudo  # ^[ = ESC = Alt prefix; s = lowercase
 
-# ── Ctrl-G — fzf git branch picker → checkout ─────────────────────────
-if (( ${+commands[fzf]} )); then
-    _sideral_fzf_git_checkout() {
+# ── Ctrl-G — tv git-branches picker → checkout ────────────────────────
+# Channel `git-branches` defined at /etc/xdg/television/cable/git-branches.toml.
+if (( ${+commands[tv]} )); then
+    _sideral_git_checkout() {
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
-        local branch
-        branch=$(git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/ 2>/dev/null \
-                 | sed 's|^origin/||' | awk '!seen[$0]++' \
-                 | fzf --height 40% --reverse --prompt 'Checkout: ')
+        local branch=$(tv git-branches)
         [[ -z "$branch" ]] && return
         git checkout "$branch"
         zle reset-prompt 2>/dev/null
     }
-    zle -N _sideral_fzf_git_checkout
-    bindkey '^G' _sideral_fzf_git_checkout
+    zle -N _sideral_git_checkout
+    bindkey '^G' _sideral_git_checkout
+fi
+
+# ── Ctrl-E — launch yazi (file manager); cd-on-exit via HM's `y` fn ────
+# Displaces ZLE's default end-of-line. Use End or vi-cmd-mode to compensate.
+if (( ${+commands[yazi]} )); then
+    _sideral_yazi() { y; zle reset-prompt 2>/dev/null }
+    zle -N _sideral_yazi
+    bindkey '^E' _sideral_yazi
+fi
+
+# ── Ctrl-/ — launch television (channel-picker fuzzy finder) ───────────
+# `^_` is the same byte (0x1F) most terminals send for Ctrl+/.
+if (( ${+commands[tv]} )); then
+    _sideral_tv_launch() { tv; zle reset-prompt 2>/dev/null }
+    zle -N _sideral_tv_launch
+    bindkey '^_' _sideral_tv_launch
 fi
 
 # ── Syntax highlighting (MUST load last) ────────────────────────────────
 # zsh-syntax-highlighting wraps every existing ZLE widget at source time.
-# Loading last means Ctrl+P / Alt-S / Ctrl-G widgets above also get
+# Loading last means Ctrl-P / Alt-S / Ctrl-G widgets above also get
 # colored. Upstream README requires this ordering.
 if [[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
     source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

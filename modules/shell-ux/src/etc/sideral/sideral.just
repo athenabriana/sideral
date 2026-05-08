@@ -74,7 +74,7 @@ tools:
       z <partial>     ${D}NEW.${R} zoxide jump by frecency. Replaces \`cd long/path\`
                       with \`z partial\`. \`z\` alone → highest-frecency match.
       zi              ${D}NEW.${R} interactive zoxide picker (fzf-backed).
-      Ctrl+P          ${D}NEW.${R} fzf-driven file picker → opens in \$VISUAL.
+      Ctrl+P          ${D}NEW.${R} tv-driven file picker → opens in \$VISUAL.
                       Like VS Code's Quick Open but shell-side.
       Ctrl+R          ${D}REPLACED.${R} atuin replaces bash's reverse-i-search.
                       Adds: fuzzy match, cwd/exit-code/duration metadata,
@@ -82,7 +82,9 @@ tools:
       Ctrl+T          ${D}NEW.${R} fzf — paste a file path at cursor.
       Alt+C           ${D}NEW.${R} fzf — cd into a subdir picked from the tree.
       Alt+S           ${D}NEW.${R} toggle \`sudo \` prefix on the current line.
-      Ctrl+G          ${D}NEW.${R} fzf-driven git branch picker → checkout.
+      Ctrl+G          ${D}NEW.${R} tv-driven git branch picker → checkout.
+      Ctrl+E          ${D}NEW.${R} launch yazi — cd to where you exit.
+      Ctrl+/          ${D}NEW.${R} launch television channel picker.
 
     ${B}Containers${R} — there is no docker daemon
       \`docker ...\`    runs podman (via virtualisation.podman.dockerCompat).

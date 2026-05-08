@@ -1,0 +1,18 @@
+# sideral television channel — files (override of the bundled default).
+# Same source as upstream's files channel, but pins bat as the preview
+# command so syntax highlighting / line numbers / git decoration are
+# consistent with `cat`'s alias.
+
+[metadata]
+name = "files"
+description = "Project files (gitignore-aware)"
+requirements = ["rg", "bat"]
+
+[source]
+command = "rg --files --hidden --follow --glob '!.git'"
+
+[preview]
+command = "bat --color=always --style=numbers,changes --line-range=:500 {}"
+
+[ui]
+preview_size = 60

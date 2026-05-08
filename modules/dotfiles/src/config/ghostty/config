@@ -1,44 +1,51 @@
-# sideral default ghostty config — mirrors niri keybinds but with Alt
-# instead of Super so the muscle memory carries over inside the terminal.
-# tabs are ghostty's analog to niri columns; splits are the in-tab analog
-# to multi-window-per-column.
+# sideral default ghostty config.
 #
-# Theme is sourced from Noctalia's matugen pipeline at
-# `~/.config/ghostty/config.ghostty` (overwritten on every wallpaper change).
+# Modifier scheme:
+#   Super → niri (compositor: column/window/workspace nav)
+#   Ctrl  → ghostty (terminal: tabs/splits/palette)
+#   Alt   → zellij + shell (in-pane multiplexer + readline extras)
+#   bare  → helix / shell readline
+#
+# Ctrl bindings here will shadow some shell readline defaults inside
+# ghostty (e.g. Ctrl+W normally word-deletes in bash; Ctrl+L clears
+# screen; Ctrl+D sends EOF). Accepted tradeoff per the layered-modifier
+# scheme — shell users reach for Backspace/`clear`/`exit` instead.
 
 config-file = ?config.ghostty
 
-# --- tabs (mirror niri columns: Mod+H/L → Alt+H/L) ---
-keybind = alt+t=new_tab
-keybind = alt+q=close_surface
-keybind = alt+h=previous_tab
-keybind = alt+l=next_tab
-keybind = alt+left=previous_tab
-keybind = alt+right=next_tab
-keybind = alt+shift+h=move_tab:-1
-keybind = alt+shift+l=move_tab:1
-keybind = alt+shift+left=move_tab:-1
-keybind = alt+shift+right=move_tab:1
+# --- tabs ---
+# Ctrl+N for new tab (frees Ctrl+T for fzf path-paste in shell)
+keybind = ctrl+n=new_tab
+keybind = ctrl+w=close_surface
+keybind = ctrl+h=previous_tab
+keybind = ctrl+l=next_tab
+keybind = ctrl+left=previous_tab
+keybind = ctrl+right=next_tab
+keybind = ctrl+shift+h=move_tab:-1
+keybind = ctrl+shift+l=move_tab:1
+keybind = ctrl+shift+left=move_tab:-1
+keybind = ctrl+shift+right=move_tab:1
 
-# --- numbered tab focus (mirror niri workspaces 1–9) ---
-keybind = alt+one=goto_tab:1
-keybind = alt+two=goto_tab:2
-keybind = alt+three=goto_tab:3
-keybind = alt+four=goto_tab:4
-keybind = alt+five=goto_tab:5
-keybind = alt+six=goto_tab:6
-keybind = alt+seven=goto_tab:7
-keybind = alt+eight=goto_tab:8
-keybind = alt+nine=goto_tab:9
+# --- numbered tab focus ---
+keybind = ctrl+one=goto_tab:1
+keybind = ctrl+two=goto_tab:2
+keybind = ctrl+three=goto_tab:3
+keybind = ctrl+four=goto_tab:4
+keybind = ctrl+five=goto_tab:5
+keybind = ctrl+six=goto_tab:6
+keybind = ctrl+seven=goto_tab:7
+keybind = ctrl+eight=goto_tab:8
+keybind = ctrl+nine=goto_tab:9
 
-# --- splits (mirror niri windows-within-column: Mod+J/K → Alt+J/K) ---
-keybind = alt+d=new_split:right
-keybind = alt+shift+d=new_split:down
-keybind = alt+j=goto_split:bottom
-keybind = alt+k=goto_split:top
-keybind = alt+down=goto_split:bottom
-keybind = alt+up=goto_split:top
+# --- splits ---
+keybind = ctrl+d=new_split:right
+keybind = ctrl+shift+d=new_split:down
+keybind = ctrl+j=goto_split:bottom
+keybind = ctrl+k=goto_split:top
+keybind = ctrl+down=goto_split:bottom
+keybind = ctrl+up=goto_split:top
 
-# --- launcher analog: Alt+Space → command palette (mirror Mod+Space) ---
-keybind = alt+space=toggle_command_palette
+# --- command palette ---
+keybind = ctrl+space=toggle_command_palette
+
 theme = noctalia

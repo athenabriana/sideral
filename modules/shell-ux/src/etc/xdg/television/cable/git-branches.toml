@@ -1,0 +1,17 @@
+# sideral television channel — git-branches.
+# Lists local + remote branches (origin/foo deduped to foo).
+# Bound to Ctrl+G in bash/zsh; selection runs `git checkout`.
+
+[metadata]
+name = "git-branches"
+description = "Local + remote git branches"
+requirements = ["git"]
+
+[source]
+command = "git for-each-ref --format='%(refname:short)' refs/heads refs/remotes 2>/dev/null | sed 's|^origin/||' | awk '!seen[$0]++'"
+
+[preview]
+command = "git log --oneline --decorate --graph --color=always {} -n 30 2>/dev/null"
+
+[ui]
+preview_size = 60

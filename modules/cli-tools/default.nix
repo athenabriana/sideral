@@ -16,6 +16,9 @@
     cmake
     helix
     yazi
+    television
+    zellij
+    lazygit
     rclone
     fuse3
     chromium

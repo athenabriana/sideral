@@ -1,0 +1,58 @@
+// sideral zellij defaults — system-wide config.
+//
+// Modifier layering:
+//   Super → niri (window manager)
+//   Ctrl  → ghostty (terminal: tabs/splits/palette — bare-Ctrl scheme)
+//   Alt   → zellij (this file) + shell (Alt+S sudo, etc.)
+//   bare  → helix / shell readline
+//
+// zellij must NOT use:
+//   * Ctrl+T  — ghostty's "new tab" (bare Ctrl). zellij's default tab-mode
+//               prefix is unbound.
+//   * Ctrl+P  — user's bashrc/zshrc fzf quick-open.
+//   * Ctrl+G  — user's bashrc/zshrc fzf git-branch picker.
+//   * Alt+S   — user's bashrc Alt+S sudo-toggle.
+//
+// zellij owns:
+//   * Alt+H/J/K/L  → pane focus left/down/up/right (vim-style)
+//   * Alt+1..9     → switch to tab N
+//   * Alt+N        → new pane
+//   * Alt+W        → close pane
+//   * Alt+F        → toggle floating pane
+
+keybinds {
+    // Strip conflicting zellij defaults from every mode.
+    shared_except "locked" {
+        unbind "Ctrl t"
+        unbind "Ctrl p"
+        unbind "Ctrl g"
+    }
+
+    // Direct Alt-prefixed bindings — work in NORMAL mode, no prefix-mode
+    // dance. shared_except with no listed modes applies to all modes
+    // except locked.
+    shared_except "locked" {
+        bind "Alt h" { MoveFocus "Left"; }
+        bind "Alt l" { MoveFocus "Right"; }
+        bind "Alt j" { MoveFocus "Down"; }
+        bind "Alt k" { MoveFocus "Up"; }
+
+        bind "Alt 1" { GoToTab 1; }
+        bind "Alt 2" { GoToTab 2; }
+        bind "Alt 3" { GoToTab 3; }
+        bind "Alt 4" { GoToTab 4; }
+        bind "Alt 5" { GoToTab 5; }
+        bind "Alt 6" { GoToTab 6; }
+        bind "Alt 7" { GoToTab 7; }
+        bind "Alt 8" { GoToTab 8; }
+        bind "Alt 9" { GoToTab 9; }
+
+        bind "Alt n" { NewPane; }
+        bind "Alt w" { CloseFocus; }
+        bind "Alt f" { ToggleFloatingPanes; }
+    }
+}
+
+// Hide pane frames — niri/noctalia provides enough chrome already, and
+// zjstatus draws the status bar. Toggle with `zellij action toggle-pane-frames`.
+pane_frames false
