@@ -49,12 +49,6 @@
       enableBashIntegration = false;
       enableZshIntegration = false;
     };
-    fzf = {
-      enable = true;
-      enableBashIntegration = false;
-      enableZshIntegration = false;
-    };
-
     yazi = {
       enable = true;
       enableBashIntegration = true;

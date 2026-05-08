@@ -3,7 +3,6 @@
     chezmoi
     mise
     atuin
-    fzf
     bat
     eza
     ripgrep

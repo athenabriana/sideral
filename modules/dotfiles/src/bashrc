@@ -50,3 +50,6 @@ fi
 if command -v carapace >/dev/null 2>&1; then
     source <(carapace _carapace bash)
 fi
+
+# Note: fzf removed from the system — `cmd | fzf` and `zoxide zi` no
+# longer work. Use television (`tv`, `tv files`, `tv git-log`, etc.) instead.

@@ -6,7 +6,7 @@
 # Run `njust` (no args) to list all recipes.
 
 # Switch login shell. With no argument, opens an interactive picker
-# (gum/fzf). Pass a shell name to skip the picker. Uses `sudo usermod
+# (gum/tv). Pass a shell name to skip the picker. Uses `sudo usermod
 # -s` because setuid `chsh` is dropped by NixOS' default hardening —
 # `usermod` is the equivalent root-only path.
 #
@@ -22,8 +22,8 @@ chsh shell="":
     if [ -z "$selected" ]; then
         if command -v gum >/dev/null 2>&1; then
             selected="$(gum choose zsh bash)" || exit 0
-        elif command -v fzf >/dev/null 2>&1; then
-            selected="$(printf 'zsh\nbash\n' | fzf --height=10 --prompt='Login shell: ')" || exit 0
+        elif command -v tv >/dev/null 2>&1; then
+            selected="$(printf 'zsh\nbash\n' | tv --preview-disabled --no-help)" || exit 0
         else
             echo "Pass a shell name explicitly: njust chsh [bash|zsh]" >&2
             exit 1
@@ -73,15 +73,14 @@ tools:
     ${B}Navigation${R} — what changes from stock bash
       z <partial>     ${D}NEW.${R} zoxide jump by frecency. Replaces \`cd long/path\`
                       with \`z partial\`. \`z\` alone → highest-frecency match.
-      zi              ${D}NEW.${R} interactive zoxide picker (fzf-backed).
+      cd "$(tv dirs)" ${D}NEW.${R} pick a directory via television, cd in.
       Ctrl+P          ${D}NEW.${R} tv-driven file picker → opens in \$VISUAL.
                       Like VS Code's Quick Open but shell-side.
       Ctrl+R          ${D}REPLACED.${R} atuin replaces bash's reverse-i-search.
                       Adds: fuzzy match, cwd/exit-code/duration metadata,
                       cross-shell history, optional sync.
-      Ctrl+T          ${D}NEW.${R} fzf — paste a file path at cursor.
-      Alt+C           ${D}NEW.${R} fzf — cd into a subdir picked from the tree.
-      Alt+S           ${D}NEW.${R} toggle \`sudo \` prefix on the current line.
+      Ctrl+T          ${D}NEW.${R} tv files → paste path at cursor.
+      Ctrl+S          ${D}NEW.${R} toggle \`sudo \` prefix on the current line.
       Ctrl+G          ${D}NEW.${R} tv-driven git branch picker → checkout.
       Ctrl+E          ${D}NEW.${R} launch yazi — cd to where you exit.
       Ctrl+/          ${D}NEW.${R} launch television channel picker.

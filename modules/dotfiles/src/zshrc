@@ -51,10 +51,9 @@ if (( ${+commands[mise]} )); then
         eval "$(mise activate zsh)"
     fi
 fi
-# fzf binary stays installed for transitive consumers (zoxide's `zi`,
-# atuin internals, ad-hoc `cmd | fzf` pipes), but user-facing pickers
-# go through television. Skipping `source <(fzf --zsh)` means no
-# Ctrl+T / Alt+C / `**<TAB>` — by design.
+# fzf removed from the system. Television owns all user-facing pickers;
+# zoxide's `zi` interactive picker no longer works (uses fzf binary
+# directly) — use `z <partial>` and `cd "$(tv dirs)"` instead.
 
 # carapace — 839+ CLI completions; needs compinit (above).
 # Must load before zsh-syntax-highlighting (last rule).
@@ -127,9 +126,11 @@ if (( ${+commands[tv]} )); then
     bindkey '^P' _sideral_quick_open
 fi
 
-# ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
+# ── Ctrl-S — toggle `sudo ` prefix on current line ────────────────────
+# Free Ctrl+S from terminal XOFF flow-control so ZLE can capture it.
 # BUFFER / CURSOR are zsh's editable-line variables (equivalent of
 # bash's READLINE_LINE / READLINE_POINT).
+stty -ixon 2>/dev/null
 _sideral_toggle_sudo() {
     if [[ "$BUFFER" == sudo\ * ]]; then
         BUFFER="${BUFFER#sudo }"
@@ -141,7 +142,7 @@ _sideral_toggle_sudo() {
     fi
 }
 zle -N _sideral_toggle_sudo
-bindkey '^[s' _sideral_toggle_sudo  # ^[ = ESC = Alt prefix; s = lowercase
+bindkey '^S' _sideral_toggle_sudo
 
 # ── Ctrl-G — tv git-branches picker → checkout ────────────────────────
 # Channel `git-branches` defined at /etc/xdg/television/cable/git-branches.toml.
@@ -165,6 +166,20 @@ if (( ${+commands[yazi]} )); then
     bindkey '^E' _sideral_yazi
 fi
 
+# ── Ctrl-T — tv files picker → insert path at cursor ──────────────────
+# Direct equivalent of fzf's old Ctrl+T (paste-files), now via tv.
+# Displaces ZLE's default transpose-chars.
+if (( ${+commands[tv]} )); then
+    _sideral_tv_paste() {
+        local file=$(tv files)
+        [[ -z "$file" ]] && return
+        LBUFFER+="$file "
+        zle redisplay 2>/dev/null
+    }
+    zle -N _sideral_tv_paste
+    bindkey '^T' _sideral_tv_paste
+fi
+
 # ── Ctrl-/ — launch television (channel-picker fuzzy finder) ───────────
 # `^_` is the same byte (0x1F) most terminals send for Ctrl+/.
 if (( ${+commands[tv]} )); then
@@ -175,7 +190,7 @@ fi
 
 # ── Syntax highlighting (MUST load last) ────────────────────────────────
 # zsh-syntax-highlighting wraps every existing ZLE widget at source time.
-# Loading last means Ctrl-P / Alt-S / Ctrl-G widgets above also get
+# Loading last means Ctrl-P / Ctrl-S / Ctrl-G widgets above also get
 # colored. Upstream README requires this ordering.
 if [[ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
     source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

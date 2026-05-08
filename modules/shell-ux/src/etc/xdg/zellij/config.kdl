@@ -6,12 +6,9 @@
 //   Alt   → zellij (this file) + shell (Alt+S sudo, etc.)
 //   bare  → helix / shell readline
 //
-// zellij must NOT use:
-//   * Ctrl+T  — ghostty's "new tab" (bare Ctrl). zellij's default tab-mode
-//               prefix is unbound.
-//   * Ctrl+P  — user's bashrc/zshrc fzf quick-open.
-//   * Ctrl+G  — user's bashrc/zshrc fzf git-branch picker.
-//   * Alt+S   — user's bashrc Alt+S sudo-toggle.
+// zellij must NOT intercept any user-bound Ctrl-letter that the shell
+// owns: Ctrl+P / Ctrl+G / Ctrl+T (tv pickers + path-paste), Ctrl+E
+// (yazi), Ctrl+S (sudo-toggle, requires `stty -ixon`).
 //
 // zellij owns:
 //   * Alt+H/J/K/L  → pane focus left/down/up/right (vim-style)
@@ -26,6 +23,7 @@ keybinds {
         unbind "Ctrl t"
         unbind "Ctrl p"
         unbind "Ctrl g"
+        unbind "Ctrl s"
     }
 
     // Direct Alt-prefixed bindings — work in NORMAL mode, no prefix-mode
