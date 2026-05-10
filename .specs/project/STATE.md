@@ -4,7 +4,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current focus
 - **No feature in flight.** `chezmoi-home` (the most recently-spec'd feature) effectively shipped on 2026-05-02 — every commit since the 2026-05-01 source-tree landing has gone through the `build-sideral` CI workflow (matrix amd64 × {open, nvidia}, ending in `bootc container lint`), and the major post-spec changes (module refactor, docker→podman, NVIDIA variant, kubernetes module, flatpak grow-out) all required `just build`-equivalent CI passes to merge. T15's "needs a host with podman + shellcheck" gate is met by CI itself.
-- Next candidates: **`niri-shell`** (fully spec'd, ready for `/spec-design`) and **`nushell`** (spec'd 2026-05-02, ready for `/spec-run`). Can proceed in either order; `nushell` is smaller and independent.
+- No next candidate queued.
 
 ## Past features (shipped)
 
@@ -20,11 +20,10 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 - `nix-home` — designed and implemented locally (40 requirements, 15 locked decisions) but retired before VM verification on 2026-05-01. Reason: composefs vs nix-installer ostree planner ([nix-installer#1445](https://github.com/DeterminateSystems/nix-installer/issues/1445)), SELinux mislabel of /nix store paths ([#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383), still open), and `/nix` + nix-daemon disappearing after `rpm-ostree upgrade` on F42+ (multiple Universal Blue forum reports). Replaced by `chezmoi-home`. Spec preserved at `.specs/features/nix-home/spec.md` for historical reference. See `.specs/features/chezmoi-home/context.md` D-01.
 
 ## Roadmap
-- See `.specs/project/ROADMAP.md` for queued (`image-ops`, `niri-shell`) and backlog features.
+- See `.specs/project/ROADMAP.md` for queued (`image-ops`) and backlog features.
 
 ## Pending decisions
 - **Signed-rebase flip** — currently `ostree-unverified-registry:` is canonical. To flip: replace `os/modules/signing/src/etc/containers/policy.json` with the strict `sigstoreSigned` schema (template in `os/modules/signing/UPGRADE.md`), update README's install command. Keyless OIDC signing of the OCI image already runs in `build.yml`. (Same work as ACR-29.)
-- **Niri vs GNOME — fully replace, or ship as a parallel `sideral-niri` variant?** Tracked in `.specs/features/niri-shell/context.md`.
 
 ## Locked decisions
 
@@ -83,7 +82,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
   - `/etc/zsh/sideral-cli-init.zsh` + custom `/etc/zshrc` (zsh; replaces Fedora's stock 3-line zshrc via `rpm -Uvh --replacefiles`)
 - All three wire the same set: starship, atuin, zoxide, mise, fzf, EDITOR=hx + VISUAL=code, eza/bat aliases (skipped for AI agents), Ctrl+P fzf quick-open, Alt+S sudo toggle, Ctrl+G fzf git-branch checkout.
 - zsh fish-parity via `zsh-syntax-highlighting` + `zsh-autosuggestions` (Fedora main, source-loaded with the upstream-required ordering — autosuggestions first, syntax-highlighting last). No plugin manager needed for two source lines.
-- Switch via `ujust chsh [bash|fish|zsh]` — uses `sudo usermod -s` because ublue removes setuid `chsh` as part of its hardening pass. Interactive picker via `ugum choose` if no shell name passed.
+- Switch via `ujust chsh [bash|zsh]` — uses `sudo usermod -s` because ublue removes setuid `chsh` as part of its hardening pass. Interactive picker via `ugum choose` if no shell name passed.
 
 ### Shell init details
 - **AI-agent shell detection**: 14 env-var markers (AGENT, AI_AGENT, CLAUDECODE, CURSOR_AGENT, CURSOR_TRACE_ID, GEMINI_CLI, CODEX_SANDBOX, AUGMENT_AGENT, CLINE_ACTIVE, OPENCODE_CLIENT, TRAE_AI_SHELL_ID, ANTIGRAVITY_AGENT, REPL_ID, COPILOT_MODEL, plus manual `SIDERAL_NO_ALIASES`). Suppresses eza/bat aliases so agents see plain `ls`/`cat` output instead of icons + ANSI escapes.
@@ -92,7 +91,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ### ujust extension slot (2026-05-02)
 - `/usr/share/ublue-os/just/60-custom.just` fills `ublue-os-just`'s `import? "60-custom.just"` slot.
-- Shipped recipes: `chsh [shell]`, `chezmoi-init <repo>`, `gdrive-setup`, `gdrive-remove`, `tools` (behavior cheatsheet motd via inherited `ugum` + Urllink for OSC-8 hyperlinks).
+- Shipped recipes: `chsh [shell]`, `apply-defaults` (re-stows image defaults into $HOME), `gdrive-setup`, `gdrive-remove`, `tools` (behavior cheatsheet motd via inherited `ugum` + Urllink for OSC-8 hyperlinks).
 
 ### Welcome UX (2026-05-02)
 - `/etc/user-motd` — every-login banner picked up by inherited `/etc/profile.d/user-motd.sh` (ublue-os-just). Lists common `ujust` recipes.
@@ -113,10 +112,17 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 - `sideral-flatpak-install.service` repurposed as forward-compat self-heal — every-boot idempotent re-apply of remotes + manifest + purge list. Future image rebases that add new entries install on existing user systems.
 
 ### Distrobox
-- `/etc/distrobox/distrobox.conf` lives in `sideral-services` (was sideral-base; moved 2026-05-02). Defaults only — no `/nix` mounts (chezmoi-home D-01).
+- `/etc/distrobox/distrobox.conf` lives in `sideral-services` (was sideral-base; moved 2026-05-02). Defaults only — no `/nix` mounts.
+
+### Dotfile seeding (2026-05-10 — chezmoi → GNU stow)
+- Image-default dotfiles ship as stow packages at `/usr/share/sideral/stow/<pkg>/` (one subdir per concern: `bash`, `zsh`, `ghostty`, `mise`).
+- `/etc/profile.d/sideral-stow-defaults.sh` runs `stow --restow --no-folding` over every package on first login (marker-guarded at `~/.local/state/sideral/stow-defaults-applied`).
+- `ujust apply-defaults` re-runs the same loop for upgrade-time refresh.
+- chezmoi removed from `sideral-cli-tools` Requires; replaced with `stow`. The dual-source diff-prompt UX of chezmoi is gone — image defaults and personal repos no longer auto-reconcile; user manages conflicts manually if both touch the same path.
+- Customization model: replace symlink → real file → edit. To restore default, delete file → `ujust apply-defaults`.
 
 ### Host-only / non-goals
-- mise and chezmoi run on the host. Distrobox containers install their own tooling if needed (no shared `/nix`, no shared user profile).
+- mise runs on the host. Distrobox containers install their own tooling if needed (no shared `/nix`, no shared user profile).
 - No brew, no nix (user declined both; ad-hoc CLI tooling via distrobox or RPM, language runtimes via mise).
 
 ## Known blockers
@@ -148,10 +154,8 @@ None.
   - **`set -o pipefail` makes `var=$(... | grep ...)` a hidden landmine** when the grep can find nothing. Capture into a variable first, then `grep ... || true`, then validate.
 
 ## Deferred
-- **Chezmoi default dotfiles repo** — create a `sideral-dotfiles` GitHub repo containing all seeded skeletons (`~/.bashrc`, `~/.zshrc`, `~/.config/nushell/{env.nu,config.nu}`, `~/.config/mise/config.toml`). Replace the `sideral-shell-seed` file-creation logic with `chezmoi init --apply github.com/athenabriana/sideral-dotfiles` (one-shot, only if `~/.local/share/chezmoi` is empty). Users who want their own dotfiles repo run `ujust chezmoi-init <their-repo>` to take over. Open question: GitHub-hosted (requires network on first login, users can `chezmoi update` for improvements) vs bundled in image at `/usr/share/sideral/chezmoi/` (offline-safe, updates ship with image rebuilds). Spec this as a follow-on to `nushell` once the seed service ships.
 - Tailscale daemon + GNOME indicator. (Niri migration may change the indicator angle.)
 - QCOW2 / raw bootc-image-builder outputs (ISO landed 2026-04-30; qcow2/raw still skipped).
 - Matrix builds (aarch64).
 - Bitwarden CLI integration via chezmoi templates (chezmoi-home D-07 — user can opt in by editing their chezmoi source tree; image stays neutral).
 - VS Code extension auto-install via `code --install-extension` in /etc/profile.d/ (chezmoi-home open concern; not worth the time-to-first-shell penalty for now).
-- **Niri migration** — see `niri-shell` feature spec under `.specs/features/niri-shell/`.

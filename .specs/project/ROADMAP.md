@@ -17,43 +17,12 @@ Features in flight, queued, and parked. Updated as decisions are made.
 ## Considered, dropped
 
 - **`nix-home`** — retired pre-VM-verification 2026-05-01. Composefs vs ostree planner ([nix-installer#1445](https://github.com/DeterminateSystems/nix-installer/issues/1445)) + SELinux mislabel ([#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383)) + post-upgrade-survival reports on F42+ make nix fragile on Fedora atomic 43. Replaced by `chezmoi-home`. Spec preserved at `.specs/features/nix-home/spec.md`.
+- **`niri-shell`** — niri scrollable-tiling compositor + Noctalia shell + SDDM/SilentSDDM + matugen. Implemented through 2026-05-04 and reverted 2026-05-10. User decision: keep stock GNOME inherited from `silverblue-main`. The compositor swap was carrying too much surface area (Terra repo, full GNOME conflict-removal, kanata Super-tap-vs-hold, fcitx5 IME wiring, NVIDIA niri-specific tweaks, three-island Quickshell deferred work) for a single-user image; vanilla GNOME is "good enough" without the maintenance tax. Feature spec dir + `niri-islands` backlog item retired with it. ghostty terminal (the one Terra package worth keeping) was relocated to `sideral-cli-tools`.
+- **`chezmoi` for dotfile seeding** — replaced with GNU stow on 2026-05-10. Both `chezmoi-home` (CLI tool layer) and `chezmoi-dotfiles` (image-default dotfile seeding via chezmoi) features were superseded. Reasons: stow's symlink-farm model lines up with atomic Fedora's own immutable-source pattern (`/usr/etc` symlinks to ostree commits); zero state machine to drift; one verb (`stow`) instead of chezmoi's `dot_*`/`run_onchange_*`/`executable_*` source-format vocabulary; ancient/ubiquitous Perl tool with no breaking-change risk; cleaner `stow -D` rollback. Cost paid: lost the dual-source diff-prompt UX (image defaults + personal repo no longer auto-reconcile — manual conflict resolution if both touch the same path) and the `run_onchange` script hook (the nushell vendor-autoload regen disappeared with nushell itself, so this cost was zero in practice). Spec preserved at `.specs/features/chezmoi-home/` and `.specs/features/chezmoi-dotfiles/` for historical reference. nushell removed in the same pass.
 
 ---
 
 ## Queued — next 1–2 features
-
-### `nushell` — replace fish with nushell + inshellisense
-
-**Scope**: drop fish, add nushell (Fedora main `nu` package) as the third interactive shell option alongside bash and zsh. Wire full sideral tool suite into `/usr/share/nushell/vendor/autoload/sideral-cli-init.nu` (starship, atuin, zoxide, mise, fzf, eza/bat aliases, agent detection, Ctrl-P/Alt-S/Ctrl-G keybindings). Add a systemd user service (`sideral-nushell-seed`) that seeds `~/.config/nushell/{env.nu,config.nu}` on every session if missing. Add inshellisense (`nodejs` + `npm install -g @microsoft/inshellisense` at build time) and wire Ctrl-I keybinding in bash, zsh, and nushell.
-
-**Locked decisions**:
-- D-01 = nushell replaces fish entirely; no parallel fish support
-- D-02 = config seeding is an always-check idempotent user service (same pattern as flatpak self-heal)
-- D-03 = inshellisense delivered via `nodejs` (Fedora main) + npm global install at build time; no standalone binary exists
-- D-04 = carapace rejected (not in Fedora main or Terra)
-
-**Spec**: `.specs/features/nushell/spec.md` — 18 requirements, ready for `/spec-run`.
-
-**Entry criterion**: spec complete 2026-05-02. Small/Medium feature — skip `/spec-design`, go straight to `/spec-run nushell`.
-
-### `niri-shell` — migrate off GNOME to niri + Wayland shell + matugen
-
-**Scope**: replace the current GNOME + tiling-shell + Mutter desktop with a niri-based scrollable-tiling Wayland session and **Noctalia** (Quickshell-based shell from Terra), themed dynamically from wallpaper via matugen. Includes: SDDM + SilentSDDM theme, niri compositor (Fedora main), Noctalia + noctalia-qs (Terra), ghostty terminal (Terra), kanshi multi-monitor, fcitx5 IME, grim/slurp/wl-clipboard/cliphist for screenshot+clipboard, bluefin/bazzite-grade NVIDIA hardening on the nvidia variant, and the wiring to make sideral's existing chezmoi-driven dotfile / sideral-cli-tools / ujust / motd surface still work the same. Final repo set: Fedora main + Terra. No third-party COPRs.
-
-**Locked decisions** (see `.specs/features/niri-shell/context.md`):
-- D-01 = full GNOME replacement on `sideral:latest` + `sideral-nvidia:latest`.
-- D-02 = SDDM + SilentSDDM theme.
-- D-04 = ship stock **Noctalia** via Terra's `noctalia-shell` RPM. Noctalia handles bar/notifications/launcher/lock/control-center/wallpaper out of the box. Three-island aesthetic deferred to `niri-islands` (Backlog below) — Noctalia chosen partly for its minimalist architecture as a cleaner base to bar-replace.
-- D-07 = ghostty via Terra's `ghostty` package.
-- D-13 = niri ships on both variants (open-source GPU and NVIDIA) from day 1. No frozen GNOME-NVIDIA fallback. Bluefin/bazzite-grade NVIDIA hardening.
-- D-15 = silent swap on `:latest`. **No GNOME image shipped at all** — no `:gnome-final` preservation tag. Users use `rpm-ostree rollback` or fork at pre-niri SHA for opt-out.
-- D-03 = niri from Fedora main. D-10 = matugen via `rust-matugen` from Fedora main. D-14 = retired (Noctalia uses noctalia-qs, not upstream Quickshell).
-
-**Final repo set**: Fedora main + Terra (`terra-release`). No third-party COPRs.
-
-All decisions locked. Spec ready for `/compact` then `/spec-design`.
-
-**Entry criterion**: all decisions locked (2026-05-02). Ready for `/compact` then `/spec-design` — this is unambiguously a Large/Complex feature even with Noctalia doing the QML-shaped heavy lifting.
 
 ### `image-ops` — CI & image-delivery hardening
 
@@ -68,15 +37,13 @@ All decisions locked. Spec ready for `/compact` then `/spec-design`.
 | `fedora-multimedia` swap | `dnf5 swap ffmpeg-free ffmpeg --allowerasing` via RPMFusion → hardware-accelerated H.264/HEVC | Bluefin pattern |
 | Actions cache for `/var/lib/containers` | Cuts base-image pull time; keeps builds under 12 min | [ublue-os/container-storage-action](https://github.com/ublue-os/container-storage-action) |
 
-**Entry criterion**: independent of `niri-shell`; can run in parallel.
+**Entry criterion**: independent of other features; can run any time.
 
 ---
 
 ## Backlog — enhancement features (unscheduled)
 
 ### `gnome-extras`
-
-> Status note (2026-05-02): if `niri-shell` ships as a full replacement, this backlog item retires entirely; if it ships as a parallel variant, this item still applies to the GNOME variant only.
 
 **Scope**: curated GNOME extension + flatpak additions from Tier 3 research that did NOT land in the 2026-05-02 manifest grow-out.
 
@@ -100,42 +67,9 @@ All decisions locked. Spec ready for `/compact` then `/spec-design`.
 - `fwupd-refresh.timer` explicitly enabled (verify state)
 - ✓ **NVIDIA variant** — *landed 2026-05-02*. Separate `sideral-nvidia` ghcr image; ISO installer reads `lspci` and rebases to the matching variant.
 
-### `niri-islands` — three-pill Dynamic-Island bar (DEFERRED FROM `niri-shell`)
-
-**Scope**: replace Noctalia's stock bar with a sideral-authored three-island Quickshell layout — left island = niri-IPC-driven spatial task list (sorted left→right by column index, top→bottom within column), center island = clock/date, right island = tray + audio + network + battery. Each island is a separately-positioned floating pill modeled visually on Apple's iOS Dynamic Island. matugen-themed. Replacement scope: only the bar QML; rest of Noctalia (notifications, launcher, lock, control center, wallpaper) keeps working unchanged.
-
-**Promotion criteria**:
-- `niri-shell` shipped and stable for ~3 months of daily use.
-- Three-island aesthetic still feels load-bearing in practice (not just "wouldn't it be cool").
-- noctalia-qs (Quickshell fork) API surface stable enough that vendoring iNiR's NiriService.qml against it is realistic; OR fall back to vendoring upstream Quickshell alongside noctalia-qs (would require resolving noctalia-qs's `Conflicts: quickshell` declaration).
-
-**Reference reads** (already cloned to `/tmp/research-repos/` from the 2026-05-02 research sweep):
-- iNiR's `services/NiriService.qml` — most-documented public niri-IPC-to-QML pattern; vendorable.
-- DMS's `Modules/DankBar/` — single-PanelWindow with three-internal-section layout that we'd refactor into three independent PanelWindows. (Even though DMS isn't shipped, its bar architecture is a useful reference.)
-- caelestia's `services/*.qml` singletons — clean decompositor-agnostic Time/Audio/Battery/Network patterns.
-- Noctalia's stock bar QML at `/etc/xdg/quickshell/noctalia-shell/` (in the running v1 image) — shows the integration points we'd swap.
-
-**Cost estimate**: ~400 LOC of sideral-authored QML + matugen template additions + ongoing audit when Noctalia or matugen update.
-
 ### `bootloader-swap` — drop GRUB
 
-**Scope**: replace inherited GRUB2 with systemd-boot (sd-boot), Limine, or rEFInd. User preference flagged 2026-05-02 — GRUB is the friction. Atomic Fedora 43's bootloader story is GRUB2 + BLS managed by rpm-ostree via bootupd; swapping means rewriting bootupd integration, anaconda-hook.sh ISO logic, and any kargs.d consumers (`os/modules/nvidia/kargs.d/00-nvidia.toml` would need to verify cross-bootloader compatibility). Spec deferred to its own feature dir when promoted; NOT bundled with niri-shell. Likely promotes to Queued AFTER `niri-shell` ships.
-
-### `base-bump-f44` — rebase silverblue-main:43 → :44
-
-**Scope**: bump the inherited base from `silverblue-main:43` to `silverblue-main:44` (and `silverblue-nvidia:43` → `:44`). Routine F-release hygiene — newer kernel, mesa, podman, Qt stack, etc. Verify that the niri + Noctalia + Terra + matugen pipeline builds and boots cleanly on F44. **NOT bundled with niri-shell** — bundling would conflate "niri broke" vs "F44 broke" in the post-rebase failure mode.
-
-**Why deferred**: F44 doesn't unlock anything for niri-shell specifically. Upstream Quickshell landing in f44 main is moot — we ship `noctalia-qs` (the upstream-mandated fork) from Terra regardless of which Quickshell is in Fedora main. Everything else we need (niri, rust-matugen, sddm, kanshi, fcitx5, grim/slurp/wl-clipboard/cliphist, libva-nvidia-driver) is already in f43 main. Hygiene-only.
-
-**Promotion criteria**:
-- `niri-shell` shipped and stable (~1 month of daily use without compositor regressions).
-- ublue-os has published `silverblue-main:44` and `silverblue-nvidia:44` tags (verify before promoting).
-- Terra noctalia-shell, noctalia-qs, ghostty all have current f44 RPMs (verify in `terrapkg/packages` before promoting).
-
-**Risks to flag during /spec-design**:
-- NVIDIA: F44 typically ships a newer kernel; verify nvidia-driver akmod has F44 builds in the ublue-os pipeline before flipping the nvidia variant.
-- bootupd / kargs.d schema cross-version compatibility (low risk, but verify against any `bootloader-swap` work that may have landed first — interaction order matters).
-- If `image-ops` Renovate config landed first, add the F44 tag to the tracked base-image patterns.
+**Scope**: replace inherited GRUB2 with systemd-boot (sd-boot), Limine, or rEFInd. User preference flagged 2026-05-02 — GRUB is the friction. Atomic Fedora's bootloader story is GRUB2 + BLS managed by rpm-ostree via bootupd; swapping means rewriting bootupd integration, anaconda-hook.sh ISO logic, and any kargs.d consumers (`os/build/nvidia/kargs.d/00-nvidia.toml` would need to verify cross-bootloader compatibility). Spec deferred to its own feature dir when promoted.
 
 ### Security hardening (selective, from secureblue)
 

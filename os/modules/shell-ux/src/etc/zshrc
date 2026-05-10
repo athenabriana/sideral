@@ -7,7 +7,7 @@
 # /etc/profile.d. Interactive non-login terminals inherit env from
 # their parent login shell.
 #
-# All sideral interactive-shell wiring lives in ~/.zshrc, managed by
-# chezmoi (source: /usr/share/sideral/chezmoi/dot_zshrc).
+# All sideral interactive-shell wiring lives in ~/.zshrc, symlinked by
+# GNU stow from /usr/share/sideral/stow/zsh/.zshrc on first login.
 
 umask 022

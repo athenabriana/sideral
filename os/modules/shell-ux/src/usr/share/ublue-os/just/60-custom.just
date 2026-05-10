@@ -4,7 +4,7 @@
 # `import? "/usr/share/ublue-os/just/60-custom.just"` line — the `?`
 # makes the import optional; this file fills the slot.
 #
-# Run any recipe with `ujust <name>` (e.g. `ujust chsh nu`).
+# Run any recipe with `ujust <name>` (e.g. `ujust chsh zsh`).
 # Run `ujust` (no args) to list all recipes.
 
 # Switch login shell. With no argument, opens an interactive picker
@@ -15,7 +15,6 @@
 # Examples:
 #   ujust chsh           # interactive picker (recommended)
 #   ujust chsh zsh       # → /usr/bin/zsh  (default)
-#   ujust chsh nu        # → /usr/bin/nu
 #   ujust chsh bash      # → /bin/bash
 [group('System')]
 chsh shell="":
@@ -25,14 +24,13 @@ chsh shell="":
     if [ -z "$selected" ]; then
         # ugum is the ublue gum-or-fzf wrapper; falls through to fzf
         # if gum isn't installed, which it isn't on sideral by default.
-        selected="$(ugum choose zsh nu bash)" || exit 0
+        selected="$(ugum choose zsh bash)" || exit 0
     fi
     case "$selected" in
         bash) target=/bin/bash ;;
-        nu)   target=/usr/bin/nu ;;
         zsh)  target=/usr/bin/zsh ;;
         *)
-            echo "Unknown shell: $selected (try: bash, zsh, nu)" >&2
+            echo "Unknown shell: $selected (try: bash, zsh)" >&2
             exit 1
             ;;
     esac
@@ -111,20 +109,18 @@ tools:
       ${D}\\\\ls / \\\\cat skip the alias and hit GNU coreutils for scripts.${R}
 
     ${B}Skipped from this list${R} — you already know these
-      gh, chezmoi, git-lfs, gcc, make, cmake, kubectl, kind, helm,
+      gh, stow, git-lfs, gcc, make, cmake, kubectl, kind, helm,
       starship, fzf — install fine, work as you'd expect.
 
     ${B}Shells${R} — zsh is default; bash always present
       ujust chsh        switch (default: zsh — highlight + autosuggest + carapace)
-      ujust chsh nu     nushell — structured-data-first, all tools wired
       ujust chsh bash   stay on bash
-      ${D}All three share starship/atuin/zoxide/mise/fzf/carapace wiring${R}
+      ${D}Both share starship/atuin/zoxide/mise/fzf/carapace wiring${R}
       ${D}and the same Ctrl+P quick-open + agent-shell guard.${R}
 
     ${B}Other ujust recipes${R}
       ujust                       list every recipe (sideral + ublue stock)
-      ujust chezmoi               chezmoi cheatsheet (personal dotfiles + image defaults)
-      ujust apply-defaults        pull in new image defaults after rpm-ostree upgrade
+      ujust apply-defaults        re-symlink sideral image defaults via stow
       ujust gdrive-setup          set up Google Drive auto-mount at ~/gdrive
                                   (one-time; mounts on every login after)
       ujust gdrive-remove         disable auto-mount; optionally wipe config
@@ -239,186 +235,29 @@ gdrive-setup:
         exit 1
     fi
 
-# Pull in updated image defaults after rpm-ostree upgrade.
-# chezmoi compares /usr/share/sideral/chezmoi/ (source) against $HOME
-# (destination). Clean files (unchanged since last apply) update silently.
-# Files you've customized get a diff prompt so you decide what to keep.
+# Re-symlink sideral image defaults from /usr/share/sideral/stow/ into $HOME.
+# Run after `rpm-ostree upgrade` to pick up new files added to the seed.
+# Idempotent — `stow --restow` re-creates existing symlinks and adds new
+# ones. If you customized a file (replaced the symlink with a real file),
+# stow will refuse to overwrite it; remove or move your local copy first.
 [group('Setup')]
 apply-defaults:
-    chezmoi apply --source /usr/share/sideral/chezmoi
-
-# chezmoi cheatsheet — personal dotfiles and image defaults.
-#
-# sideral ships two independent chezmoi source trees:
-#   /usr/share/sideral/chezmoi/   image defaults (applied automatically
-#                                 on first login; update with apply-defaults)
-#   ~/.local/share/chezmoi/       your personal dotfiles (optional; init
-#                                 from your own git repo with chezmoi init)
-#
-# The two sources are fully independent. chezmoi --source only reads
-# from the path you give it; your personal repo is never touched by
-# apply-defaults (and vice versa). If both manage the same file,
-# last-applied wins.
-[group('Help')]
-chezmoi:
-    #!/usr/bin/bash
-    source /usr/lib/ujust/libformatting.sh
-    B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
-    cat <<EOF
-
-    ${B}chezmoi — dotfile manager${R}
-    ${D}Manages your personal dotfiles from a git repo.${R}
-    ${D}See https://chezmoi.io for full docs.${R}
-
-    ${B}Image defaults${R} — shipped at /usr/share/sideral/chezmoi/
-      ujust apply-defaults    pull in new defaults after rpm-ostree upgrade.
-                              Clean files update silently; files you've
-                              customized get a diff prompt so you decide.
-      ${D}Image defaults are also applied automatically on first login — no${R}
-      ${D}manual step needed for a fresh account.${R}
-
-    ${B}Personal dotfiles${R} — your own git repo
-      chezmoi init --apply <repo>   bootstrap from your dotfiles repo.
-                                    Clones to ~/.local/share/chezmoi/ and
-                                    applies all managed files to \$HOME.
-      chezmoi update                pull latest from your repo + apply.
-                                    Prompts on conflicts.
-      chezmoi diff                  show what would change before applying.
-      chezmoi apply                 apply current source state to \$HOME.
-      chezmoi add <file>            start tracking a file in your repo.
-      chezmoi edit <file>           edit source for a tracked file (\$EDITOR).
-      chezmoi cd                    open a shell in ~/.local/share/chezmoi/.
-
-    ${B}How the two sources interact${R}
-      apply-defaults reads /usr/share/sideral/chezmoi/ only — it does not
-      touch ~/.local/share/chezmoi/. Your personal repo is independent.
-      If both manage the same file (e.g. ~/.bashrc), whichever you ran
-      last wins. chezmoi diff before applying to review the delta.
-
-    ${B}Examples${R}
-      chezmoi init --apply https://github.com/yourname/dotfiles
-      chezmoi init --apply git@github.com:yourname/dotfiles.git
-      chezmoi add ~/.config/ghostty/config
-      chezmoi edit ~/.bashrc
-
-    EOF
-    echo "    Source: $(Urllink "https://chezmoi.io" "chezmoi.io") | $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"
-    echo
-
-# Apply a wallpaper and regenerate the Material 3 palette for ghostty +
-# helix via matugen. Noctalia's own wallpaper picker handles the bar /
-# launcher / notification recolor through its built-in matugen pipeline;
-# this recipe handles the terminal and editor side.
-#
-# What it does:
-#   1. Run `matugen image <wallpaper>` — reads ~/.config/matugen/config.toml
-#      (seeded from /etc/skel on first login), renders ghostty palette to
-#      ~/.config/ghostty/config-matugen and helix theme to
-#      ~/.config/helix/themes/sideral.toml.
-#   2. Signal ghostty to reload its config (SIGUSR1).
-#   3. Print where the files landed and remind about Noctalia recolor.
-#
-# The ghostty palette file is config-matugen (not the main config) so
-# the user can include it from their main config without overwriting
-# any manual settings.
-#
-# Examples:
-#   ujust theme ~/Pictures/wallpaper.jpg
-#   ujust theme /usr/share/wallpapers/sideral/default.jpg
-[group('Desktop')]
-theme wallpaper="":
     #!/usr/bin/bash
     set -euo pipefail
-    target="{{wallpaper}}"
-    if [ -z "$target" ]; then
-        echo "Usage: ujust theme <path-to-image>" >&2
-        echo "Example: ujust theme ~/Pictures/wallpaper.jpg" >&2
+    if ! command -v stow >/dev/null 2>&1; then
+        echo "stow not found — should ship via sideral-cli-tools" >&2
         exit 1
     fi
-    if [ ! -f "$target" ]; then
-        echo "File not found: $target" >&2
+    src=/usr/share/sideral/stow
+    if [ ! -d "$src" ]; then
+        echo "$src not found — sideral-stow-defaults not installed?" >&2
         exit 1
     fi
-    if ! command -v matugen >/dev/null 2>&1; then
-        echo "matugen not found — should ship via sideral-niri-defaults" >&2
-        exit 1
-    fi
-    # Seed the per-user matugen config from the system default if absent.
-    if [ ! -f "$HOME/.config/matugen/config.toml" ]; then
-        mkdir -p "$HOME/.config/matugen/templates"
-        if [ -f /etc/xdg/matugen/config.toml ]; then
-            cp /etc/xdg/matugen/config.toml "$HOME/.config/matugen/config.toml"
-            cp -r /etc/xdg/matugen/templates/. "$HOME/.config/matugen/templates/"
-        fi
-    fi
-    echo "Running matugen on $target..."
-    matugen image "$target"
-    # Reload ghostty (SIGUSR1 triggers live config reload without restart).
-    pkill -USR1 ghostty 2>/dev/null || true
+    for pkg in "$src"/*/; do
+        name="$(basename "$pkg")"
+        echo "Stowing $name..."
+        stow --target="$HOME" --dir="$src" --restow --no-folding "$name"
+    done
     echo
-    echo "Done. ghostty palette written to ~/.config/ghostty/config-matugen"
-    echo "      helix theme written to ~/.config/helix/themes/sideral.toml"
-    echo
-    echo "For the bar / launcher / notifications: use Noctalia's wallpaper"
-    echo "picker (or its built-in ujust/keybind) — Noctalia drives its own"
-    echo "matugen pipeline separately."
-    echo
-    echo "To activate ghostty palette, add to ~/.config/ghostty/config:"
-    echo "  config-file = ~/.config/ghostty/config-matugen"
-    echo "To activate helix theme, add to ~/.config/helix/config.toml:"
-    echo '  [editor]'
-    echo '  theme = "sideral"'
+    echo "Done. \$HOME now points at the latest sideral defaults."
 
-# Niri + Noctalia desktop cheatsheet — default keybinds, theming,
-# and chezmoi override paths. Modeled on `ujust tools`.
-[group('Help')]
-niri:
-    #!/usr/bin/bash
-    source /usr/lib/ujust/libformatting.sh
-    B=$'\e[1m'; D=$'\e[2m'; R=$'\e[0m'
-    cat <<EOF
-
-    ${B}niri — scrollable-tiling Wayland compositor${R}
-    ${D}Modifier key is Super (Win/Cmd). Keybinds from /etc/xdg/niri/config.kdl.${R}
-
-    ${B}Session${R}
-      Mod+T           open ghostty terminal
-      Mod+D           open Noctalia launcher (app search + run)
-      Mod+L           lock screen (Noctalia lock screen)
-      Mod+Q           close focused window
-
-    ${B}Scrollable tiling navigation${R}
-      Mod+Left / Right   focus column left / right
-      Mod+Up / Down      focus window up / down within a column
-      Mod+Shift+Left / Right   move column left / right
-      Mod+1…9         switch to workspace 1–9
-      Mod+Shift+1…9   move focused column to workspace 1–9
-      ${D}Windows tile side-by-side in scrollable columns (PaperWM-style).${R}
-      ${D}There is no "floating" mode — every window lives in the tiling grid.${R}
-
-    ${B}Screenshots${R}
-      Print             region → clipboard (drag to select)
-      Shift+Print       full screen → clipboard
-
-    ${B}Audio${R}
-      XF86AudioRaiseVolume / LowerVolume / Mute / MicMute
-
-    ${B}Theming${R}
-      ujust theme <image>   regenerate Material 3 palette from a wallpaper
-                            (ghostty + helix; Noctalia bar/launcher/notifs
-                            use Noctalia's built-in wallpaper picker)
-
-    ${B}Config override paths${R} (chezmoi templates override system defaults)
-      ~/.config/niri/config.kdl              niri keybinds + layout
-      ~/.config/matugen/config.toml          matugen template targets
-      ~/.config/noctalia/settings.json       Noctalia settings
-      /etc/xdg/quickshell/noctalia-shell/    Noctalia QML (RPM-owned;
-                                             override per-user via chezmoi)
-
-    ${B}NVIDIA variant${R}
-      debug { disable-cursor-plane } — active by default (VRR cursor fix)
-      See os/modules/niri-defaults/README.md for full NVIDIA notes.
-
-    EOF
-    echo "    Source: $(Urllink "https://github.com/athenabriana/sideral" "github.com/athenabriana/sideral")"
-    echo

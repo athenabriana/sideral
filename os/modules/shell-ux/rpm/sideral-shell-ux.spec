@@ -17,11 +17,10 @@ Requires:       bash
 Ships system-wide shell scaffolding — the parts that have to live in
 /etc or /usr because they're per-system, not per-user. Interactive-
 shell wiring (starship, atuin, zoxide, mise, fzf, carapace, eza/bat
-aliases, agent guard, Ctrl+P / Alt-S / Ctrl-G keybindings) moved to
-chezmoi-managed user dotfiles in sideral-chezmoi-defaults — that lets
-users edit their own ~/.bashrc, ~/.zshrc, ~/.config/nushell/{env,config}.nu,
-and ~/.local/share/nushell/vendor/autoload/sideral-cli-init.nu freely
-without sudo or image rebuild.
+aliases, agent guard, Ctrl+P / Alt-S / Ctrl-G keybindings) lives in
+~/.bashrc and ~/.zshrc, symlinked into $HOME by GNU stow via
+sideral-stow-defaults — users break the symlink to a real file when
+they want to customize.
 
 /etc/zshrc:
   Replaces Fedora's stock /etc/zshrc via rpm -Uvh --replacefiles. Just
@@ -32,17 +31,14 @@ without sudo or image rebuild.
 Shell maintenance — /etc/profile.d/ login-time scripts:
   sideral-shell-migrate.sh: auto-migrates users whose login shell binary
   no longer exists (e.g. fish removed) to /usr/bin/zsh (sudo -n, safe).
-  sideral-nushell-plugins.sh: registers /usr/lib/nushell/plugins/ into
-  the user's plugin.msgpackz on first encounter; no-op once registered.
 
 mise config — /etc/mise/config.toml:
   System-wide settings (trusted_config_paths, not_found_auto_install,
   etc.). User toolchain declared in ~/.config/mise/config.toml (seeded
-  by sideral-chezmoi-defaults on first login).
+  by sideral-stow-defaults on first login).
 
 ujust recipes — /usr/share/ublue-os/just/60-custom.just:
-  chsh [bash|zsh|nu], chezmoi, apply-defaults, gdrive-setup, gdrive-remove,
-  tools, theme, niri.
+  chsh [bash|zsh], apply-defaults, gdrive-setup, gdrive-remove, tools.
 
 user-motd — /etc/user-motd:
   Every-login banner picked up by ublue-os-just's user-motd.sh.
@@ -57,7 +53,6 @@ cp -a usr %{buildroot}/
 
 %files
 /etc/profile.d/sideral-shell-migrate.sh
-/etc/profile.d/sideral-nushell-plugins.sh
 /etc/zshrc
 /etc/user-motd
 /etc/mise/config.toml

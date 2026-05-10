@@ -13,7 +13,7 @@ log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 MODULES_DIR="/ctx/modules"
 BUILD_DIR="/ctx/build"
 
-MODULES=(cli-tools niri-defaults services kubernetes flatpaks)
+MODULES=(cli-tools services kubernetes flatpaks)
 BUILD=(fonts nvidia)
 
 # ── 1. Remove inherited base packages ──────────────────────────────────

@@ -10,7 +10,7 @@ on:
     branches: [main]
 
 env:
-  IMAGE_DESC: "Personal Fedora atomic desktop — niri compositor + Noctalia shell on ublue-os/silverblue-main, Zen Browser (Flatpak from Flathub), curated flatpaks, chezmoi-driven user dotfiles, sideral-cli-tools meta-RPM (nushell, zsh, starship, carapace-bin, mise, code, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, chezmoi), and rootless podman with docker compatibility shims."
+  IMAGE_DESC: "Personal Fedora atomic desktop — stock GNOME on ublue-os/silverblue-main, ghostty terminal (Terra), Zen Browser (Flatpak from Flathub), curated flatpaks, GNU-stow-seeded user dotfiles, sideral-cli-tools meta-RPM (zsh, starship, carapace-bin, mise, code, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, stow), and rootless podman with docker compatibility shims."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
   R2_BUCKET: sideral

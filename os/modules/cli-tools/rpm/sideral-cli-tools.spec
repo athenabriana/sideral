@@ -3,33 +3,31 @@
 # resolving carapace-bin updates on a running system.
 #
 # Tools split by source:
-#   • Fedora 44 main:         chezmoi, atuin, fzf, bat, eza, ripgrep,
+#   • Fedora 44 main:         stow, atuin, fzf, bat, eza, ripgrep,
 #                             zoxide, gh, git-lfs, gcc, make, cmake,
 #                             helix, zsh
-#   • copr:atim/nushell:      nushell
-#   • mise.jdx.dev/rpm:       mise          (repo shipped via sideral-base)
-#   • packages.microsoft.com: code          (repo shipped via sideral-base)
-#   • repo.terra.fyralabs.com: starship     (repo shipped via sideral-niri-defaults)
-#   • yum.fury.io/rsteube:    carapace-bin  (repo shipped by this package)
+#   • mise.jdx.dev/rpm:       mise              (repo shipped via sideral-base)
+#   • packages.microsoft.com: code              (repo shipped via sideral-base)
+#   • repo.terra.fyralabs.com: starship, ghostty (repo shipped by this package)
+#   • yum.fury.io/rsteube:    carapace-bin      (repo shipped by this package)
 #
-# helix is set as $EDITOR; code is VISUAL. nushell + zsh are opt-in shells
-# via `ujust chsh {nu,zsh}`. All three shells wire up via parallel init
-# files in sideral-shell-ux (profile.d, zsh/, nushell vendor autoload).
+# helix is set as $EDITOR; code is VISUAL. zsh is the default shell;
+# bash stays available via `ujust chsh bash`. Shell init files are
+# symlinked into $HOME by stow (sideral-stow-defaults) on first login.
 
 Name:           sideral-cli-tools
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral CLI toolset (chezmoi, nushell, starship, carapace-bin, mise, code + 15 Fedora RPMs)
+Summary:        sideral CLI toolset (stow, starship, carapace-bin, mise, code, ghostty + Fedora RPMs)
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
-Requires:       chezmoi
+Requires:       stow
 Requires:       mise
 Requires:       code
 Requires:       starship
-Requires:       nushell
 Requires:       carapace-bin
 Requires:       atuin
 Requires:       fzf
@@ -48,16 +46,17 @@ Requires:       zsh-syntax-highlighting
 Requires:       zsh-autosuggestions
 Requires:       rclone
 Requires:       fuse3
+Requires:       ghostty
 
 %description
 Meta-package: depends on the RPM-packaged CLI tools sideral wires into
-the user shell via parallel init files for bash, zsh, and nushell
-(/etc/profile.d/sideral-cli-init.sh, /etc/zsh/sideral-cli-init.zsh,
-/usr/share/nushell/vendor/autoload/sideral-cli-init.nu). VS Code (`code`)
-is the GUI editor (VISUAL); Helix (`hx`) is the default terminal editor
-(EDITOR). nushell + zsh are opt-in shells via `ujust chsh {nu,zsh}`.
-Also ships /etc/yum.repos.d/carapace.repo so post-install `dnf upgrade`
-keeps carapace-bin current between image rebuilds.
+the user shell. Shell init lives in ~/.bashrc and ~/.zshrc, symlinked
+from /usr/share/sideral/stow/ by sideral-stow-defaults on first login.
+VS Code (`code`) is the GUI editor (VISUAL); Helix (`hx`) is the default
+terminal editor (EDITOR). zsh is the default interactive shell; bash
+stays available via `ujust chsh bash`. Also ships
+/etc/yum.repos.d/{carapace,terra}.repo so post-install `dnf upgrade`
+keeps carapace-bin + ghostty current between image rebuilds.
 
 %prep
 %setup -q
@@ -68,7 +67,7 @@ cp -a etc %{buildroot}/
 
 %files
 /etc/yum.repos.d/carapace.repo
-/etc/yum.repos.d/nushell.repo
+/etc/yum.repos.d/terra.repo
 
 %changelog
 * Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-12

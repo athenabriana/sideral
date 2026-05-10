@@ -14,7 +14,7 @@ just build
 ```
 Runs `podman build` with `os/Containerfile`. The final step is `bootc container lint`, which must pass. Exit 0 is required.
 
-CI runs the same gate per-PR via `.github/workflows/build.yml` against the matrix `{silverblue-main:43, silverblue-nvidia:43}`, ending in `bootc container lint` for both variants.
+CI runs the same gate per-PR via `.github/workflows/build.yml` against the matrix `{silverblue-main:44, silverblue-nvidia:44}`, ending in `bootc container lint` for both variants.
 
 ## Manual verification (VM / rebase)
 Only run when explicitly validating a full pass:
@@ -27,16 +27,16 @@ Only run when explicitly validating a full pass:
    - `which code` → `/usr/bin/code` (Microsoft RPM via persistent vscode.repo)
    - `which hx` → `/usr/bin/hx` (Helix; default `$EDITOR`)
    - `which starship && starship --version` → upstream binary baked into `/usr/bin`
-   - `mise --version` → resolves; user picks toolchain in their chezmoi'd `~/.config/mise/config.toml`
-   - `chezmoi --version` → resolves
+   - `mise --version` → resolves; user picks toolchain in their stowed `~/.config/mise/config.toml`
+   - `stow --version` → resolves (replaces chezmoi for image-default dotfile seeding)
    - `which docker` → `/usr/bin/docker` (podman-docker shim wrapper)
    - `systemctl --user is-active podman.socket` → `active` (auto-enabled by sideral-services)
    - `kubectl version --client` + `kind version` + `helm version` → all resolve
    - On nvidia variant: `cat /usr/lib/bootc/kargs.d/00-nvidia.toml` → 4 kargs incl. `nvidia-drm.modeset=1`; `gsettings get org.gnome.mutter experimental-features` → contains `kms-modifiers`
    - `rpm-ostree status` → sideral current, previous deployment preserved (ATH-08)
-   - `ujust chsh nu && exec nu -l` → nushell opens; starship prompt + atuin + zoxide + view command available; `which fish` returns empty
-   - `ujust chsh zsh && exec zsh -l` → zsh init loads; same integrations + zsh-syntax-highlighting + zsh-autosuggestions + carapace completions
-   - **Distrobox check**: `distrobox create --image fedora:42 t && distrobox enter t -- echo hello` → succeeds (no `/nix` mount expectation post chezmoi-home)
+   - `which nu` returns empty (nushell removed); `which fish` returns empty
+   - `ujust chsh zsh && exec zsh -l` → zsh init loads; starship + atuin + zoxide + zsh-syntax-highlighting + zsh-autosuggestions + carapace completions
+   - **Distrobox check**: `distrobox create --image fedora:42 t && distrobox enter t -- echo hello` → succeeds
 
 ## Task-level gate matrix
 | Task touches | Gate |

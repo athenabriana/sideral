@@ -1,10 +1,10 @@
 # sideral — a personal Fedora atomic desktop derived directly from
-# ublue-os/silverblue-main. Ships niri compositor + Noctalia shell,
-# Zen Browser (preinstalled Flatpak from Flathub), a curated flatpak
-# set, chezmoi-driven user dotfile layer + sideral-cli-tools (mise,
-# code, starship, carapace-bin, nushell, zsh, atuin, fzf, etc.),
-# and a narrow RPM layer (rootless podman with docker compatibility
-# shims, kubernetes stack, fonts).
+# ublue-os/silverblue-main. Inherits the stock GNOME desktop unchanged;
+# adds Zen Browser (preinstalled Flatpak from Flathub), a curated
+# flatpak set, ghostty terminal (Terra repo), GNU-stow-seeded user
+# dotfiles + sideral-cli-tools (mise, code, starship, carapace-bin,
+# zsh, atuin, fzf, etc.), and a narrow RPM layer (rootless podman
+# with docker compatibility shims, kubernetes stack, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
@@ -42,7 +42,6 @@ FROM scratch AS ctx-packages
 COPY lib/install-packages.sh /lib/install-packages.sh
 # packages.txt per module
 COPY modules/cli-tools/packages.txt    /modules/cli-tools/packages.txt
-COPY modules/niri-defaults/packages.txt /modules/niri-defaults/packages.txt
 COPY modules/services/packages.txt     /modules/services/packages.txt
 COPY modules/kubernetes/packages.txt   /modules/kubernetes/packages.txt
 COPY build/fonts/packages.txt          /build/fonts/packages.txt
@@ -50,7 +49,6 @@ COPY build/nvidia/packages.txt         /build/nvidia/packages.txt
 # repo files (staged into /etc/yum.repos.d/ before any dnf call)
 COPY modules/base/src/etc/yum.repos.d/          /modules/base/src/etc/yum.repos.d/
 COPY modules/cli-tools/src/etc/yum.repos.d/     /modules/cli-tools/src/etc/yum.repos.d/
-COPY modules/niri-defaults/src/etc/yum.repos.d/ /modules/niri-defaults/src/etc/yum.repos.d/
 COPY modules/kubernetes/src/etc/yum.repos.d/    /modules/kubernetes/src/etc/yum.repos.d/
 
 # ── Stage 1b: full build context ────────────────────────────────────────
@@ -78,8 +76,8 @@ RUN --mount=type=bind,from=ctx-packages,source=/,target=/ctx \
     ostree container commit
 
 # Layer 2 — scripts + RPMs: run per-module *.sh scripts (hide-chromium,
-# nushell-plugins, flatpak preinstall, nvidia apply), then build and
-# install sideral-* RPMs inline.
+# flatpak preinstall, nvidia apply), then build and install sideral-*
+# RPMs inline.
 #
 # Several sideral files conflict with base-image packages on file
 # ownership (/etc/os-release vs fedora-release-common,

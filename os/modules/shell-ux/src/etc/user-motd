@@ -4,10 +4,9 @@
 
   Common tasks (all via ujust):
     ujust                            list every recipe (sideral + ublue)
-    ujust niri                       niri + Noctalia keybinds + theming guide
     ujust tools                      cheatsheet of CLIs / aliases / keybinds
-    ujust chsh [bash|fish|zsh]       switch login shell (default: zsh)
-    ujust chezmoi-init <repo-url>    initialize dotfiles from a chezmoi repo
+    ujust chsh [bash|zsh]            switch login shell (default: zsh)
+    ujust apply-defaults             re-symlink image defaults via stow
     ujust gdrive-setup               auto-mount Google Drive at ~/gdrive
     ujust update                     pull latest image + flatpak updates
 

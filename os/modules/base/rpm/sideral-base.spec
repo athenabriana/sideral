@@ -25,9 +25,8 @@ BuildArch:      noarch
 # remove sideral-flatpaks etc. for granular opt-out).
 Requires:       sideral-services          = %{version}-%{release}
 Requires:       sideral-flatpaks          = %{version}-%{release}
-Requires:       sideral-niri-defaults     = %{version}-%{release}
 Requires:       sideral-shell-ux          = %{version}-%{release}
-Requires:       sideral-chezmoi-defaults  = %{version}-%{release}
+Requires:       sideral-stow-defaults     = %{version}-%{release}
 Requires:       sideral-cli-tools         = %{version}-%{release}
 Requires:       sideral-kubernetes        = %{version}-%{release}
 
