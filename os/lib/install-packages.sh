@@ -20,13 +20,14 @@ BUILD=(fonts nvidia)
 # Sideral keeps stock GNOME from silverblue-main intact (gdm + gnome-shell
 # + gnome-session + mutter + gnome-control-center + gnome-settings-daemon
 # + the appindicator/dash-to-panel extensions all stay). Only prune the
-# couple of packages we actively replace: firefox (Zen Browser via Flatpak
-# is the canonical browser) and gnome-software (Bazaar via Flatpak is the
-# canonical app store).
+# packages we actively replace: firefox (Zen Browser via Flatpak), gnome-
+# software (Bazaar via Flatpak), gnome-terminal (ghostty from Terra is
+# the canonical terminal, see sideral-cli-tools).
 log "Removing inherited base packages"
 to_remove=()
 for pkg in firefox firefox-langpacks dconf-editor \
-           gnome-software gnome-software-rpm-ostree; do
+           gnome-software gnome-software-rpm-ostree \
+           gnome-terminal gnome-terminal-nautilus; do
     rpm -q "$pkg" >/dev/null 2>&1 && to_remove+=("$pkg")
 done
 [ ${#to_remove[@]} -gt 0 ] && dnf5 remove -y "${to_remove[@]}"
