@@ -26,7 +26,8 @@ BuildArch:      noarch
 Requires:       sideral-services          = %{version}-%{release}
 Requires:       sideral-flatpaks          = %{version}-%{release}
 Requires:       sideral-shell-ux          = %{version}-%{release}
-Requires:       sideral-stow-defaults     = %{version}-%{release}
+Requires:       sideral-fox               = %{version}-%{release}
+Requires:       sideral-home              = %{version}-%{release}
 Requires:       sideral-cli-tools         = %{version}-%{release}
 Requires:       sideral-kubernetes        = %{version}-%{release}
 
@@ -74,6 +75,10 @@ cp -a etc %{buildroot}/
 /etc/containers/policy.json
 
 %changelog
+* Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-14
+- Swap Requires: sideral-stow-defaults → sideral-fox + sideral-home.
+  dotfiles module retired; fox (operator CLI) and home (/etc/skel seed)
+  replace it.
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-13
 - Drop /etc/yum.repos.d/vscode.repo. VS Code is removed from sideral
   in favor of Zed (Terra repo, owned by sideral-cli-tools). The
