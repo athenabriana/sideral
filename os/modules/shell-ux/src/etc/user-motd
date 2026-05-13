@@ -3,13 +3,14 @@
   sideral OS — Fedora atomic desktop
 
   Common tasks (operator CLI):
-    fox                              list every fox recipe
+    fox                              list every recipe
     man sideral                      cheatsheet (alias: fox cheatsheet)
     fox chsh [bash|zsh]              switch login shell (default: bash)
-    fox upgrade                      stage rpm-ostree upgrade
+    fox upgrade                      full system upgrade (ostree + flatpak + distrobox)
     fox rollback                     swap to the previous deployment
-    fox update                       update installed flatpaks
+    fox toggle-banner                show/hide this banner
     fox home factory-reset           reset sideral dotfiles from /etc/skel
+    fox upgrade-firmware             update device firmware
 
-  Hide this banner: touch ~/.config/no-show-user-motd
+  Hide this banner: fox toggle-banner
   ─────────────────────────────────────────────────────────────────

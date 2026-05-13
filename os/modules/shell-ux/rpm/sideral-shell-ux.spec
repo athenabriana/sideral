@@ -1,12 +1,11 @@
-# sideral-shell-ux — narrowed system-level shell concerns. Owns three
-# paths under /etc and nothing under /usr. See %changelog for the prior
-# scope (operator-CLI extension slot + user-unit for cloud-storage
-# mount, both retired with the fox feature).
+# sideral-shell-ux — system-level shell scaffolding (motd, mise config,
+# login-shell migrate, motd display script). Owns four paths under /etc.
+# See %changelog for the prior scope.
 
 Name:           sideral-shell-ux
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral system-level shell scaffolding (user-motd, mise system config, login-shell migrate)
+Summary:        sideral system-level shell scaffolding (motd, mise system config, login-shell migrate)
 License:        MIT
 URL:            https://github.com/athenabriana/sideral
 Source0:        %{name}-%{version}.tar.gz
@@ -16,16 +15,22 @@ Requires:       bash
 
 %description
 Ships the small set of /etc paths that have to be system-level (not
-user-domain): the every-login banner, the mise system config, and a
-rescue script that switches a user's login shell to zsh if its binary
-no longer exists. Everything user-facing (interactive-shell wiring,
-keybindings, AI-agent guard, EDITOR/VISUAL) ships via sideral-home's
-/etc/skel seed instead, copied into new user homes by useradd.
+user-domain): the every-login banner, the motd display script, the
+mise system config, and a rescue script that switches a user's login
+shell to zsh if its binary no longer exists. Everything user-facing
+(interactive-shell wiring, keybindings, AI-agent guard, EDITOR/VISUAL)
+ships via sideral-home's /etc/skel seed instead, copied into new user
+homes by useradd.
 
 /etc/user-motd:
-  Every-login banner picked up by ublue-os-just's user-motd.sh. Lists
-  the common `fox` recipes for sideral and `man sideral` for the
-  cheatsheet. Per-user opt-out: `touch ~/.config/no-show-user-motd`.
+  Every-login banner. Displayed by sideral-motd.sh on interactive login
+  (profile.d). Lists the common `fox` recipes. Per-user opt-out:
+  `fox toggle-banner` or `touch ~/.config/no-show-user-motd`.
+
+/etc/profile.d/sideral-motd.sh:
+  Reads and displays /etc/user-motd on login. Double-source guarded by
+  SIDERAL_MOTD_SOURCED. Replaces ublue-os-just's user-motd.sh (which
+  was removed when ublue-os-just was pruned from the image).
 
 /etc/mise/config.toml:
   System-wide settings (trusted_config_paths, not_found_auto_install,
@@ -47,11 +52,18 @@ mkdir -p %{buildroot}
 cp -a etc %{buildroot}/
 
 %files
+/etc/profile.d/sideral-motd.sh
 /etc/profile.d/sideral-shell-migrate.sh
 /etc/user-motd
 /etc/mise/config.toml
 
 %changelog
+* Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-16
+- Add /etc/profile.d/sideral-motd.sh: sideral-owned login-banner display
+  script. Replaces ublue-os-just's user-motd.sh, which is removed as part
+  of the ublue-os-just package prune (ublue-os-just no longer in image).
+- %description: update to reference sideral-motd.sh; remove mention of
+  ublue-os-just's user-motd.sh now that sideral owns the path.
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-15
 - Narrow scope to system-level shell concerns. Drop:
   • /etc/zshrc (sideral's customized one) — stock Fedora /etc/zshrc

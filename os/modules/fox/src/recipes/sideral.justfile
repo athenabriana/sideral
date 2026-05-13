@@ -1,6 +1,6 @@
 # sideral.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
 # Verbs: chsh, cheatsheet, update, upgrade, rollback, status, cleanup,
-# changelog, toggle-banner, upgrade-firmware, sync, diff, edit, doctor
+# changelog, toggle-banner, upgrade-firmware, diff, edit, doctor
 # (top-level) + home::factory-reset (module).
 
 default:
@@ -14,9 +14,15 @@ chsh shell="":
 cheatsheet:
     exec man 7 sideral
 
-# Update installed flatpaks
+# Update installed flatpaks and sync nix config
 update *args:
+    #!/usr/bin/bash
     flatpak update {{args}}
+    if command -v nh >/dev/null 2>&1; then
+      echo "--- nix home switch ---"
+      stow -R -d "$HOME/.config/sideral/stow" -t "$HOME" nix 2>/dev/null || true
+      nh home switch --impure -c "$(whoami)"
+    fi
 
 # Stage rpm-ostree upgrade, flatpak update, and distrobox upgrade all at once
 upgrade *args:
@@ -109,22 +115,6 @@ doctor:
       echo "~/.config/nix/flake.nix not found or not a symlink"
       echo "Run 'fox sync' to set up the starter flake."
     fi
-
-# Sync nix config: stow flake + nh home switch (auto-installs nh)
-sync:
-    #!/usr/bin/bash
-    if ! command -v nix >/dev/null 2>&1; then
-      echo "nix not ready. Wait for first-boot bootstrap or reboot."
-      echo "  systemctl status sideral-nix-bootstrap"
-      exit 1
-    fi
-    stow -R -d "$HOME/.config/sideral/stow" -t "$HOME" nix 2>/dev/null || true
-    if ! command -v nh >/dev/null 2>&1; then
-      echo "Installing nh..."
-      nix profile install nixpkgs#nh
-    fi
-    echo "Applying home config..."
-    nh home switch --impure -c "$(whoami)"
 
 # Show pending nix config changes (dry-run)
 diff:

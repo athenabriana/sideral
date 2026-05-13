@@ -45,11 +45,25 @@ assert_contains "noarg_justfile" "FAKEJUST:$SIDERAL_JUSTFILE" "$actual"
 actual=$(run --help | grep '^FAKEJUST:' | tr '\n' ' ')
 assert_contains "help_list" "FAKEJUST:--list" "$actual"
 
+# FOXEN-01: fox toggle-banner → just toggle-banner.
+actual=$(run toggle-banner | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "toggle-banner_pass" "FAKEJUST:toggle-banner" "$actual"
+
+# FOXEN-03: fox upgrade-firmware → just upgrade-firmware.
+actual=$(run upgrade-firmware | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "upgrade-firmware_pass" "FAKEJUST:upgrade-firmware" "$actual"
+
+# FOXEN-02: fox cleanup → just cleanup.
+actual=$(run cleanup | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "cleanup_pass" "FAKEJUST:cleanup" "$actual"
+actual=$(run cleanup -bm | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "cleanup_flag" "FAKEJUST:-bm" "$actual"
+
 # FOX-04 / FOX-05: unknown verb passes through.
 actual=$(run xyzzy | grep '^FAKEJUST:' | tail -n1)
 assert_eq "passthrough_verb" "FAKEJUST:xyzzy" "$actual"
 
-# FOX-05: fox upgrade → just upgrade.
+# FOXEN-04 / FOX-05: fox upgrade with flags → just upgrade with flags.
 actual=$(run upgrade --allow-downgrade | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "upgrade_pass" "FAKEJUST:upgrade" "$actual"
 assert_contains "upgrade_flag" "FAKEJUST:--allow-downgrade" "$actual"

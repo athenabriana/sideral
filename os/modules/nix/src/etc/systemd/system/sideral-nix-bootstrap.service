@@ -9,6 +9,7 @@ ConditionPathExists=!/var/lib/sideral/nix-setup-done
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/libexec/nix-installer install ostree --persistence /var/lib/nix --no-confirm
+ExecStartPost=/nix/var/nix/profiles/default/bin/nix profile install --profile /nix/var/nix/profiles/default nixpkgs#nh
 ExecStartPost=/bin/mkdir -p /var/lib/sideral
 ExecStartPost=/bin/touch /var/lib/sideral/nix-setup-done
 Restart=on-failure
