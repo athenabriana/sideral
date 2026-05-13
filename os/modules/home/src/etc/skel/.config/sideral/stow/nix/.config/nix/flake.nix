@@ -1,12 +1,16 @@
 # sideral starter flake — declarative user packages via nix + nh.
-# Edit this file, then run `fox home sync` to apply changes.
 #
-# nh replaces home-manager switch and nix-collect-garbage:
-#   `nh home switch -c $(whoami)`  — build + activate
-#   `nh clean`                     — garbage collection
+# Edit this file, then run `fox sync` to apply changes.
 #
-# $NH_FLAKE is set in bashrc/zshrc so nh resolves ~/.config/nix
-# automatically.
+# nh replaces home-manager switch:
+#   `fox sync`  →  stow + `nh home switch --impure -c <user>`
+#
+# $NH_FLAKE é definido em bashrc/zshrc apontando para ~/.config/nix.
+#
+# NOTA sobre pureza da avaliação:
+#   O nix avalia flakes em modo PURE por padrão, onde `builtins.getEnv`
+#   retorna vazio. O `--impure` permite acesso a variáveis de ambiente.
+#   Os comandos fox (sync, diff) passam `--impure` automaticamente.
 {
   description = "sideral user home configuration";
 
@@ -19,57 +23,52 @@
   };
 
   outputs = { self, nixpkgs, home-manager, ... }: let
-    user = builtins.getEnv "USER";
     system = "x86_64-linux";
-    pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
+    pkgs = nixpkgs.legacyPackages.${system};
+
+    # builtins.getEnv retorna "" em pure eval. Com --impure, retorna
+    # o usuário real. O fallback "changeme" é usado quando --impure
+    # não é passado (se você executar `nh` manualmente sem --impure,
+    # troque "changeme" pelo seu username).
+    user = let u = builtins.getEnv "USER"; in if u != "" then u else "changeme";
   in {
     homeConfigurations."${user}" = home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
+      extraSpecialArgs = { inherit user; };
       modules = [
-        ({ pkgs, ... }: {
+        ({ user, ... }: {
           home = {
             username = "${user}";
             homeDirectory = "/home/${user}";
             stateVersion = "24.11";
 
             packages = with pkgs; [
-              # nh manages its own version — stays here so `nh clean`
-              # doesn't remove it as an orphaned profile entry.
+              # nh gerencia a própria versão. `fox sync` instala
+              # nh automaticamente se não estiver presente.
               nh
 
-              # ── Uncomment what you need ─────────────────────────
-              # bat           # file viewer with syntax highlighting
-              # eza           # modern ls replacement (icons, git)
-              # ripgrep       # fast recursive grep
-              # fd            # fast file find
-              # jq            # JSON processor
-              # yq            # YAML/JSON/XML/Toml processor
-              # htop          # interactive process viewer
-              # btop          # modern resource monitor (TUI)
+              # ── Descomente o que precisar ─────────────────────────
+              # bat           # file viewer com syntax highlight
+              # eza           # ls moderno (icons, git status)
+              # ripgrep       # grep recursivo rápido
+              # fd            # find rápido
+              # jq            # processador JSON
+              # yq            # YAML/JSON/XML/Toml
+              # btop          # monitor de recursos TUI
               # lazygit       # git TUI
-              # delta         # git diff viewer (used by git config)
-              # tealdeer      # fast tldr client (community-man pages)
-              # du-dust       # `dust` — intuitive `du` replacement
-              # procs         # modern `ps` replacement
-              # sd            # intuitive `sed` replacement
+              # delta         # diff viewer para git
+              # tealdeer      # tldr client (man pages comunitários)
+              # du-dust       # dust — du intuitivo
+              # procs         # ps moderno
+              # sd            # sed intuitivo
             ];
           };
 
-          # ── Mise (runtime manager) — uncomment to manage via nix ──
-          # WARNING: If you already have mise installed via the RPM
-          # layered in the image, use the nix version OR the RPM one,
-          # not both. They will conflict on PATH.
+          # ── Mise (runtime manager) ───────────────────────────────
           # programs.mise.enable = true;
-          # programs.mise.globalConfig = ".config/mise/config.toml";
 
-          # ── Flatpaks — uncomment to manage flatpaks via nix ─────
-          # WARNING: The image ships a curated flatpak set via
-          # sideral-flatpaks. Enabling this will manage flatpaks
-          # declaratively via home-manager instead.
+          # ── Flatpaks via nix ─────────────────────────────────────
           # services.flatpak.enable = true;
-          # services.flatpak.packages = [
-          #   { appId = "org.mozilla.firefox"; origin = "flathub"; }
-          # ];
 
           programs.home-manager.enable = true;
         })

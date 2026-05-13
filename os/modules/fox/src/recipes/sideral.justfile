@@ -1,6 +1,7 @@
 # sideral.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
 # Verbs: chsh, cheatsheet, update, upgrade, rollback, status, cleanup,
-# changelog, toggle-banner, upgrade-firmware (top-level) + home::factory-reset (module).
+# changelog, toggle-banner, upgrade-firmware, sync, diff, edit, doctor
+# (top-level) + home::factory-reset (module).
 
 default:
     @just -f {{ justfile() }} --list
@@ -74,7 +75,7 @@ upgrade-firmware:
     fwupdmgr update
 
 # Diagnose nix + nh health — version, daemon, mount, SELinux, flake
-nix-doctor:
+doctor:
     #!/usr/bin/bash
     echo "=== nix version ==="
     nix --version 2>&1 || echo "NOT FOUND"
@@ -97,16 +98,43 @@ nix-doctor:
       echo "NOT ACCESSIBLE — /nix/store does not exist"
     fi
     echo "=== nh version ==="
-    nh --version 2>&1 || echo "NOT INSTALLED (run 'fox home init')"
+    nh --version 2>&1 || echo "NOT INSTALLED (run 'fox sync')"
     echo "=== NH_FLAKE ==="
     echo "${NH_FLAKE:-<unset>}"
     echo "=== flake symlink ==="
     if [ -L "$HOME/.config/nix/flake.nix" ]; then
       echo "symlink: $(readlink -f "$HOME/.config/nix/flake.nix")"
-      nix flake check "$HOME/.config/nix" 2>&1 || echo "flake check FAILED — run 'fox home sync' to update"
+      nix flake check "$HOME/.config/nix" 2>&1 || echo "flake check FAILED — run 'fox sync' to update"
     else
       echo "~/.config/nix/flake.nix not found or not a symlink"
-      echo "Run 'fox home init' to set up the starter flake."
+      echo "Run 'fox sync' to set up the starter flake."
     fi
+
+# Sync nix config: stow flake + nh home switch (auto-installs nh)
+sync:
+    #!/usr/bin/bash
+    if ! command -v nix >/dev/null 2>&1; then
+      echo "nix not ready. Wait for first-boot bootstrap or reboot."
+      echo "  systemctl status sideral-nix-bootstrap"
+      exit 1
+    fi
+    stow -R -d "$HOME/.config/sideral/stow" -t "$HOME" nix 2>/dev/null || true
+    if ! command -v nh >/dev/null 2>&1; then
+      echo "Installing nh..."
+      nix profile install nixpkgs#nh
+    fi
+    echo "Applying home config..."
+    nh home switch --impure -c "$(whoami)"
+
+# Show pending nix config changes (dry-run)
+diff:
+    #!/usr/bin/bash
+    nh home switch --impure -c "$(whoami)" -- --dry-run 2>/dev/null \
+      || nh home switch --impure -c "$(whoami)" --dry 2>/dev/null \
+      || echo "Dry-run not available. Run 'fox sync' to apply."
+
+# Open the nix flake in $EDITOR
+edit:
+    exec $EDITOR ~/.config/nix/flake.nix
 
 mod home

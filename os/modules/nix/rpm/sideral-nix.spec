@@ -5,6 +5,7 @@
 #     that runs the Determinate nix-installer with ostree planner
 #   • multi-user.target.wants/ enablement symlink
 #   • /etc/sudoers.d/nix-sudo-env — adds nix profile bin to sudo secure_path
+#   • /etc/profile.d/sideral-nix-init.sh — auto-stow + first-login nh init
 #
 # The nix-installer binary is pre-downloaded at build time by
 # nix-installer-download.sh (staged at /usr/libexec/nix-installer).
@@ -41,6 +42,12 @@ Ships:
     Adds /nix/var/nix/profiles/default/bin to sudo's secure_path so
     nix-installed commands (e.g. nh) are found when running with sudo.
 
+  /etc/profile.d/sideral-nix-init.sh
+    Runs `stow -R nix` on every login to keep the flake symlink in
+    sync. On the very first login per user: installs nh via nix
+    profile and runs `nh home switch --impure` to apply the starter
+    flake. Guarded by a per-user sentinel file.
+
 Pre-downloaded at build time: nix-installer binary at /usr/libexec/.
 Pre-created at build time: nixbld group (GID 30000) and users
 nixbld1-32 (UIDs 30001-30032).
@@ -56,6 +63,7 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/sideral-nix-bootstrap.service
 /etc/systemd/system/multi-user.target.wants/sideral-nix-bootstrap.service
 /etc/sudoers.d/nix-sudo-env
+/etc/profile.d/sideral-nix-init.sh
 
 %changelog
 * Wed May 13 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
