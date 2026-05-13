@@ -21,10 +21,8 @@ chmod +x "$NIX_INSTALLER_DEST"
 ls -lh "$NIX_INSTALLER_DEST"
 
 log "Downloading nh v${NH_VERSION}..."
-curl -fsSL "$NH_URL" -o /tmp/nh.tar.zst
-tar --zstd -xf /tmp/nh.tar.zst -C /tmp/
-install -m 0755 /tmp/nh "${NH_DEST}"
-rm -f /tmp/nh.tar.zst /tmp/nh
+curl -fsSL "$NH_URL" -o "${NH_DEST}"
+chmod +x "${NH_DEST}"
 ls -lh "${NH_DEST}"
 
 log "Creating empty /nix for composefs compatibility..."
