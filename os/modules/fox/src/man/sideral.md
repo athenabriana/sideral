@@ -135,7 +135,7 @@ bash (default) and zsh are the only shells sideral wires. Switch via
 `/usr/libexec/sideral/home-factory-reset.sh`
 :   factory-reset implementation.
 
-`/etc/skel/.config/sideral/stow/{bash,zsh,mise,ghostty,zed}/`
+`/etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/`
 :   Image-default dotfile seed. Copied into new user homes by `useradd`;
     user-domain thereafter.
 

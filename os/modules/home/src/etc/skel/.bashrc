@@ -1,1 +1,1 @@
-.config/sideral/stow/bash/.bashrc
+Dotfiles/bash/.bashrc

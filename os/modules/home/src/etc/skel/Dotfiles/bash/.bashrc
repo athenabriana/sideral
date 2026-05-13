@@ -1,9 +1,8 @@
 # ~/.bashrc — sideral bash interactive-shell wiring.
 #
-# Symlinked from /usr/share/sideral/stow/bash/.bashrc by GNU stow on first
-# login. The symlink targets a read-only ostree path — to customize, replace
-# the symlink with a real file and edit. To restore the sideral default,
-# delete your copy and run `ujust apply-defaults`.
+# Stow package from Dotfiles/bash/.bashrc — to customize, replace the
+# symlink with a real file and edit. The skel merge (profile.d) copies
+# new defaults from /etc/skel on every login.
 #
 # Each `eval` is `command -v`-guarded so removing any single tool via
 # `rpm-ostree override remove` doesn't break the rest.

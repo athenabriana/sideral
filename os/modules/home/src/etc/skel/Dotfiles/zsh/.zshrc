@@ -1,9 +1,8 @@
 # ~/.zshrc — sideral zsh interactive-shell wiring.
 #
-# Symlinked from /usr/share/sideral/stow/zsh/.zshrc by GNU stow on first
-# login. The symlink targets a read-only ostree path — to customize, replace
-# the symlink with a real file and edit. To restore the sideral default,
-# delete your copy and run `ujust apply-defaults`.
+# Stow package from Dotfiles/zsh/.zshrc — to customize, replace the
+# symlink with a real file and edit. The skel merge (profile.d) copies
+# new defaults from /etc/skel on every login.
 
 # ── ~/.local/bin on PATH ────────────────────────────────────────────────
 # XDG per-user bin dir for cargo/pipx/manual installs. Idempotent via

@@ -1,9 +1,7 @@
 // ~/.config/zed/settings.json — sideral image default.
 //
-// Symlinked from /usr/share/sideral/stow/zed/.config/zed/settings.json by
-// GNU stow on first login. The symlink targets a read-only ostree path —
-// to customize, replace the symlink with a real file and edit. To restore
-// the sideral default, delete your copy and run `ujust apply-defaults`.
+// Stow package from Dotfiles/zed/.config/zed/settings.json.
+// To customize, replace the symlink with a real file and edit.
 //
 // JSONC: trailing commas and // comments are accepted by Zed's parser.
 {

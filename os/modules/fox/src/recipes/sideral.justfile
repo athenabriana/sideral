@@ -20,7 +20,7 @@ update *args:
     flatpak update {{args}}
     if command -v nh >/dev/null 2>&1; then
       echo "--- nix home switch ---"
-      stow -R -d "$HOME/.config/sideral/stow" -t "$HOME" nix 2>/dev/null || true
+      stow -R -d "$HOME/Dotfiles" -t "$HOME" nix 2>/dev/null || true
       nh home switch --impure -c "$(whoami)"
     fi
 

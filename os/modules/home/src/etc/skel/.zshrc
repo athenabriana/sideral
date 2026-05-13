@@ -1,1 +1,1 @@
-.config/sideral/stow/zsh/.zshrc
+Dotfiles/zsh/.zshrc

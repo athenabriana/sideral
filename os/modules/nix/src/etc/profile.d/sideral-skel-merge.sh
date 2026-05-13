@@ -26,8 +26,8 @@ pending=()
 while IFS= read -r -d '' top; do
     rel="${top#"$SKEL_DIR"/}"
 
-    # Skip sideral stow directory — managed by stow, not by skel merge
-    [[ "$rel" == .config/sideral* ]] && continue
+    # Skip Dotfiles directory — managed by stow, not by skel merge
+    [[ "$rel" == Dotfiles ]] && continue
 
     if [[ -d "$top" && ! -L "$top" ]]; then
         # Directory: walk depth-1 children

@@ -20,8 +20,8 @@ fi
 SIDERAL_NIX_INIT_RAN=1
 
 # Stow nix flake (every login, idempotent)
-if command -v stow >/dev/null 2>&1 && [ -d "$HOME/.config/sideral/stow/nix" ]; then
-    stow -R -d "$HOME/.config/sideral/stow" -t "$HOME" nix 2>/dev/null || true
+if command -v stow >/dev/null 2>&1 && [ -d "$HOME/Dotfiles/nix" ]; then
+    stow -R -d "$HOME/Dotfiles" -t "$HOME" nix 2>/dev/null || true
 fi
 
 # First-login: apply nix config

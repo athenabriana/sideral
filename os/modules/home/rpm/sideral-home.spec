@@ -1,7 +1,7 @@
 # sideral-home — user-domain seed via /etc/skel.
 #
 # Ships sideral's image-default dotfiles as a stow source tree at
-# /etc/skel/.config/sideral/stow/{bash,zsh,mise,ghostty,zed}/, plus five
+# /etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/, plus five
 # pre-farmed relative symlinks at /etc/skel/{.bashrc,.zshrc,.config/...}.
 # `useradd` (traditional Unix, cp -a semantics) copies the whole tree
 # into new user homes, preserving symlinks. From that moment forward the
@@ -9,12 +9,8 @@
 # that change defaults affect only future-created users; existing users
 # own their copy.
 #
-# To revert to image defaults destructively: `fox home factory-reset`.
-# To customize a single file: replace the symlink with a real file and
-# edit; future factory-resets will overwrite it.
-#
-# Replaces sideral-stow-defaults, which seeded via stow-on-first-login
-# against /usr/share/sideral/stow/ (read-only ostree-symlinked).
+# To customize a single file: replace the symlink with a real file.
+# Dotfiles stays intact across rebases — edit freely.
 
 Name:           sideral-home
 Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
@@ -28,18 +24,19 @@ BuildArch:      noarch
 %description
 Ships sideral's image-default user dotfiles via /etc/skel:
 
-  - /etc/skel/.config/sideral/stow/{bash,zsh,mise,ghostty,zed}/ — five
-    stow packages holding the real config content (bash + zsh rcs with
+  - /etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/ — six stow
+    packages holding the real config content (bash + zsh rcs with
     starship/atuin/zoxide/mise/fzf wiring, mise user toolchain pins,
-    ghostty config, zed settings with vim_mode + helix_normal).
+    ghostty config, zed settings with vim_mode + helix_normal, nix
+    starter flake for nh).
   - /etc/skel/{.bashrc, .zshrc} — top-level relative symlinks into the
-    stow tree.
+    Dotfiles stow tree.
   - /etc/skel/.config/{mise/config.toml, ghostty/config, zed/settings.json}
-    — depth-2 relative symlinks into the stow tree.
+    — depth-2 relative symlinks into the Dotfiles stow tree.
 
 useradd copies the whole tree (cp -a semantics preserves symlinks) into
-new user homes. The stow tree gives users `stow`-friendly ergonomics
-without sideral owning the post-useradd state.
+new user homes. The Dotfiles stow tree gives users `stow`-friendly
+ergonomics without sideral owning the post-useradd state.
 
 %prep
 %setup -q
@@ -49,29 +46,28 @@ mkdir -p %{buildroot}
 cp -a etc %{buildroot}/
 
 %files
-%dir /etc/skel/.config/sideral
-%dir /etc/skel/.config/sideral/stow
-%dir /etc/skel/.config/sideral/stow/bash
-/etc/skel/.config/sideral/stow/bash/.bashrc
-%dir /etc/skel/.config/sideral/stow/zsh
-/etc/skel/.config/sideral/stow/zsh/.zshrc
-%dir /etc/skel/.config/sideral/stow/mise
-%dir /etc/skel/.config/sideral/stow/mise/.config
-%dir /etc/skel/.config/sideral/stow/mise/.config/mise
-/etc/skel/.config/sideral/stow/mise/.config/mise/config.toml
-%dir /etc/skel/.config/sideral/stow/ghostty
-%dir /etc/skel/.config/sideral/stow/ghostty/.config
-%dir /etc/skel/.config/sideral/stow/ghostty/.config/ghostty
-/etc/skel/.config/sideral/stow/ghostty/.config/ghostty/config
-%dir /etc/skel/.config/sideral/stow/zed
-%dir /etc/skel/.config/sideral/stow/zed/.config
-%dir /etc/skel/.config/sideral/stow/zed/.config/zed
-/etc/skel/.config/sideral/stow/zed/.config/zed/settings.json
-%dir /etc/skel/.config/sideral/stow/nix
-%dir /etc/skel/.config/sideral/stow/nix/.config
-%dir /etc/skel/.config/sideral/stow/nix/.config/nix
-/etc/skel/.config/sideral/stow/nix/.config/nix/flake.nix
-/etc/skel/.config/sideral/stow/nix/.config/nix/flake.lock
+%dir /etc/skel/Dotfiles
+%dir /etc/skel/Dotfiles/bash
+/etc/skel/Dotfiles/bash/.bashrc
+%dir /etc/skel/Dotfiles/zsh
+/etc/skel/Dotfiles/zsh/.zshrc
+%dir /etc/skel/Dotfiles/mise
+%dir /etc/skel/Dotfiles/mise/.config
+%dir /etc/skel/Dotfiles/mise/.config/mise
+/etc/skel/Dotfiles/mise/.config/mise/config.toml
+%dir /etc/skel/Dotfiles/ghostty
+%dir /etc/skel/Dotfiles/ghostty/.config
+%dir /etc/skel/Dotfiles/ghostty/.config/ghostty
+/etc/skel/Dotfiles/ghostty/.config/ghostty/config
+%dir /etc/skel/Dotfiles/zed
+%dir /etc/skel/Dotfiles/zed/.config
+%dir /etc/skel/Dotfiles/zed/.config/zed
+/etc/skel/Dotfiles/zed/.config/zed/settings.json
+%dir /etc/skel/Dotfiles/nix
+%dir /etc/skel/Dotfiles/nix/.config
+%dir /etc/skel/Dotfiles/nix/.config/nix
+/etc/skel/Dotfiles/nix/.config/nix/flake.nix
+/etc/skel/Dotfiles/nix/.config/nix/flake.lock
 /etc/skel/.bashrc
 /etc/skel/.zshrc
 %dir /etc/skel/.config/mise
