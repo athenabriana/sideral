@@ -25,33 +25,9 @@ update *args:
     fi
 
 # Stage rpm-ostree upgrade.
-# With --merge: applies new defaults from /etc/skel (conflict-aware).
-update-system *merge="":
-    #!/usr/bin/bash
-    set -euo pipefail
-    rpm-ostree upgrade "$@"
-    if [ "$merge" = "--merge" ]; then
-      echo "--- skel merge ---"
-      if [ -f "$HOME/.config/sideral/.skel-pending" ]; then
-        echo "Applying pending skel defaults..."
-        while IFS= read -r relpath; do
-          [ -z "$relpath" ] && continue
-          src="/etc/skel/$relpath"
-          dst="$HOME/$relpath"
-          if [ -f "$src" ] || [ -L "$src" ]; then
-            echo "  $relpath"
-            rm -f "$dst"
-            mkdir -p "$(dirname "$dst")"
-            cp -a "$src" "$dst"
-          fi
-        done < "$HOME/.config/sideral/.skel-pending"
-        rm -f "$HOME/.config/sideral/.skel-pending"
-        echo "Skel defaults applied. Re-login or source your rc files."
-      else
-        echo "No pending skel defaults."
-      fi
-    fi
-    echo "Reboot to apply the staged deployment."
+update-system:
+    rpm-ostree upgrade
+    @echo "Reboot to apply the staged deployment."
 
 # Roll back to the previous rpm-ostree deployment
 rollback *args:

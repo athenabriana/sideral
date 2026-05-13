@@ -77,9 +77,8 @@ if [ ${#pending[@]} -gt 0 ]; then
     mkdir -p "$HOME/.config/sideral"
     printf '%s\n' "${pending[@]}" > "$PENDING_FILE"
     echo
-    echo "⚡ sideral: novos defaults disponíveis em /etc/skel"
-    echo "   Execute 'fox update-system --merge' para aplicar."
-    echo "   Arquivos conflitantes:"
+    echo "⚡ sideral: novos defaults do sistema disponíveis"
+    echo "   Revise os arquivos conflitantes e resolva manualmente:"
     for p in "${pending[@]}"; do
         echo "     • $p"
     done
