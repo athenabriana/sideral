@@ -67,6 +67,11 @@ cp -a etc %{buildroot}/
 %dir /etc/skel/.config/sideral/stow/zed/.config
 %dir /etc/skel/.config/sideral/stow/zed/.config/zed
 /etc/skel/.config/sideral/stow/zed/.config/zed/settings.json
+%dir /etc/skel/.config/sideral/stow/nix
+%dir /etc/skel/.config/sideral/stow/nix/.config
+%dir /etc/skel/.config/sideral/stow/nix/.config/nix
+/etc/skel/.config/sideral/stow/nix/.config/nix/flake.nix
+/etc/skel/.config/sideral/stow/nix/.config/nix/flake.lock
 /etc/skel/.bashrc
 /etc/skel/.zshrc
 %dir /etc/skel/.config/mise

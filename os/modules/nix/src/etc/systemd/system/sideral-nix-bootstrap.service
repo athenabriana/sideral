@@ -1,0 +1,18 @@
+[Unit]
+Description=Sideral Nix Bootstrap — first-boot nix-installer run
+Documentation=https://github.com/DeterminateSystems/nix-installer
+Wants=network-online.target
+After=network-online.target ostree-remount.service
+ConditionPathExists=!/var/lib/sideral/nix-setup-done
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/nix-installer install ostree --persistence /var/lib/nix --no-confirm
+ExecStartPost=/bin/mkdir -p /var/lib/sideral
+ExecStartPost=/bin/touch /var/lib/sideral/nix-setup-done
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

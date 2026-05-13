@@ -5,6 +5,12 @@
 set -euo pipefail
 
 SKEL_DIR="${SKEL_DIR:-/etc/skel}"
+# Paths under $HOME to preserve (relative to the skel tree). The nix
+# stow package contains the user's flake.nix — wiping it would discard
+# the user's declarative config.
+SKIP_PATTERNS=(
+    ".config/sideral/stow/nix"
+)
 
 yes=0
 for arg in "$@"; do
@@ -44,10 +50,24 @@ if [[ "$yes" -eq 0 ]]; then
 fi
 
 : "${HOME:?HOME must be set}"
+reset_count=0
+skip_count=0
 for p in "${paths[@]}"; do
+    skip=0
+    for pattern in "${SKIP_PATTERNS[@]}"; do
+        if [[ "$p" == "$pattern"* ]]; then
+            skip=1
+            break
+        fi
+    done
+    if [[ "$skip" -eq 1 ]]; then
+        ((skip_count++))
+        continue
+    fi
     rm -rf "${HOME:?}/$p"
     mkdir -p "$(dirname "$HOME/$p")"
     cp -a "$SKEL_DIR/$p" "$HOME/$p"
+    ((reset_count++))
 done
 
-echo "Reset $N entries from $SKEL_DIR."
+echo "Reset $reset_count entries from $SKEL_DIR ($skip_count skipped)."

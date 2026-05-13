@@ -30,6 +30,7 @@ Requires:       sideral-fox               = %{version}-%{release}
 Requires:       sideral-home              = %{version}-%{release}
 Requires:       sideral-cli-tools         = %{version}-%{release}
 Requires:       sideral-kubernetes        = %{version}-%{release}
+Requires:       sideral-nix               = %{version}-%{release}
 
 # Conflicts with ublue-os-signing — both own /etc/containers/policy.json.
 # The Containerfile removes ublue-os-signing before rpm -Uvh so this never

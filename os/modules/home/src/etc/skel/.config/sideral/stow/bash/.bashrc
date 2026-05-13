@@ -33,6 +33,14 @@ if command -v zed >/dev/null 2>&1; then
     export VISUAL='zed --wait'
 fi
 
+# ── Nix flake path (nh) ────────────────────────────────────────────────
+# nh (nix-community/nh) uses NH_FLAKE to find the home-manager flake.
+# Set to ~/.config/nix so `nh home switch -c <user>` resolves without
+# an explicit flake path argument.
+if command -v nh >/dev/null 2>&1; then
+    export NH_FLAKE="$HOME/.config/nix"
+fi
+
 # ── Tool inits ──────────────────────────────────────────────────────────
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"

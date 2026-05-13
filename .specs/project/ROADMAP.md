@@ -6,10 +6,13 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Current
 
-- **`fox` (in flight, 2026-05-11)** — sideral-owned operator CLI (~20-line bash dispatcher around `just`) replacing `ujust`, paired with a `/etc/skel`-seeded user-domain dotfile model and the retirement of `sideral-stow-defaults` + the gdrive integration. Two new modules (`fox/`, `home/`), one narrowed (`shell-ux/`), one retired (`dotfiles/`). 47 testable requirements, 18 locked decisions. Spec at `.specs/features/fox/`; task list at `.specs/features/fox/tasks.md`. Source-level changes for Phases 1–5 have landed; Phase 6 (`just build` + `bootc container lint` + VM rebase) pending.
+- **`nix+nh` (revived 2026-05-13)** — Declarative user config via nix + nh. Determinate installer on first boot, `/nix` persists via `/var/lib/nix` bind-mount. `nh home switch` substitui home-manager. `nh clean` pra GC. Starter flake.nix em `/etc/skel` como stow package. 33 requirements. Spec em `.specs/features/nix/`.
+
+- **`fox-enhancements` (in flight, 2026-05-11)** — port useful ujust recipes to fox, ship sideral-owned motd display script, and remove the inherited `ublue-os-just` RPM. `fox` gains `toggle-banner`, `upgrade-firmware`, expanded `upgrade` (ostree + flatpak + distrobox), expanded `cleanup` (podman + flatpak + ostree). `sideral-shell-ux` gains `/etc/profile.d/sideral-motd.sh`. `ublue-os-just` pruned from image build. 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
 
 ## Previous (shipped)
 
+- **`fox`** — sideral-owned operator CLI (~20-line bash dispatcher around `just`) replacing the ujust extension slot, paired with a `/etc/skel`-seeded user-domain dotfile model and the retirement of `sideral-stow-defaults` + the gdrive integration. Two new modules (`fox/`, `home/`), one narrowed (`shell-ux/`), one retired (`dotfiles/`). 47 testable requirements, 18 locked decisions. Spec preserved at `.specs/features/fox/`.
 - **`chezmoi-home`** — replaced `nix-home`. Drops nix entirely; user-config layer is chezmoi (Fedora-packaged Go binary) + RPM-layered CLI tools. 23 requirements, 9 locked decisions. Source-tree changes landed 2026-05-01 (T01–T14); CI-validated continuously since.
 - **`sideral-rpms`** — package sideral customizations into 8 sub-packages (now organized under `os/modules/<capability>/rpm/<spec>` post 2026-05-02 refactor; spec names kept stable for upgrade safety). Inline build inside the Containerfile (no Copr, no token, no external service). Renamed from `sideral-copr` on 2026-04-29; Phase R landed 2026-04-30 (CI run 25188178498, sha `e06bc39`). 26 requirements; ACR-29 (signed-rebase README cutover) and ACR-38 (drift-detection CI) deferred and non-blocking.
 - **`sideral`** — fork from Hyprland lineage into GNOME + tiling-shell on silverblue-main:43. 27 requirements. ATH-04 amended 2026-05-01 → 2026-05-02: 5 → 4 enabled extensions (bazaar-integration retired with original Bazaar→GNOME-Software swap; the later 2026-05-02 GNOME-Software→Bazaar reversion did NOT bring it back — Bazaar is a flatpak now, not an in-shell integration).
@@ -95,8 +98,8 @@ See `.specs/features/fox/context.md` D-16 (home-manager framing) and D-17 (manif
 
 ## Explicit non-goals (re-confirmed April 2026 after research; updated 2026-05-02)
 
-- **Nix as user-level package manager** — *added 2026-05-01*. Considered and dropped via `nix-home` → `chezmoi-home` pivot. User-config layer is chezmoi + RPMs. Revisit if upstream resolves all three composefs/SELinux/post-upgrade issues. See `.specs/features/chezmoi-home/context.md` D-01.
-- **Flake-based workflow by default** — n/a (nix retired).
+- **Nix as user-level package manager** — *revived 2026-05-13*. The three historical blockers (composefs, SELinux, post-upgrade) are all addressable: Determinate installer handles SELinux, systemd `.mount` unit handles composefs, `--persistence /var/lib/nix` handles post-upgrade survival. Spec at `.specs/features/nix/`. nh wraps the workflow.
+- **Flake-based workflow by default** — *revived 2026-05-13*. Starter flake.nix ships in the nix stow package. `nh home switch` applies it.
 - **`direnv` / `nix-direnv`** — dropped per user preference.
 - **`devenv`** — required flakes + nix-command; n/a.
 - **Determinate Nix fork** — n/a.

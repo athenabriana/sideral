@@ -1,6 +1,6 @@
 # sideral.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
 # Verbs: chsh, cheatsheet, update, upgrade, rollback, status, cleanup,
-# changelog (top-level) + home::factory-reset (module).
+# changelog, toggle-banner, upgrade-firmware (top-level) + home::factory-reset (module).
 
 default:
     @just -f {{ justfile() }} --list
@@ -17,10 +17,17 @@ cheatsheet:
 update *args:
     flatpak update {{args}}
 
-# Stage rpm-ostree upgrade for the next boot
+# Stage rpm-ostree upgrade, flatpak update, and distrobox upgrade all at once
 upgrade *args:
-    rpm-ostree upgrade {{args}}
-    @echo "Reboot to apply the staged deployment."
+    #!/usr/bin/bash
+    rpm-ostree upgrade "$@"
+    echo "--- flatpak update ---"
+    flatpak update -y
+    if command -v distrobox >/dev/null 2>&1; then
+      echo "--- distrobox upgrade ---"
+      distrobox upgrade -a
+    fi
+    echo "Reboot to apply the staged deployment."
 
 # Roll back to the previous rpm-ostree deployment
 rollback *args:
@@ -31,12 +38,75 @@ rollback *args:
 status *args:
     rpm-ostree status {{args}}
 
-# Clean rpm-ostree state (default: -prm = pending + repomd + metadata)
+# Clean podman images, unused flatpaks, rpm-ostree metadata, and nix store (default);
+# with explicit args, passes through to rpm-ostree cleanup
 cleanup *args:
-    rpm-ostree cleanup {{ if args == "" { "-prm" } else { args } }}
+    #!/usr/bin/bash
+    if [ $# -eq 0 ]; then
+      podman image prune -af
+      flatpak uninstall --unused
+      rpm-ostree cleanup -prm
+      command -v nh >/dev/null 2>&1 && nh clean || echo "nh not installed, skipping nix cleanup"
+    else
+      rpm-ostree cleanup "$@"
+    fi
 
 # Show RPM diff vs the pending or previous deployment
 changelog *args:
     rpm-ostree db diff {{args}}
+
+# Toggle display of the login banner
+toggle-banner:
+    #!/usr/bin/bash
+    if test -e "${HOME}/.config/no-show-user-motd"; then
+      rm -f "${HOME}/.config/no-show-user-motd"
+      echo "Banner enabled on next login."
+    else
+      mkdir -p "${HOME}/.config"
+      touch "${HOME}/.config/no-show-user-motd"
+      echo "Banner disabled."
+    fi
+
+# Update device firmware (fwupdmgr)
+upgrade-firmware:
+    fwupdmgr refresh --force
+    fwupdmgr get-updates
+    fwupdmgr update
+
+# Diagnose nix + nh health — version, daemon, mount, SELinux, flake
+nix-doctor:
+    #!/usr/bin/bash
+    echo "=== nix version ==="
+    nix --version 2>&1 || echo "NOT FOUND"
+    echo "=== nix-daemon ==="
+    if systemctl is-active nix-daemon >/dev/null 2>&1; then
+      echo "active"
+    else
+      echo "NOT ACTIVE (try: sudo systemctl start nix-daemon)"
+    fi
+    echo "=== /nix mount ==="
+    if findmnt /nix >/dev/null 2>&1; then
+      echo "$(findmnt -n -o SOURCE /nix) → /nix"
+    else
+      echo "NOT MOUNTED (nix bootstrap may not have run yet)"
+    fi
+    echo "=== SELinux /nix/store ==="
+    if [ -d /nix/store ]; then
+      ls -Z /nix/store 2>&1 | head -1
+    else
+      echo "NOT ACCESSIBLE — /nix/store does not exist"
+    fi
+    echo "=== nh version ==="
+    nh --version 2>&1 || echo "NOT INSTALLED (run 'fox home init')"
+    echo "=== NH_FLAKE ==="
+    echo "${NH_FLAKE:-<unset>}"
+    echo "=== flake symlink ==="
+    if [ -L "$HOME/.config/nix/flake.nix" ]; then
+      echo "symlink: $(readlink -f "$HOME/.config/nix/flake.nix")"
+      nix flake check "$HOME/.config/nix" 2>&1 || echo "flake check FAILED — run 'fox home sync' to update"
+    else
+      echo "~/.config/nix/flake.nix not found or not a symlink"
+      echo "Run 'fox home init' to set up the starter flake."
+    fi
 
 mod home

@@ -22,6 +22,12 @@ if (( ${+commands[zed]} )); then
     export VISUAL='zed --wait'
 fi
 
+# ── Nix flake path (nh) ────────────────────────────────────────────
+# nh uses NH_FLAKE to find the home-manager-compatible flake.
+if (( ${+commands[nh]} )); then
+    export NH_FLAKE="$HOME/.config/nix"
+fi
+
 # ── compinit — load completion system before tool inits ────────────────
 # atuin, zoxide, mise, fzf, and carapace each emit `compdef …` lines
 # from their `init zsh` output. Those run at source-time and need

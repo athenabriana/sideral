@@ -13,7 +13,7 @@ log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 MODULES_DIR="/ctx/modules"
 BUILD_DIR="/ctx/build"
 
-MODULES=(cli-tools services kubernetes flatpaks)
+MODULES=(cli-tools services kubernetes nix flatpaks)
 BUILD=(fonts nvidia)
 
 # ── 1. Remove inherited base packages ──────────────────────────────────
@@ -27,7 +27,8 @@ log "Removing inherited base packages"
 to_remove=()
 for pkg in firefox firefox-langpacks dconf-editor \
            gnome-software gnome-software-rpm-ostree \
-           gnome-terminal gnome-terminal-nautilus; do
+           gnome-terminal gnome-terminal-nautilus \
+           ublue-os-just; do
     rpm -q "$pkg" >/dev/null 2>&1 && to_remove+=("$pkg")
 done
 [ ${#to_remove[@]} -gt 0 ] && dnf5 remove -y "${to_remove[@]}"

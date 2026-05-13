@@ -1,154 +1,215 @@
-# Nix on Host Specification
+# Sideral — Nix + nh
 
 ## Problem Statement
 
-Sideral ships a curated CLI toolset (`sideral-cli-tools`) sourced from Fedora 44 main + Terra + a few third-party RPMs. Adding a new tool to that toolset requires editing the Containerfile and rebuilding the image — too much friction for personal/ad-hoc package needs (latest versions, niche utilities, anything outside the Fedora/Terra/Flathub surface). Nix as a parallel package manager fills this gap with low marginal cost per package via nixpkgs's much larger surface area.
+Sideral's user-level config is split across RPM-layered CLI tools (`sideral-cli-tools`), mise-managed runtimes, system-level flatpak installs, and a stow tree of dotfiles. Adding, removing, or updating anything requires touching at least two places (e.g., rebuild the image for a new RPM, or edit flake.nix + run a command). There is no single source of truth for "what packages does this user want."
 
-The previous `nix-home` feature retired pre-VM-verification on 2026-05-01 because composefs + SELinux + `/nix`-disappears-after-`rpm-ostree-upgrade` on Fedora atomic 42+ made nix-on-atomic fragile. As of late 2026, the Determinate Systems `nix-installer` ships an `ostree` subcommand and `--persistence=/var/lib/nix` flag explicitly designed for this case — the previous blockers either fixed or have explicit workarounds. This spec re-opens the door using the new path.
+This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the declarative user backend. Nix is installed by a first-boot oneshot (Determinate installer, ostree planner). `nh` replaces `home-manager switch` and `nix-collect-garbage` with a unified CLI (`nh home switch`, `nh clean`). The stow tree continues to own dotfiles (bashrc, starship, ghostty, zed config). Fox wraps common operations: `fox home sync/diff/edit`.
 
 ## Goals
 
-- [ ] After `rpm-ostree rebase` to a sideral image including this feature + reboot, `nix --version` resolves on every user shell without manual install steps
-- [ ] Any user on the system can `nix profile install nixpkgs#<pkg>` and have the binary on their PATH
-- [ ] `/nix/store` and per-user nix profiles survive `rpm-ostree upgrade` between sideral image rebases
-- [ ] Existing sideral integrations (rpm-ostree, podman, mise, flatpak, stow seeds) coexist with nix without conflict
+- [ ] After `rpm-ostree rebase` + reboot + first-boot oneshot, `nix --version` resolves and `nix-daemon.service` is active
+- [ ] `/nix/store` and per-user nix profiles survive `rpm-ostree upgrade` between image rebases
+- [ ] `nh` is installed via user's nix profile and provides `nh home`, `nh clean`, `nh search`
+- [ ] A starter `flake.nix` ships at `~/.config/nix/flake.nix` with working nh-compatible home configuration (packages + programs + services)
+- [ ] `fox home sync` runs `nh home switch` to apply the flake
+- [ ] `fox home edit` opens the flake.nix, `fox home diff` shows pending changes
+- [ ] Existing sideral integrations (rpm-ostree, podman, mise, stow seeds) coexist with nix without conflict
 
 ## Out of Scope
 
 | Feature | Reason |
 |---|---|
-| home-manager | Retired with `nix-home` 2026-05-01. Stow + image-default seeds is the user-config layer. |
 | NixOS modules | Sideral remains rpm-ostree atomic, not NixOS. |
-| `nix-flatpak` flatpak management | NixOS-only module; sideral keeps `sideral-flatpaks` RPM as the flatpak management surface. |
-| `devbox` | Tracked separately as a follow-on feature once nix is stable on the image (user request: "primeiro a spec do nix sozinho, depois adicionamos devbox"). |
-| Pinned nixpkgs channel/flake in the image | Users manage channels themselves; image stays neutral on what nixpkgs revision they want. |
-| User-level package preinstalls | Image ships nix functional + empty profile. What users install is per-user state, not image-default. |
-| Migration tooling from rpm-ostree-layered tools to nix | If a user wants to move e.g. `helix` from `sideral-cli-tools` to a nix profile, that's a manual choice; no automation. |
+| Pinned nixpkgs revision in the image | User pins in their own `flake.lock`. |
+| Migration of existing RPM-layered tools to nix | Per-user manual choice. `sideral-cli-tools` still ships image-default tools. |
+| nix-flatpak / home-manager | `nh home` replaces both. |
+| `fox.toml` → flake generator | User writes `flake.nix` directly. No extra abstraction layer. |
 
 ---
 
 ## User Stories
 
-### P1: Out-of-box nix availability ⭐ MVP
+### P1: Nix ready after first boot ⭐ MVP
 
-**User Story:** As a sideral user, I want `nix` to be available system-wide after `rpm-ostree rebase` + reboot, so I can install nixpkgs packages without going through any separate install procedure.
+**Story:** Rebase to a sideral image including this feature, reboot — nix is available system-wide without running any installer.
 
-**Why P1:** This is the entire value proposition of "nix in the image" — eliminating the manual install step that the gist (and the prior `nix-home` feature) imposed.
+**Acceptance:**
 
-**Acceptance Criteria:**
+1. **NIX-01** — Determinate `nix-installer` binary is pre-downloaded at image build time and staged at `/usr/libexec/nix-installer`.
+2. **NIX-02** — `sideral-nix-bootstrap.service` runs on first boot (system oneshot, `After=network-online.target ostree-remount.service`), executes `nix-installer install ostree --persistence /var/lib/nix --no-confirm`.
+3. **NIX-03** — Service is guarded by `ConditionPathExists=!/var/lib/sideral/nix-setup-done`; writes marker on success, retries on failure.
+4. **NIX-04** — After service completes, `nix --version` resolves on every user shell (bash + zsh).
+5. **NIX-05** — `/nix` is a bind-mount from `/var/lib/nix` (verified by `findmnt /nix`).
+6. **NIX-06** — `nix-daemon.service` is active and enabled, created by the installer.
+7. **NIX-07** — Sudoers snippet at `/etc/sudoers.d/nix-sudo-env` adds `/nix/var/nix/profiles/default/bin` to `secure_path`.
+8. **NIX-08** — Works with any composefs state (enabled, disabled, root.transient) — no `prepare-root.conf` changes needed.
 
-1. WHEN a user rebases to a sideral image including this feature and reboots THEN `nix --version` SHALL resolve on the first interactive shell (bash + zsh).
-2. WHEN a non-sudo user runs `nix profile install nixpkgs#hello && hello` THEN the install SHALL succeed and `hello` SHALL print "Hello, world!".
-3. WHEN multiple Linux user accounts on the same host install different nixpkgs packages THEN each user's profile SHALL be independent and isolated.
-4. WHEN the system boots with composefs + `root.transient` THEN `/nix` SHALL be reachable as a real path without overlay interference.
-
-**Independent Test:** `rpm-ostree rebase ostree-unverified-registry:ghcr.io/<owner>/sideral:latest && systemctl reboot`. After login: `nix profile install nixpkgs#hello && hello` returns "Hello, world!".
+**Test:** Fresh VM rebase → reboot → `systemctl status sideral-nix-bootstrap.service` (exited 0) → `nix --version` → `findmnt /nix` shows `/var/lib/nix` source.
 
 ---
 
-### P1: Persistence across rpm-ostree upgrade ⭐ MVP
+### P1: Persistence across upgrades ⭐ MVP
 
-**User Story:** As a user who installed nixpkgs packages, I want them to survive sideral image upgrades, so I don't lose state on every weekly rebase.
+**Story:** Packages installed via nix survive image rebases — CI rebuilds don't blow away user state.
 
-**Why P1:** Without persistence, nix is unusable in practice — every CI rebuild blows away every package the user installed.
+**Acceptance:**
 
-**Acceptance Criteria:**
+1. **NIX-09** — After `rpm-ostree upgrade` to a new image commit + reboot, prior `nix profile install` packages still resolve.
+2. **NIX-10** — `rpm-ostree rollback` preserves `/var/lib/nix` (state in `/var`, preserved across ostree generations).
+3. **NIX-11** — `nh clean` (or `nix-collect-garbage -d`) removes unreferenced store paths without affecting other users.
 
-1. WHEN the sideral image is rebased to a new commit THEN `/nix/store` AND each user's `~/.local/state/nix` profile SHALL retain prior contents.
-2. WHEN `rpm-ostree rollback` reverts to a previous deployment THEN nix profiles SHALL remain in the same state as before the rollback (state lives in `/var`, which is preserved across ostree generations).
-3. WHEN a user runs `nix-collect-garbage -d` THEN unreferenced store paths SHALL be removed without affecting other users' profiles.
+**Test:** Install package → CI rerun → `rpm-ostree upgrade` → reboot → package still on `$PATH`.
 
-**Independent Test:** Install a package via `nix profile install`, force a sideral image bump (CI rerun), `rpm-ostree upgrade`, reboot, verify the package still resolves.
+---
+
+### P1: `nh` bootstraps on first `fox home init` ⭐ MVP
+
+**Story:** User runs `fox home init` once — it copies the stow tree, installs `nh` via `nix profile`, and runs the starter config.
+
+**Acceptance:**
+
+1. **NIX-12** — A starter `flake.nix` and `flake.lock` ship at `/etc/skel/.config/sideral/stow/nix/.config/nix/flake.nix`.
+2. **NIX-13** — `fox home init` copies stow tree, runs `stow -R nix`, then `nix profile install nixpkgs#nh` and `nh home switch -c $(whoami)` (NH_FLAKE resolves to ~/.config/nix).
+3. **NIX-14** — `nh` is NOT pre-installed in the image — `nix profile install` fetches it on first init.
+4. **NIX-15** — After init, `nh home --version` resolves and `nh home switch` succeeds.
+
+**Test:** New user → `fox home init` → `nh home switch` succeeds → `nh clean --help` resolves.
+
+---
+
+### P2: Starter flake.nix with nh
+
+**Story:** The image ships a working starter `flake.nix` with packages and services wired in — user just uncomments what they want.
+
+**Acceptance:**
+
+1. **NIX-16** — Starter flake has `homeConfigurations."USER"` output using `builtins.getEnv "USER"` for username.
+2. **NIX-17** — Starter flake has a commented `home.packages` section with common CLI tools (bat, eza, ripgrep, jq, yq, nh) as examples.
+3. **NIX-18** — `nh` is listed in `home.packages` (managed by nh itself, self-referential but works).
+4. **NIX-19** — Starter flake has commented `programs.mise.enable = true` section.
+5. **NIX-20** — Starter flake has commented `services.flatpak.packages` section with flathub remote.
+
+**Test:** `cat /etc/skel/.config/sideral/stow/nix/.config/nix/flake.nix` shows all sections with examples.
+
+---
+
+### P2: Flake is a stow package
+
+**Story:** The `flake.nix` lives in the stow tree — it's a symlink, directly editable, managed by the same stow workflow as other dotfiles.
+
+**Acceptance:**
+
+1. **NIX-21** — `~/.config/nix/flake.nix` is a symlink to `~/.config/sideral/stow/nix/.config/nix/flake.nix`.
+2. **NIX-22** — `fox home sync` runs `stow -R nix` before `nh home switch` — stow re-asserts broken symlinks.
+3. **NIX-23** — `fox home edit` opens `~/.config/nix/flake.nix` (the symlink target, directly editable).
+4. **NIX-24** — `fox home diff` runs `nh home switch --dry` (or equivalent build-only mode) and shows closure diff.
+5. **NIX-25** — `fox home factory-reset` preserves `~/.config/nix/flake.nix` (skips the nix stow package during wipe).
+
+**Test:** `ls -la ~/.config/nix/flake.nix` shows symlink. Edit → `fox home sync` applies. `fox home diff` shows diff.
+
+---
+
+### P2: NH_FLAKE set in shell init
+
+**Story:** The `NH_FLAKE` environment variable is set in user's shell rc so `nh home switch` resolves without an explicit path.
+
+**Acceptance:**
+
+1. **NIX-26** — `NH_FLAKE` is exported in `~/.bashrc` and `~/.zshrc` via the stow tree (guarded by `command -v nh`).
+2. **NIX-27** — Value is `"$HOME/.config/nix"` — the stow-managed flake directory.
+
+**Test:** `source ~/.bashrc && echo "$NH_FLAKE"` prints `$HOME/.config/nix`.
 
 ---
 
 ### P2: nix-daemon multi-user mode
 
-**User Story:** As a host that may have multiple Linux user accounts, I want nix-daemon to run as a systemd service so users share a single `/nix/store` cleanly with proper privilege separation.
-
-**Why P2:** Single-user mode works for personal use but blocks any second account from using nix. Multi-user mode is the standard daemon shape with minimal extra image weight; user explicitly accepted "pode ser global".
-
-**Acceptance Criteria:**
-
-1. WHEN the system boots THEN `nix-daemon.service` SHALL be active and enabled.
-2. WHEN a non-privileged user runs `nix profile install <pkg>` THEN the daemon SHALL handle the build/copy via socket — no setuid required on the user-facing binaries.
-3. WHEN nix-daemon crashes THEN systemd SHALL restart it within 5 seconds.
-4. WHEN the image build creates the `nixbld1`..`nixbldN` build users THEN those UIDs SHALL be stable across image rebuilds (no UID churn).
-
-**Independent Test:** `systemctl status nix-daemon.service` reports active. Create a second user with `useradd`; both users can `nix profile install` independently.
+1. **NIX-28** — `nix-daemon.service` active + enabled at boot.
+2. **NIX-29** — Non-privileged users install via daemon socket, no setuid.
+3. **NIX-30** — Systemd `Restart=always` within 5s on crash.
+4. **NIX-31** — nixbld UIDs 30000-30031 created at image build time, stable across rebuilds.
 
 ---
 
-### P2: SELinux compatibility
+### P2: SELinux compatibility (validation gate)
 
-**User Story:** As a sideral user on a default-enforcing system, I want nix operations to work without SELinux denials, so I don't have to switch to permissive mode or chase AVC errors.
-
-**Why P2:** SELinux denials block nix transparently if /nix paths get mislabeled. Historically this was [nix-installer#1383](https://github.com/DeterminateSystems/nix-installer/issues/1383). Sideral should ship with correct contexts baked in or auto-relabeled.
-
-**Acceptance Criteria:**
-
-1. WHEN nix builds or installs a package THEN no AVC denials related to `/nix` SHALL appear in the audit log.
-2. WHEN the image is rebased THEN `/nix` SHALL retain (or auto-restore) the correct SELinux file context.
-3. WHEN the user runs `restorecon -RFv /nix` THEN no relabel SHALL occur (already correct).
-
-**Independent Test:** `setenforce 1` (enforcing); `nix profile install nixpkgs#jq && jq --version`; `ausearch -m AVC -ts recent` returns no results referencing `/nix`.
+1. **NIX-32** — No AVC denials related to `/nix` in default-enforcing mode.
+2. **NIX-33** — Contexts retained across rebase (inherited from `/var/lib/nix`, labeled `var_t`).
 
 ---
 
-### P3: Diagnostic `ujust nix-doctor` recipe
+### P3: `fox nix-doctor`
 
-**User Story:** As a user troubleshooting a broken nix install, I want a `ujust nix-doctor` recipe that runs common sanity checks, so I don't have to remember the diagnostic commands.
-
-**Why P3:** Nice-to-have. Not required for core function; just shortens the loop when something goes wrong (e.g., daemon stopped, SELinux relabel needed, channel out-of-date).
-
-**Acceptance Criteria:**
-
-1. WHEN a user runs `ujust nix-doctor` THEN the recipe SHALL print: nix version, `nix-daemon.service` status, `/nix` mount info, SELinux context of `/nix/store`, current channel list, current user's profile manifest count.
-2. WHEN a check fails THEN the recipe SHALL print a one-line remediation hint (e.g., "Run `sudo restorecon -RFv /nix` to fix SELinux contexts").
-
-**Independent Test:** Stop nix-daemon (`sudo systemctl stop nix-daemon.service`); run `ujust nix-doctor`; output flags daemon as inactive with a "run systemctl start nix-daemon" hint.
+1. **NIX-34** — `fox nix-doctor` prints: nix version, nix-daemon status, `/nix` mount info, SELinux context of `/nix/store`, current user profile status, nh version, NH_FLAKE value.
+2. **NIX-35** — On failure, prints one-line remediation hint.
 
 ---
 
 ## Edge Cases
 
-- WHEN a user rebases from an older sideral image (pre-nix) to the new one THEN `/var/lib/nix` SHALL be created cleanly on first boot — no migration logic needed since starting state is empty.
-- WHEN `/etc/ostree/prepare-root.conf` was previously customized by the user THEN the sideral image SHALL NOT silently overwrite — the file is shipped with conflict-aware semantics so the user's version wins (user must reconcile manually if they want sideral's value).
-- WHEN composefs is somehow disabled by a future Fedora update THEN nix SHALL still function — the persistence mechanism (`/var/lib/nix` bind/symlink to `/nix`) does not depend on composefs being on.
-- WHEN `/var` fills up THEN nix operations SHALL fail with a clear "no space" error, not silently corrupt the store.
-- WHEN the user runs `rpm-ostree rollback` to a deployment from before this feature shipped THEN nix-daemon SHALL be absent on the rolled-back deployment (the unit lived in the new image), but `/var/lib/nix` data SHALL remain — re-rolling-forward restores nix without data loss.
+- **First boot offline**: `sideral-nix-bootstrap.service` fails, marker absent, retries on next boot. No user-facing error.
+- **`/nix` absent after failed bootstrap**: `fox nix-doctor` flags bootstrap-not-done, hints `systemctl start sideral-nix-bootstrap`.
+- **`fox home init` before nix bootstrap completes**: Fails with clear "nix not ready" message. User waits for bootstrap or reboots.
+- **Fresh rebase with new starter `flake.nix`**: Existing user's `~/.config/nix/flake.nix` is untouched (skel only applies at `fox home init` time).
+- **`fox home factory-reset` with custom flake**: The nix stow package is preserved. Factory-reset seeds bash/zsh/ghostty/zed stow packages from skel but does NOT touch `~/.config/nix/flake.nix`.
+- **`rpm-ostree rollback` to pre-nix deployment**: nix-daemon absent, `/var/lib/nix` intact. Rolling forward restores nix without data loss.
+- **Composefs state change**: Works regardless — `.mount` unit binds `/var/lib/nix` (in `/var`) to `/nix`, independent of composefs.
 
 ---
 
 ## Requirement Traceability
 
-| Requirement ID | Story | Phase | Status |
+| ID | Story | Phase | Status |
 |---|---|---|---|
-| NIX-01 | P1: Out-of-box availability — `nix --version` resolves on first shell | Design | Pending |
-| NIX-02 | P1: Out-of-box availability — `nix profile install nixpkgs#hello` succeeds | Design | Pending |
-| NIX-03 | P1: Out-of-box availability — multi-user profile isolation | Design | Pending |
-| NIX-04 | P1: Out-of-box availability — composefs/root.transient compatibility | Design | Pending |
-| NIX-05 | P1: Persistence — `/nix/store` + profiles survive rpm-ostree upgrade | Design | Pending |
-| NIX-06 | P1: Persistence — rpm-ostree rollback preserves nix state | Design | Pending |
-| NIX-07 | P1: Persistence — `nix-collect-garbage -d` works per-user | Design | Pending |
-| NIX-08 | P2: Daemon — `nix-daemon.service` active + enabled at boot | Design | Pending |
-| NIX-09 | P2: Daemon — non-privileged users install via socket, no setuid | Design | Pending |
-| NIX-10 | P2: Daemon — systemd Restart= within 5s on crash | Design | Pending |
-| NIX-11 | P2: Daemon — stable nixbld UIDs across image rebuilds | Design | Pending |
-| NIX-12 | P2: SELinux — no AVC denials in default-enforcing mode | Design | Pending |
-| NIX-13 | P2: SELinux — contexts retained / auto-restored on rebase | Design | Pending |
-| NIX-14 | P3: ujust nix-doctor — sanity-check recipe | Design | Pending |
-| NIX-15 | P3: ujust nix-doctor — remediation hints on failure | Design | Pending |
+| NIX-01 | P1: nix-installer binary pre-downloaded at build | Design | Pending |
+| NIX-02 | P1: first-boot oneshot runs installer | Design | Pending |
+| NIX-03 | P1: oneshot guarded by marker, retries on failure | Design | Pending |
+| NIX-04 | P1: `nix --version` resolves after bootstrap | Design | Pending |
+| NIX-05 | P1: `/nix` is bind-mount from `/var/lib/nix` | Design | Pending |
+| NIX-06 | P1: `nix-daemon.service` active + enabled | Design | Pending |
+| NIX-07 | P1: sudoers snippet for nix profile bin | Design | Pending |
+| NIX-08 | P1: composefs-independent (no prepare-root.conf) | Design | Pending |
+| NIX-09 | P1: packages survive rpm-ostree upgrade | Design | Pending |
+| NIX-10 | P1: rollback preserves `/var/lib/nix` | Design | Pending |
+| NIX-11 | P1: `nh clean` per-user | Design | Pending |
+| NIX-12 | P1: starter flake.nix + lock in skel stow tree | Design | Pending |
+| NIX-13 | P1: `fox home init` copies stow + installs nh + runs | Design | Pending |
+| NIX-14 | P1: nh fetched via nix profile (no pre-install) | Design | Pending |
+| NIX-15 | P1: nh resolves after init | Design | Pending |
+| NIX-16 | P2: starter flake has `builtins.getEnv "USER"` | Design | Pending |
+| NIX-17 | P2: starter flake has commented `home.packages` | Design | Pending |
+| NIX-18 | P2: nh in home.packages | Design | Pending |
+| NIX-19 | P2: starter flake has mise section | Design | Pending |
+| NIX-20 | P2: starter flake has flatpak section | Design | Pending |
+| NIX-21 | P2: `flake.nix` is a stow symlink | Design | Pending |
+| NIX-22 | P2: `fox home sync` runs stow then nh home switch | Design | Pending |
+| NIX-23 | P2: `fox home edit` opens the flake | Design | Pending |
+| NIX-24 | P2: `fox home diff` shows closure diff | Design | Pending |
+| NIX-25 | P2: factory-reset preserves flake.nix | Design | Pending |
+| NIX-26 | P2: NH_FLAKE in bashrc/zshrc (guarded) | Design | Pending |
+| NIX-27 | P2: NH_FLAKE value = "$HOME/.config/nix" | Design | Pending |
+| NIX-28 | P2: nix-daemon active at boot | Design | Pending |
+| NIX-29 | P2: non-root user install via daemon socket | Design | Pending |
+| NIX-30 | P2: daemon Restart=always on crash | Design | Pending |
+| NIX-31 | P2: stable nixbld UIDs 30000-30031 | Design | Pending |
+| NIX-32 | P2: no AVC denials in enforcing mode | Design | Pending |
+| NIX-33 | P2: SELinux contexts retained across rebase | Design | Pending |
+| NIX-34 | P3: `fox nix-doctor` prints diagnostics | Design | Pending |
+| NIX-35 | P3: `fox nix-doctor` remediation hints | Design | Pending |
 
-**ID format:** `NIX-NN`. **Status values:** Pending → In Design → In Tasks → Implementing → Verified.
-
-**Coverage:** 15 total, 0 mapped to tasks (spec phase only).
+**Total:** 35 requirements.
 
 ---
 
 ## Success Criteria
 
-- [ ] Fresh user account on a freshly-rebased sideral system can `nix profile install nixpkgs#hello && hello` without sudo, without manual setup, within ~3 minutes (channel pull + build).
-- [ ] After 4 weekly rebases (sideral CI cuts new tags), the user's installed nix packages still resolve (no state loss).
-- [ ] `nix-daemon.service` shows zero unit failures in `systemctl status`.
-- [ ] `ausearch -m AVC -ts boot` shows zero AVC denials related to `/nix` after a representative day of nix usage.
+- [ ] First-boot oneshot completes → `nix --version` resolves → `nix profile install nixpkgs#hello && hello` prints "Hello, world!"
+- [ ] `nix-daemon.service` shows zero failures after a week of daily use
+- [ ] After 4 CI-triggered rebases, user's installed nix packages still resolve
+- [ ] `fox home init` on a new user account installs nh and applies the starter flake
+- [ ] `fox home sync` applies changes to `flake.nix` without reboot
+- [ ] `fox home edit` opens the correct file; editing and re-running sync applies changes
+- [ ] `ausearch -m AVC -ts boot` shows zero denials related to `/nix`
+- [ ] `fox home factory-reset` does not wipe the user's `flake.nix`
+- [ ] `nh --version` resolves; `nh home switch` applies flake changes; `nh clean` runs without error
