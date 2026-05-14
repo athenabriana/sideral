@@ -10,76 +10,108 @@
     nix-flatpak.url = "github:gmodena/nix-flatpak";
   };
 
-  outputs = { nixpkgs, home-manager, nix-flatpak, ... }: let
-    system = "x86_64-linux";
-    pkgs = nixpkgs.legacyPackages.${system};
-  in {
-    homeConfigurations."__USER__" = home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
-      modules = [
-        "${nix-flatpak}/modules/home-manager.nix"
-        ({ ... }: {
-          home = {
-            username = "__USER__";
-            homeDirectory = "/home/__USER__";
-            stateVersion = "24.11";
-            packages = [
-            ];
-          };
+  outputs =
+    {
+      nixpkgs,
+      home-manager,
+      nix-flatpak,
+      ...
+    }:
+    let
+      system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+    in
+    {
+      homeConfigurations."__USER__" = home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        modules = [
+          "${nix-flatpak}/modules/home-manager.nix"
+          (
+            { ... }:
+            {
+              home = {
+                username = "__USER__";
+                homeDirectory = "/home/__USER__";
+                stateVersion = "24.11";
+                packages = [
+                  pkgs.nixd
+                  pkgs.nil
+                  pkgs.opencode
+                ];
+              };
 
-          programs.mise = {
-            enable = true;
+              programs.mise = {
+                enable = true;
 
-            globalConfig = {
-              settings = {
-                experimental = true;
-                trusted_config_paths = ["/"];
-                not_found_auto_install = true;
-                idiomatic_version_file_enable_tools = ["node" "python" "java" "ruby" "go" "rust"];
-                jobs = 8;
-                http_timeout = "60s";
-                status = {
-                  missing_tools = "if_other_versions_installed";
-                  show_env = false;
-                  show_tools = false;
+                globalConfig = {
+                  settings = {
+                    trusted_config_paths = [ "/" ];
+                    auto_install = true;
+                    not_found_auto_install = true;
+                    status = {
+                      missing_tools = "always";
+                    };
+                  };
+
+                  tools = {
+                    node = "lts";
+                    bun = "latest";
+                    pnpm = "latest";
+                    python = "latest";
+                    uv = "latest";
+                    go = "latest";
+                    rust = "stable";
+                    zig = "latest";
+                  };
                 };
               };
 
-              tools = {
-                node = "lts";
-                bun = "latest";
-                pnpm = "latest";
-                python = "latest";
-                uv = "latest";
-                go = "latest";
-                rust = "stable";
-                zig = "latest";
-                act = "latest";
+              services.flatpak = {
+                enable = true;
+                remotes = [
+                  {
+                    name = "flathub";
+                    location = "https://dl.flathub.org/repo/flathub.flatpakrepo";
+                  }
+                ];
+                packages = [
+                  {
+                    appId = "app.zen_browser.zen";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "com.github.tchx84.Flatseal";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "com.mattjakeman.ExtensionManager";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "io.podman_desktop.PodmanDesktop";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "net.nokyan.Resources";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "it.mijorus.smile";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "org.pvermeer.WebAppHub";
+                    origin = "flathub";
+                  }
+                  {
+                    appId = "org.gnome.World.PikaBackup";
+                    origin = "flathub";
+                  }
+                ];
               };
-            };
-          };
-
-          services.flatpak = {
-            enable = true;
-            remotes = [{
-              name = "flathub";
-              location = "https://dl.flathub.org/repo/flathub.flatpakrepo";
-            }];
-            packages = [
-              { appId = "app.zen_browser.zen"; origin = "flathub"; }
-              { appId = "com.github.tchx84.Flatseal"; origin = "flathub"; }
-              { appId = "com.mattjakeman.ExtensionManager"; origin = "flathub"; }
-              { appId = "io.podman_desktop.PodmanDesktop"; origin = "flathub"; }
-              { appId = "com.ranfdev.DistroShelf"; origin = "flathub"; }
-              { appId = "net.nokyan.Resources"; origin = "flathub"; }
-              { appId = "it.mijorus.smile"; origin = "flathub"; }
-              { appId = "org.pvermeer.WebAppHub"; origin = "flathub"; }
-              { appId = "org.gnome.World.PikaBackup"; origin = "flathub"; }
-              { appId = "re.sonny.Junction"; origin = "flathub"; }
-            ];
-          };
-        })
-      ];
+            }
+          )
+        ];
+      };
     };
-  };
 }
