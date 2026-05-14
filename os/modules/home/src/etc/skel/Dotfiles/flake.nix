@@ -8,6 +8,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     nix-flatpak.url = "github:gmodena/nix-flatpak";
+    silverfox = {
+      url = "path:/usr/share/silverfox";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -15,6 +19,7 @@
       nixpkgs,
       home-manager,
       nix-flatpak,
+      silverfox,
       ...
     }:
     let
@@ -26,6 +31,7 @@
         inherit pkgs;
         modules = [
           "${nix-flatpak}/modules/home-manager.nix"
+          silverfox.homeManagerModules.syspkgs
           (
             { ... }:
             {
@@ -34,12 +40,7 @@
                 homeDirectory = "/home/__USER__";
                 stateVersion = "24.11";
                 packages = [
-                  # nix tooling
-                  pkgs.nh
-                  pkgs.nixd
-                  pkgs.nil
                   pkgs.opencode
-                  # cli tools — fonte da verdade (removidos do silverfox-cli-tools RPM)
                   pkgs.atuin
                   pkgs.fzf
                   pkgs.bat

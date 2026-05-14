@@ -22,14 +22,8 @@ if (( ${+commands[zed]} )); then
 fi
 
 # ── Nix flake path (nh) ────────────────────────────────────────────
-# nh uses NH_FLAKE to find the home-manager-compatible flake.
-# Resolve the real path: stow creates file-level symlinks inside
-# ~/.config/nix/ and Nix won't follow them when evaluating the flake.
 if (( ${+commands[nh]} )); then
-    _sf_nf="${HOME}/.config/nix/flake.nix"
-    [[ -L "$_sf_nf" ]] && _sf_nf="$(readlink -f "$_sf_nf")"
-    export NH_FLAKE="${_sf_nf%/flake.nix}"
-    unset _sf_nf
+    export NH_FLAKE="${HOME}/Dotfiles"
 fi
 
 # ── compinit — load completion system before tool inits ────────────────

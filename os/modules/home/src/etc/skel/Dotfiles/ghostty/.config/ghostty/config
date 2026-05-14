@@ -1,5 +1,9 @@
 # silverfox default ghostty config — Alt-prefixed tabs/splits/panel.
 
+window-decoration = false
+window-show-tab-bar = always
+config-file = ./config-base16
+
 # --- tabs (Alt+H/L cycle, Alt+Shift+H/L move) ---
 keybind = alt+t=new_tab
 keybind = alt+q=close_surface

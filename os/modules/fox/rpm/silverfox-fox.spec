@@ -45,6 +45,7 @@ changelog, config, diff, doctor, toggle-banner, upgrade-firmware.
 %install
 install -D -m 0755 /var/tmp/fox-prebuilt/bin/fox                       %{buildroot}/usr/bin/fox
 install -D -m 0644 /var/tmp/fox-prebuilt/recipes/silverfox.justfile      %{buildroot}/usr/share/silverfox/silverfox.justfile
+install -D -m 0644 /var/tmp/fox-prebuilt/recipes/flake.nix               %{buildroot}/usr/share/silverfox/flake.nix
 # home.just removed 2026-05-14; "dotfiles link" and "dotfiles reset"
 # live directly in silverfox.justfile as quoted space-separated recipes.
 install -D -m 0755 /var/tmp/fox-prebuilt/libexec/chsh.sh               %{buildroot}/usr/libexec/silverfox/chsh.sh
@@ -53,6 +54,7 @@ install -D -m 0755 /var/tmp/fox-prebuilt/libexec/chsh.sh               %{buildro
 /usr/bin/fox
 %dir /usr/share/silverfox
 /usr/share/silverfox/silverfox.justfile
+/usr/share/silverfox/flake.nix
 %dir /usr/libexec/silverfox
 /usr/libexec/silverfox/chsh.sh
 
