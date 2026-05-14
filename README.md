@@ -18,7 +18,7 @@ just build
 
 ## fox
 
-The CLI is called `fox` — **F**edora **O**verengineered **E**xperience. Every verb is a `just` recipe.
+The CLI is called `fox` — **f**edora **o**verengineered e**x**perience. Every verb is a `just` recipe.
 
 ```bash
 fox sync       # nh home switch + stow
