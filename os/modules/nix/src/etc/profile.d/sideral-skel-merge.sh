@@ -5,7 +5,7 @@
 #   2. Se um arquivo do skel mudou vs $HOME: marca como pendente
 #   3. Exibe aviso se houver pendências
 #
-# Para aplicar pendências: fox update-system --merge
+# Para aplicar pendências: fox upgrade --merge
 
 if [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     return

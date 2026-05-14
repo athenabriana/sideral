@@ -4,10 +4,9 @@
 
   Common tasks (operator CLI):
     fox                              list every recipe
-    man sideral                      cheatsheet (alias: fox cheatsheet)
     fox chsh [bash|zsh]              switch login shell (default: bash)
-    fox update                       sync flatpaks + nix config
-    fox update-system                rpm-ostree upgrade
+    fox sync                         sync flatpaks + nix config
+    fox upgrade                      rpm-ostree upgrade
     fox rollback                     swap to the previous deployment
     fox toggle-banner                show/hide this banner
     fox doctor                       diagnose nix + system health

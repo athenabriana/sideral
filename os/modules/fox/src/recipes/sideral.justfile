@@ -1,7 +1,6 @@
 # sideral.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
-# Verbs: chsh, cheatsheet, update, update-system, rollback, status, cleanup,
-# changelog, toggle-banner, upgrade-firmware, diff, edit, doctor
-# (top-level) + home::factory-reset (module).
+# Verbs: chsh, sync, upgrade, rollback, status, cleanup, changelog,
+# toggle-banner, upgrade-firmware, diff, doctor, config (top-level).
 
 default:
     @just -f {{ justfile() }} --list
@@ -10,23 +9,16 @@ default:
 chsh shell="":
     /usr/libexec/sideral/chsh.sh {{shell}}
 
-# Open the sideral cheatsheet manpage (man 7 sideral)
-cheatsheet:
-    exec man 7 sideral
-
-# Update installed flatpaks and sync nix config
-update *args:
+# Sync nix config (packages + flatpaks declarativos)
+sync *args:
     #!/usr/bin/bash
-    flatpak update {{args}}
     if command -v nh >/dev/null 2>&1; then
-      echo "--- nix home switch ---"
       stow -R -d "$HOME/Dotfiles" -t "$HOME" nix 2>/dev/null || true
-      nh home switch --impure -c "$(whoami)" 2>/dev/null \
-        || nh home switch --impure -c changeme
+      nh home switch --impure
     fi
 
 # Stage rpm-ostree upgrade.
-update-system:
+upgrade *args:
     rpm-ostree upgrade
     @echo "Reboot to apply the staged deployment."
 
@@ -113,13 +105,10 @@ doctor:
 # Show pending nix config changes (dry-run)
 diff:
     #!/usr/bin/bash
-    nh home switch --impure -c "$(whoami)" -- --dry-run 2>/dev/null \
-      || nh home switch --impure -c "changeme" -- --dry-run 2>/dev/null \
-      || nh home switch --impure -c "$(whoami)" --dry 2>/dev/null \
-      || nh home switch --impure -c "changeme" --dry 2>/dev/null \
-      || echo "Dry-run not available. Run 'fox update' to apply."
+    nh home switch --impure --dry 2>/dev/null \
+      || echo "Dry-run not available. Run 'fox sync' to apply."
 
-# Open the nix flake in $EDITOR
-edit:
-    exec $EDITOR ~/.config/nix/flake.nix
+# Open the Dotfiles stow tree in $EDITOR
+config:
+    exec $EDITOR ~/Dotfiles
 
