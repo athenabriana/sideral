@@ -6,12 +6,14 @@
 #   • Fedora 44 main:        stow, atuin, fzf, bat, eza, ripgrep,
 #                            zoxide, gh, git-lfs, gcc, make, cmake,
 #                            zsh, just, chromium + zsh plugins
-#   • mise.jdx.dev/rpm:      mise     (repo shipped via silverfox-base)
 #   • repo.terra.fyralabs.com: starship, ghostty, zed (repo shipped via silverfox-cli-tools)
 #   • yum.fury.io/rsteube:   carapace-bin (repo shipped via silverfox-cli-tools)
+#
+# mise is intentionally NOT here — it's installed per-user via the
+# home-manager flake (programs.mise.enable) in silverfox-home's
+# /etc/skel seed.
 
 stow
-mise
 starship
 # carapace-bin — multi-shell tab-completion bridge (fury.io repo).
 # Wires up bash + zsh completions for 1000+ CLI tools.

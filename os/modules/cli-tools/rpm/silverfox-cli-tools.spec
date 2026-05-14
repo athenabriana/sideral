@@ -5,9 +5,11 @@
 # Tools split by source:
 #   • Fedora 44 main:         stow, atuin, fzf, bat, eza, ripgrep,
 #                             zoxide, gh, git-lfs, gcc, make, cmake, zsh
-#   • mise.jdx.dev/rpm:       mise              (repo shipped via silverfox-base)
 #   • repo.terra.fyralabs.com: starship, ghostty, zed (repo shipped by this package)
 #   • yum.fury.io/rsteube:    carapace-bin      (repo shipped by this package)
+#   • nix (home-manager):     mise              (programs.mise.enable in
+#                                                silverfox-home's /etc/skel
+#                                                flake — not an RPM dep)
 #
 # zed is set as both $EDITOR and $VISUAL by the /etc/skel-seeded user
 # .bashrc / .zshrc. bash is the default shell; zsh is reached via
@@ -17,14 +19,13 @@
 Name:           silverfox-cli-tools
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
-Summary:        silverfox CLI toolset (stow, starship, carapace-bin, mise, zed, ghostty + Fedora RPMs)
+Summary:        silverfox CLI toolset (stow, starship, carapace-bin, zed, ghostty + Fedora RPMs)
 License:        MIT
 URL:            https://github.com/athenabriana/silverfox
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 Requires:       stow
-Requires:       mise
 Requires:       starship
 Requires:       carapace-bin
 Requires:       atuin
@@ -67,6 +68,12 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/terra.repo
 
 %changelog
+* Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-15
+- Drop Requires: mise. mise is now installed per-user via the home-manager
+  flake (programs.mise.enable in silverfox-home's /etc/skel seed) instead
+  of as a system RPM from mise.jdx.dev. Single source of truth for both
+  the binary and ~/.config/mise/config.toml. Also drop `mise` from
+  packages.txt (was the dnf install hook for the same RPM).
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-14
 - Drop Requires: rclone + fuse3 — gdrive integration retired with the
   fox feature. Users wanting Google Drive `rpm-ostree install rclone

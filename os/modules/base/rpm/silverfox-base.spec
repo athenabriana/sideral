@@ -1,7 +1,6 @@
 # silverfox-base — meta-package + system identity + container trust policy.
 #
 # Owns:    /etc/os-release
-#          /etc/yum.repos.d/mise.repo
 #          /etc/containers/policy.json  (absorbed from silverfox-signing)
 # Requires: every silverfox-* sub-package + transitive third-party deps
 #
@@ -40,8 +39,8 @@ Conflicts:      ublue-os-signing
 # Third-party deps (Fedora main):
 #   podman-docker  — docker → podman wrapper
 #   podman-compose — Python-based docker-compose drop-in
-# (mise from silverfox-cli-tools; its .repo file ships from this package's
-# %files so rpm-ostree upgrade keeps pulling mise updates. The previous
+# (mise migrated out of RPM entirely — now installed per-user via the
+# home-manager flake in silverfox-home's /etc/skel seed. The previous
 # vscode.repo was retired alongside the helix/code → zed editor swap;
 # zed flows via terra.repo, shipped by silverfox-cli-tools.)
 Requires:       podman-docker
@@ -53,10 +52,9 @@ ublue-os/silverblue-main. Installs the full silverfox customization
 layer (sub-packages listed in Requires) plus rootless podman with
 docker compatibility shims.
 
-Owns: /etc/os-release (silverfox identity) and /etc/yum.repos.d/mise.repo
-(kept enabled so rpm-ostree upgrade pulls mise updates between image
-rebuilds). Flatpaks managed declaratively via nix-flatpak in the user's
-flake.nix (flathub remote + curated set + nh home switch).
+Owns: /etc/os-release (silverfox identity). Flatpaks managed
+declaratively via nix-flatpak in the user's flake.nix (flathub remote +
+curated set + nh home switch).
 
 %prep
 %setup -q
@@ -67,10 +65,15 @@ cp -a etc %{buildroot}/
 
 %files
 /etc/os-release
-/etc/yum.repos.d/mise.repo
 /etc/containers/policy.json
 
 %changelog
+* Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-15
+- Drop /etc/yum.repos.d/mise.repo. mise is no longer installed as a
+  system RPM — it now comes from the home-manager flake
+  (programs.mise.enable) in silverfox-home's /etc/skel seed. Without
+  an RPM consumer, the mise.jdx.dev repo registration has no purpose
+  and rpm-ostree upgrade would never pull anything from it.
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-14
 - Swap Requires: silverfox-stow-defaults → silverfox-fox + silverfox-home.
   dotfiles module retired; fox (operator CLI) and home (/etc/skel seed)
