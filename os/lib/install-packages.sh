@@ -4,8 +4,6 @@
 # Mounted from ctx-packages (stable content only) so spec/script changes
 # do not invalidate this layer's BuildKit cache.
 #
-# Module ORDER mirrors build.sh. flatpaks has no packages.txt — no-op.
-
 set -euo pipefail
 
 log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
@@ -13,7 +11,7 @@ log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 MODULES_DIR="/ctx/modules"
 BUILD_DIR="/ctx/build"
 
-MODULES=(cli-tools services kubernetes nix flatpaks)
+MODULES=(cli-tools services kubernetes nix)
 BUILD=(fonts nvidia)
 
 # ── 1. Remove inherited base packages ──────────────────────────────────

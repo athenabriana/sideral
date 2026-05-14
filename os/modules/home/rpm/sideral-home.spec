@@ -64,10 +64,8 @@ cp -a etc %{buildroot}/
 %dir /etc/skel/Dotfiles/zed/.config/zed
 /etc/skel/Dotfiles/zed/.config/zed/settings.json
 %dir /etc/skel/Dotfiles/nix
-%dir /etc/skel/Dotfiles/nix/.config
-%dir /etc/skel/Dotfiles/nix/.config/nix
-/etc/skel/Dotfiles/nix/.config/nix/flake.nix
-/etc/skel/Dotfiles/nix/.config/nix/flake.lock
+/etc/skel/Dotfiles/nix/flake.nix
+/etc/skel/Dotfiles/nix/flake.lock
 /etc/skel/.bashrc
 /etc/skel/.zshrc
 %dir /etc/skel/.config/mise

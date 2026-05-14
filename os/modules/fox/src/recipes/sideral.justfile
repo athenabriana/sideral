@@ -21,7 +21,8 @@ update *args:
     if command -v nh >/dev/null 2>&1; then
       echo "--- nix home switch ---"
       stow -R -d "$HOME/Dotfiles" -t "$HOME" nix 2>/dev/null || true
-      nh home switch --impure -c "$(whoami)"
+      nh home switch --impure -c "$(whoami)" 2>/dev/null \
+        || nh home switch --impure -c changeme
     fi
 
 # Stage rpm-ostree upgrade.
@@ -113,8 +114,10 @@ doctor:
 diff:
     #!/usr/bin/bash
     nh home switch --impure -c "$(whoami)" -- --dry-run 2>/dev/null \
+      || nh home switch --impure -c "changeme" -- --dry-run 2>/dev/null \
       || nh home switch --impure -c "$(whoami)" --dry 2>/dev/null \
-      || echo "Dry-run not available. Run 'fox sync' to apply."
+      || nh home switch --impure -c "changeme" --dry 2>/dev/null \
+      || echo "Dry-run not available. Run 'fox update' to apply."
 
 # Open the nix flake in $EDITOR
 edit:

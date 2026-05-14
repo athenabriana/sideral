@@ -2,9 +2,8 @@
 # build.sh — Layer 2: run per-module *.sh scripts then regenerate initramfs.
 # Package installation is handled by install-packages.sh (Layer 1).
 #
-# Module ORDER: flatpaks last so all sideral RPMs are present before the
-# curated Flatpak set is preinstalled. nvidia last in BUILD so it's a
-# no-op on the base variant without affecting other steps.
+# nvidia last in BUILD so it's a no-op on the base variant without
+# affecting other steps.
 
 set -euo pipefail
 
@@ -13,7 +12,7 @@ log() { printf '\n\033[1;34m▶\033[0m %s\n' "$*"; }
 MODULES_DIR="/ctx/modules"
 BUILD_DIR="/ctx/build"
 
-MODULES=(cli-tools services kubernetes nix flatpaks)
+MODULES=(cli-tools services kubernetes nix)
 BUILD=(fonts nvidia)
 
 # ── 1. Run per-module *.sh scripts ────────────────────────────────────

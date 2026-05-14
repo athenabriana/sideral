@@ -22,9 +22,8 @@ Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 # Sub-packages (all required by default; users can rpm-ostree override
-# remove sideral-flatpaks etc. for granular opt-out).
+# remove for granular opt-out).
 Requires:       sideral-services          = %{version}-%{release}
-Requires:       sideral-flatpaks          = %{version}-%{release}
 Requires:       sideral-shell-ux          = %{version}-%{release}
 Requires:       sideral-fox               = %{version}-%{release}
 Requires:       sideral-home              = %{version}-%{release}
@@ -56,12 +55,8 @@ docker compatibility shims.
 
 Owns: /etc/os-release (sideral identity) and /etc/yum.repos.d/mise.repo
 (kept enabled so rpm-ostree upgrade pulls mise updates between image
-rebuilds). starship is not in this repo — it's baked into /usr/bin from
-the latest upstream binary at image build (see os/lib/build.sh +
-os/modules/cli-tools/starship-install.sh). Zen Browser ships as a Flathub flatpak
-(app.zen_browser.zen), preinstalled at image build alongside the
-rest of the curated flatpak set; updates flow via standard
-`flatpak update`. Remotes + manifest live in sideral-flatpaks.
+rebuilds). Flatpaks managed declaratively via nix-flatpak in the user's
+flake.nix (flathub remote + curated set + nh home switch).
 
 %prep
 %setup -q

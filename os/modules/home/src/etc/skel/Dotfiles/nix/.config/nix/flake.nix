@@ -20,60 +20,76 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
     # devenv para ambientes de desenvolvimento declarativos por projeto.
     # Descomente para usar `devenv shell` no lugar de distrobox/toolbox:
     #   devenv.url = "github:cachix/devenv";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }: let
+  outputs = { self, nixpkgs, home-manager, nix-flatpak, ... }: let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
 
-    # builtins.getEnv retorna "" em pure eval. Com --impure, retorna
-    # o usuário real. O fallback "changeme" é usado quando --impure
-    # não é passado (se você executar `nh` manualmente sem --impure,
-    # troque "changeme" pelo seu username).
-    user = let u = builtins.getEnv "USER"; in if u != "" then u else "changeme";
+    # O attr name precisa ser estatico (nh avalia sem --impure pra listar).
+    # Troque "changeme" pelo seu username:
+    #   nh home switch --impure -c <username>
+    user = "changeme";
   in {
     homeConfigurations."${user}" = home-manager.lib.homeManagerConfiguration {
       inherit pkgs;
-      extraSpecialArgs = { inherit user; };
       modules = [
-        ({ user, ... }: {
+        "${nix-flatpak}/modules/home-manager.nix"
+        ({ ... }: {
           home = {
             username = "${user}";
             homeDirectory = "/home/${user}";
             stateVersion = "24.11";
 
-            packages = with pkgs; [
-              # nh gerencia a própria versão. `fox sync` instala
-              # nh automaticamente se não estiver presente.
-              nh
+            packages = [
+              # nh já vem pré-instalado na imagem (/usr/libexec/nh).
+              # Descomente os pacotes que quiser instalar:
 
-              # ── Descomente o que precisar ─────────────────────────
-              # bat           # file viewer com syntax highlight
-              # eza           # ls moderno (icons, git status)
-              # ripgrep       # grep recursivo rápido
-              # fd            # find rápido
-              # jq            # processador JSON
-              # yq            # YAML/JSON/XML/Toml
-              # btop          # monitor de recursos TUI
-              # lazygit       # git TUI
-              # delta         # diff viewer para git
-              # tealdeer      # tldr client (man pages comunitários)
-              # du-dust       # dust — du intuitivo
-              # procs         # ps moderno
-              # sd            # sed intuitivo
+              # pkgs.bat            # file viewer com syntax highlight
+              # pkgs.eza            # ls moderno (icons, git status)
+              # pkgs.ripgrep        # grep recursivo rápido
+              # pkgs.fd             # find rápido
+              # pkgs.jq             # processador JSON
+              # pkgs.yq             # YAML/JSON/XML/Toml
+              # pkgs.btop           # monitor de recursos TUI
+              # pkgs.lazygit        # git TUI
+              # pkgs.delta          # diff viewer para git
+              # pkgs.tealdeer       # tldr client
+              # pkgs.du-dust        # dust — du intuitivo
+              # pkgs.procs          # ps moderno
+              # pkgs.sd             # sed intuitivo
             ];
           };
 
           # ── Mise (runtime manager) ───────────────────────────────
           # programs.mise.enable = true;
 
-          # ── Flatpaks via nix ─────────────────────────────────────
-          # services.flatpak.enable = true;
+          # ── Flatpaks gerenciados pelo nix ────────────────────────
+          services.flatpak = {
+            enable = true;
+            remotes = [{
+              name = "flathub";
+              location = "https://dl.flathub.org/repo/flathub.flatpakrepo";
+            }];
+            packages = [
+              { appId = "app.zen_browser.zen"; origin = "flathub"; }
+              { appId = "io.github.kolunmi.Bazaar"; origin = "flathub"; }
+              { appId = "com.github.tchx84.Flatseal"; origin = "flathub"; }
+              { appId = "com.mattjakeman.ExtensionManager"; origin = "flathub"; }
+              { appId = "io.podman_desktop.PodmanDesktop"; origin = "flathub"; }
+              { appId = "com.ranfdev.DistroShelf"; origin = "flathub"; }
+              { appId = "net.nokyan.Resources"; origin = "flathub"; }
+              { appId = "it.mijorus.smile"; origin = "flathub"; }
+              { appId = "org.pvermeer.WebAppHub"; origin = "flathub"; }
+              { appId = "org.gnome.World.PikaBackup"; origin = "flathub"; }
+              { appId = "re.sonny.Junction"; origin = "flathub"; }
+            ];
+          };
 
-          programs.home-manager.enable = true;
         })
       ];
     };
