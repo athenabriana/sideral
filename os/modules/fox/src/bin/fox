@@ -22,6 +22,15 @@ case "${1:-}" in
             exec just -f "$JUSTFILE" "dotfiles $sub" "$@"
         fi
         ;;
+    home)
+        if [[ $# -lt 2 ]]; then
+            exec just -f "$JUSTFILE" --list home
+        else
+            sub="$2"
+            shift 2
+            exec just -f "$JUSTFILE" "home::$sub" "$@"
+        fi
+        ;;
     *)
         exec just -f "$JUSTFILE" "$@"
         ;;
