@@ -47,6 +47,7 @@ COPY modules/services/packages.txt     /modules/services/packages.txt
 COPY modules/kubernetes/packages.txt   /modules/kubernetes/packages.txt
 COPY build/fonts/packages.txt          /build/fonts/packages.txt
 COPY build/nvidia/packages.txt         /build/nvidia/packages.txt
+COPY build/cosmic/packages.txt         /build/cosmic/packages.txt
 # repo files (staged into /etc/yum.repos.d/ before any dnf call)
 COPY modules/base/src/etc/yum.repos.d/          /modules/base/src/etc/yum.repos.d/
 COPY modules/cli-tools/src/etc/yum.repos.d/     /modules/cli-tools/src/etc/yum.repos.d/

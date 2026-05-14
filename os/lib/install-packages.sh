@@ -12,7 +12,7 @@ MODULES_DIR="/ctx/modules"
 BUILD_DIR="/ctx/build"
 
 MODULES=(cli-tools services kubernetes nix)
-BUILD=(fonts nvidia)
+BUILD=(fonts nvidia cosmic)
 
 # ── 1. Remove inherited base packages ──────────────────────────────────
 # Silverfox keeps stock GNOME from silverblue-main intact (gdm + gnome-shell

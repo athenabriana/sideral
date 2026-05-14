@@ -1,0 +1,4 @@
+# COSMIC desktop environment (official Fedora 44 repos).
+# Installed alongside GNOME — pick either at the GDM login screen.
+# https://packages.fedoraproject.org/search?query=cosmic
+@cosmic-desktop-environment
