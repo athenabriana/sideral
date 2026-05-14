@@ -8,7 +8,7 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 - **`nix+nh` (revived 2026-05-13)** — Declarative user config via nix + nh. Determinate installer on first boot, `/nix` persists via `/var/lib/nix` bind-mount. `nh home switch` substitui home-manager. `nh clean` pra GC. Starter flake.nix em `/etc/skel` como stow package. 33 requirements. Spec em `.specs/features/nix/`.
 
-- **`fox-enhancements` (in flight, 2026-05-11)** — port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM. `fox` gains `toggle-banner`, `upgrade-firmware`, expanded `upgrade` (ostree + flatpak + distrobox), expanded `cleanup` (podman + flatpak + ostree). `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh`. `ublue-os-just` pruned from image build. 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
+- **`fox-enhancements` (in flight, 2026-05-11)** — port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM. `fox` gains `toggle-banner`, `upgrade-firmware`, expanded `upgrade` (ostree), `clean` (podman + rpm-ostree + nix GC via nh). Flatpaks gerenciados por nix-flatpak — removidos do `upgrade` e do `clean`. `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh`. `ublue-os-just` pruned from image build. 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
 
 ## Previous (shipped)
 
@@ -47,18 +47,11 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Backlog — enhancement features (unscheduled)
 
-### `fox-home-sync` (v2 of the fox feature)
+### `fox-home-sync` (v2 of the fox feature) — **superseded by nix-flatpak**
 
-**Scope**: declarative user-level config — silverfox's home-manager equivalent, without the nix substrate. v1's `fox home factory-reset` is the imperative counterpart; v2 introduces reconciliation.
+O primeiro backend previsto (flatpaks declarativos) foi coberto pelo `services.flatpak.packages` via nix-flatpak no flake.nix. `fox sync` (nh home switch) aplica flatpaks + pacotes de forma declarativa e atômica. Não há mais necessidade de um reconciliador separado para flatpaks.
 
-- **Manifests**: TOML files under `~/.config/silverfox/manifests/` (user-domain only — no system-level `/etc/silverfox/` reservation, per fox D-17). First backend likely flatpaks (`flatpaks.toml` enumerating desired remotes + refs); follow-ups: dconf snapshots, systemd-user units, optional VS Code / Zed extensions.
-- **Verb**: `fox home sync` reads manifests, diffs current state, applies. The reconciliation contract (`SyncCommand<T>` or equivalent) is intentionally NOT shipped in v1 — designing it without a real backend risks getting the type shape wrong. v2 lands it alongside the first backend so the abstraction emerges from real use.
-- **Substrate (open)**: bash + jq, Bun + TypeScript, Rust + clap, or Go + cobra. v1's bash dispatcher leaves the choice genuinely free — the v2 Justfile recipe for `home::sync` can swap `bash /usr/libexec/silverfox/sync.sh` for a compiled binary without touching `/usr/bin/fox`. Reach for a typed runtime *only* when v2's substance warrants the cost.
-- **Generations / rollback**: NOT replicated inside fox. Users `git init` in `~/.config/silverfox/manifests/`; selective rollback is `git checkout <path>`; full revert to image defaults is `fox home factory-reset`.
-
-See `.specs/features/fox/context.md` D-16 (home-manager framing) and D-17 (manifests location).
-
-**Entry criterion**: v1 fox shipped and stable; a concrete backend need surfaces (e.g., flatpak set diverges from `os/modules/flatpaks/flatpak-list` enough that a one-shot reconciler beats manual `flatpak install`/`uninstall`).
+Se um backend novo surgir (dconf snapshots, systemd-user units) pode reentrar como feature separada. Spec preservada em `.specs/features/fox-home-sync/` se existir.
 
 ### `gnome-extras`
 

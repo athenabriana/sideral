@@ -1,15 +1,16 @@
-# silverfox-cli-tools — meta-package pulling the day-to-day CLI tooling.
+# silverfox-cli-tools — bootstrap shell tooling (image-level, pre-nix).
 # Also ships /etc/yum.repos.d/carapace.repo so rpm-ostree upgrade continues
 # resolving carapace-bin updates on a running system.
 #
+# These are the tools that must be present BEFORE `fox home init` completes
+# the nix bootstrap. Everything else (atuin, fzf, bat, eza, ripgrep, zoxide,
+# gh, git-lfs, gcc, make, cmake) ships via the user's flake.nix (home.packages).
+#
 # Tools split by source:
-#   • Fedora 44 main:         stow, atuin, fzf, bat, eza, ripgrep,
-#                             zoxide, gh, git-lfs, gcc, make, cmake, zsh
-#   • repo.terra.fyralabs.com: starship, ghostty, zed (repo shipped by this package)
-#   • yum.fury.io/rsteube:    carapace-bin      (repo shipped by this package)
-#   • nix (home-manager):     mise              (programs.mise.enable in
-#                                                silverfox-home's /etc/skel
-#                                                flake — not an RPM dep)
+#   • Fedora 44 main:          stow, zsh, zsh-syntax-highlighting,
+#                              zsh-autosuggestions
+#   • repo.terra.fyralabs.com: starship, ghostty, zed (repo shipped by this pkg)
+#   • yum.fury.io/rsteube:     carapace-bin      (repo shipped by this pkg)
 #
 # zed is set as both $EDITOR and $VISUAL by the /etc/skel-seeded user
 # .bashrc / .zshrc. bash is the default shell; zsh is reached via
@@ -28,17 +29,6 @@ BuildArch:      noarch
 Requires:       stow
 Requires:       starship
 Requires:       carapace-bin
-Requires:       atuin
-Requires:       fzf
-Requires:       bat
-Requires:       eza
-Requires:       ripgrep
-Requires:       zoxide
-Requires:       gh
-Requires:       git-lfs
-Requires:       gcc
-Requires:       make
-Requires:       cmake
 Requires:       zsh
 Requires:       zsh-syntax-highlighting
 Requires:       zsh-autosuggestions
@@ -46,15 +36,14 @@ Requires:       ghostty
 Requires:       zed
 
 %description
-Meta-package: depends on the RPM-packaged CLI tools silverfox wires into
-the user shell. Shell init lives in user-domain ~/.bashrc and ~/.zshrc
-(seeded once from /etc/skel by useradd, owned by silverfox-home). Zed is
-the default editor for both EDITOR and VISUAL — git, sudoedit, mise
-edit, and any tool that spawns an editor opens a Zed buffer and blocks
-until it closes (`zed --wait`). bash is the default login shell; zsh is
-reached via `fox chsh zsh`. Also ships /etc/yum.repos.d/{carapace,terra}.repo
-so post-install `dnf upgrade` keeps carapace-bin + ghostty + zed current
-between image rebuilds.
+Bootstrap CLI tooling for the silverfox image — the tools that must be
+present before the nix first-boot service completes. Day-to-day CLI tools
+(atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake)
+are managed declaratively via the user's flake.nix (home.packages + nh
+home switch). Zed is the default editor for both EDITOR and VISUAL. bash
+is the default login shell; zsh is reached via `fox chsh zsh`. Also ships
+/etc/yum.repos.d/{carapace,terra}.repo so rpm-ostree upgrade keeps
+carapace-bin + ghostty + zed current between image rebuilds.
 
 %prep
 %setup -q
@@ -68,6 +57,11 @@ cp -a etc %{buildroot}/
 /etc/yum.repos.d/terra.repo
 
 %changelog
+* Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-16
+- Drop Requires: atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs,
+  gcc, make, cmake. These move to the user's flake.nix home.packages
+  (managed by nh home switch). Package now ships only bootstrap tools:
+  stow, starship, carapace-bin, zsh + fish-parity pair, ghostty, zed.
 * Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-15
 - Drop Requires: mise. mise is now installed per-user via the home-manager
   flake (programs.mise.enable in silverfox-home's /etc/skel seed) instead

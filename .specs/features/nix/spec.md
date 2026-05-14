@@ -23,7 +23,7 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 | NixOS modules | Silverfox remains rpm-ostree atomic, not NixOS. |
 | Pinned nixpkgs revision in the image | User pins in their own `flake.lock`. |
 | Migration of existing RPM-layered tools to nix | Per-user manual choice. `silverfox-cli-tools` still ships image-default tools. |
-| nix-flatpak / home-manager | `nh home` replaces both. |
+| home-manager direct use | `nh home` wraps home-manager internally; user doesn't invoke it. |
 | `fox.toml` → flake generator | User writes `flake.nix` directly. No extra abstraction layer. |
 
 ---
@@ -88,7 +88,7 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 2. **NIX-17** — Starter flake has a commented `home.packages` section with common CLI tools (bat, eza, ripgrep, jq, yq, nh) as examples.
 3. **NIX-18** — `nh` is listed in `home.packages` (managed by nh itself, self-referential but works).
 4. **NIX-19** — Starter flake has commented `programs.mise.enable = true` section.
-5. **NIX-20** — Starter flake has commented `services.flatpak.packages` section with flathub remote.
+5. **NIX-20** — Starter flake has `services.flatpak.packages` (via nix-flatpak module) as the **primary** flatpak management mechanism — not commented out. The curated app set (Zen Browser, Flatseal, Extension Manager, Podman Desktop, Resources, Smile, Web App Hub, Pika Backup) is declared here. No separate `/etc/flatpak-manifest` or first-boot service — `nh home switch` owns the flatpak lifecycle.
 
 **Test:** `cat /etc/skel/.config/silverfox/stow/nix/.config/nix/flake.nix` shows all sections with examples.
 

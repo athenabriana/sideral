@@ -4,7 +4,7 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current focus
 - **`nix+nh` (revived 2026-05-13).** Declarative user config via nix + nh. Sem home-manager — `nh home switch` faz tudo. 33 requirements. Spec em `.specs/features/nix/`.
-- **`fox-enhancements` (2026-05-11).** Port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM from the image entirely. `fox` gains 4 recipe changes: `toggle-banner` (new), `upgrade-firmware` (new), `upgrade` and `cleanup` expanded. `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh` (replaces ublue's `user-motd.sh`). 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
+- **`fox-enhancements` (2026-05-11).** Port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM from the image entirely. `fox` gains: `toggle-banner` (new), `upgrade-firmware` (new), `clean` (renamed de `cleanup`; cobre podman + rpm-ostree + nix GC via nh — sem flatpak, gerenciado por nix). `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh` (replaces ublue's `user-motd.sh`). 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
 
 ## Past features (shipped)
 
@@ -69,12 +69,12 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 - Writes `/usr/lib/bootc/kargs.d/00-nvidia.toml` (4 kargs incl. `nvidia-drm.modeset=1`, required for proper Wayland on NVIDIA) + `/etc/dconf/db/local.d/50-silverfox-nvidia` (mutter `kms-modifiers=true` — stock GNOME on F43 doesn't enable it for nvidia-drm and Wayland tears without it).
 - ISO `anaconda-hook.sh` reads `lspci`, picks the matching variant from ghcr at install time.
 
-### CLI tools (2026-05-02)
-- `silverfox-cli-tools.spec` Requires graph: `chezmoi mise atuin fzf bat eza ripgrep zoxide gh git-lfs gcc make cmake code helix fish zsh zsh-syntax-highlighting zsh-autosuggestions rclone fuse3` (21 names; chezmoi + 12 day-to-day + code + helix + fish + zsh + zsh-fish-parity (2) + rclone-stack (2)).
-- **starship** — fetched as the latest upstream binary by `os/modules/shell-tools/starship-install.sh`, sha256-verified, baked into `/usr/bin`. Not RPM-tracked, NOT in `Requires:`. Detected at runtime via `command -v` so removing the binary doesn't break the init script.
-- **chromium** — installed via `os/modules/shell-tools/packages.txt` and hidden from the app grid (see Browser above).
-- **mise** via persistent `mise.jdx.dev/rpm/` repo; **VS Code** via persistent `packages.microsoft.com/yumrepos/vscode` repo; both shipped as `/etc/yum.repos.d/{mise,vscode}.repo` files in `silverfox-base` so `rpm-ostree upgrade` keeps pulling updates between rebuilds.
-- `/etc/mise/config.toml` ships settings only (`trusted_config_paths`, `not_found_auto_install`, `jobs`, etc.). Tools live in `~/.config/mise/config.toml` (seeded by `silverfox-shell-seed.service` with the full default toolchain; chezmoi-trackable). User-level config merges with system config additively.
+### CLI tools (2026-05-14 — nix como fonte da verdade)
+- `silverfox-cli-tools.spec` Requires graph (bootstrap only, 8 names): `stow starship carapace-bin zsh zsh-syntax-highlighting zsh-autosuggestions ghostty zed`.
+- **Ferramentas dia-a-dia** (atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake) movidas para `home.packages` no flake.nix — gerenciadas por `nh home switch`. Sem duplicação RPM + nix.
+- **mise** via `programs.mise.enable = true` no flake.nix. Sem mise.jdx.dev/rpm/.
+- `/etc/mise/config.toml` ships settings only (`trusted_config_paths`, etc.). Ferramentas declaradas em `tools {}` no flake.nix via `programs.mise.globalConfig`.
+- **chezmoi removido** do stack — nunca foi usado. Dotfiles via stow exclusivamente.
 
 ### Shells (2026-05-11 — two shells, /etc/skel seeded)
 - **Two shells**: bash (default) and zsh. fish dropped entirely (not in cli-tools, not in `fox chsh` allowlist, not in `/etc/skel`). nu was already gone (2026-05-10 dotfile-seeding rework).
@@ -109,11 +109,11 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 ### Fonts
 - Source Serif 4 + Source Sans 3 fetched from Adobe GitHub at image build (`os/modules/fonts/post.sh`); `cascadia-code-fonts`, `jetbrains-mono-fonts-all`, `adwaita-fonts-all`, `opendyslexic-fonts` from Fedora main.
 
-### Flatpaks (2026-05-02 grow-out)
-- **11 curated entries** preinstalled at image build into `/var/lib/flatpak`, all from flathub — Zen Browser, Bazaar, Flatseal, Extension Manager, Podman Desktop, DistroShelf, Resources, Smile, Web App Hub, Pika Backup, Junction.
-- Single `flathub` remote (the previous fedora oci+registry remote was retired 2026-05-01 — caused titanoboa live-ISO install failures on refs that exist in both remotes, e.g. Flatseal).
-- `/etc/silverfox-flatpak-purge` (new 2026-05-02) lists refs to **actively uninstall** on deployed systems on every boot. Currently: `io.github.flattool.Warehouse` (dropped from curated set 2026-05-01; the purge file gets it removed from already-deployed systems too). Closes the gap from the older self-heal model where dropping a manifest entry left existing copies in place forever.
-- `silverfox-flatpak-install.service` repurposed as forward-compat self-heal — every-boot idempotent re-apply of remotes + manifest + purge list. Future image rebases that add new entries install on existing user systems.
+### Flatpaks (2026-05-14 — nix-flatpak como fonte da verdade)
+- **Gerenciados via `services.flatpak.packages`** no flake.nix do usuário (nix-flatpak module). `nh home switch` instala, remove, e atualiza. Sem `/etc/flatpak-manifest`, sem `silverfox-flatpak-install.service`, sem purge list.
+- Apps curados declarados no starter flake.nix: Zen Browser, Flatseal, Extension Manager, Podman Desktop, Resources, Smile, Web App Hub, Pika Backup.
+- Remote `flathub` configurado no flake (`remotes` block). Único remote.
+- `fox sync` = `nh home switch` — é o único verbo necessário para reconciliar flatpaks.
 
 ### Distrobox
 - `/etc/distrobox/distrobox.conf` lives in `silverfox-services` (was silverfox-base; moved 2026-05-02). Defaults only — no `/nix` mounts.

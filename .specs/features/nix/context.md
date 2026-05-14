@@ -44,10 +44,11 @@ Ship nix + nh on the silverfox image so user-level packages (CLI tools, runtimes
 - **Why:** Users own their `flake.lock`. Image stays neutral.
 - **Trade accepted:** First `fox home init` downloads nixpkgs + nh packages (~2-5 min). Only happens once.
 
-### D-06 — No coupling to existing silverfox packaging
+### D-06 — Nix como fonte da verdade: ferramentas CLI e flatpaks
 
-- **Decision:** `silverfox-cli-tools`, `silverfox-flatpaks`, `silverfox-home` stay unchanged. Nix is additive — no tool migrates from RPM to nix as part of this feature.
-- **Why:** Migration is per-user choice. `command -v` guards in shell init handle the case where a tool is available via both paths.
+- **Decision:** `silverfox-cli-tools` é reduzido a ferramentas de bootstrap (stow, zsh + fish-parity, starship, carapace-bin, ghostty, zed). Ferramentas dia-a-dia (atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake) migram para `home.packages` no flake.nix. Flatpaks gerenciados exclusivamente via `services.flatpak.packages` (nix-flatpak) — sem `/etc/flatpak-manifest`, sem serviço de primeiro-boot de flatpak.
+- **Why:** Single source of truth. `nh home switch` aplica pacotes CLI + flatpaks de forma declarativa e atômica. Remoção de ferramenta = remover do flake + `nh home switch`. Sem divergência entre o que o RPM instala e o que o usuário quer.
+- **Trade accepted:** Janela de bootstrap — entre o primeiro boot e `fox home init` completar, as ferramentas CLI não estão disponíveis (~5–10 min, uma vez). As ferramentas de bootstrap (zsh, stow, fox, zed) estão disponíveis imediatamente via RPM.
 
 ### D-07 — Direct flake.nix, no fox.toml generator
 

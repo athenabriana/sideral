@@ -53,11 +53,11 @@ assert_contains "toggle-banner_pass" "FAKEJUST:toggle-banner" "$actual"
 actual=$(run upgrade-firmware | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "upgrade-firmware_pass" "FAKEJUST:upgrade-firmware" "$actual"
 
-# FOXEN-02: fox cleanup → just cleanup.
-actual=$(run cleanup | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "cleanup_pass" "FAKEJUST:cleanup" "$actual"
-actual=$(run cleanup -bm | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "cleanup_flag" "FAKEJUST:-bm" "$actual"
+# FOXEN-02: fox clean → just clean.
+actual=$(run clean | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "clean_pass" "FAKEJUST:clean" "$actual"
+actual=$(run clean -bm | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "clean_flag" "FAKEJUST:-bm" "$actual"
 
 # FOX-04 / FOX-05: unknown verb passes through.
 actual=$(run xyzzy | grep '^FAKEJUST:' | tail -n1)

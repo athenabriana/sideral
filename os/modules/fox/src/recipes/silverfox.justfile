@@ -1,5 +1,5 @@
 # silverfox.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
-# Verbs: chsh, sync, upgrade, rollback, status, cleanup, changelog,
+# Verbs: chsh, sync, upgrade, rollback, status, clean, changelog,
 # toggle-banner, upgrade-firmware, diff, doctor, config (top-level).
 
 default:
@@ -60,13 +60,12 @@ rollback *args:
 status *args:
     rpm-ostree status {{args}}
 
-# Clean podman images, unused flatpaks, rpm-ostree metadata, and nix store (default);
+# Clean podman images, rpm-ostree metadata, and nix store (default);
 # with explicit args, passes through to rpm-ostree cleanup
-cleanup *args:
+clean *args:
     #!/usr/bin/bash
     if [ $# -eq 0 ]; then
       podman image prune -af
-      flatpak uninstall --unused
       rpm-ostree cleanup -prm
       command -v nh >/dev/null 2>&1 && nh clean || echo "nh not installed, skipping nix cleanup"
     else

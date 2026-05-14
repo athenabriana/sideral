@@ -30,14 +30,13 @@ Requires:       coreutils
 Requires:       findutils
 Requires:       gawk
 Requires:       rpm-ostree
-Requires:       flatpak
 Requires:       sudo
 Requires:       shadow-utils
 
 %description
 silverfox-fox ships the `fox` operator CLI: a ~20-line bash dispatcher at
 /usr/bin/fox that routes argv into /usr/share/silverfox/silverfox.justfile
-via `just`. Verbs in v1: chsh, sync, upgrade, rollback, status, cleanup,
+via `just`. Verbs in v1: chsh, sync, upgrade, rollback, status, clean,
 changelog, config, diff, doctor, toggle-banner, upgrade-firmware.
 
 %prep

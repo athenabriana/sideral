@@ -34,9 +34,23 @@
                 homeDirectory = "/home/__USER__";
                 stateVersion = "24.11";
                 packages = [
+                  # nix tooling
+                  pkgs.nh
                   pkgs.nixd
                   pkgs.nil
                   pkgs.opencode
+                  # cli tools — fonte da verdade (removidos do silverfox-cli-tools RPM)
+                  pkgs.atuin
+                  pkgs.fzf
+                  pkgs.bat
+                  pkgs.eza
+                  pkgs.ripgrep
+                  pkgs.zoxide
+                  pkgs.gh
+                  pkgs.git-lfs
+                  pkgs.gcc
+                  pkgs.gnumake
+                  pkgs.cmake
                 ];
               };
 

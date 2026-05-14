@@ -54,23 +54,24 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
    ```
    Recipe signature: `toggle-banner:` (no args). Ported from ublue's `toggle-user-motd` (5 lines). `fox toggle-banner` invokes the recipe via just.
 
-2. **FOXEN-02** — `fox cleanup` expanded from `rpm-ostree cleanup -prm` only to also run:
+2. **FOXEN-02** — `fox clean` (renamed from `fox cleanup`) runs:
    - `podman image prune -af`
-   - `flatpak uninstall --unused`
-   Matching ublue's `clean-system` recipe. Recipe body:
+   - `rpm-ostree cleanup -prm`
+   - `nh clean` (nix store GC, guarded by `command -v nh`)
+   Flatpaks são gerenciados via nix-flatpak (`nh home switch`) — não há `flatpak uninstall --unused`. Recipe body:
    ```
-   # Clean up old podman images, unused flatpaks, and rpm-ostree metadata
-   cleanup *args:
+   # Clean podman images, rpm-ostree metadata, and nix store
+   clean *args:
        #!/usr/bin/bash
        if [ $# -eq 0 ]; then
          podman image prune -af
-         flatpak uninstall --unused
          rpm-ostree cleanup -prm
+         command -v nh >/dev/null 2>&1 && nh clean || echo "nh not installed, skipping nix cleanup"
        else
          rpm-ostree cleanup "$@"
        fi
    ```
-   When called with explicit args (`fox cleanup -bm`), passes through to rpm-ostree only (preserving existing behavior for power users).
+   When called with explicit args (`fox clean -bm`), passes through to rpm-ostree only.
 
 3. **FOXEN-03** — `fox upgrade-firmware` wraps `fwupdmgr`:
    ```
@@ -82,24 +83,17 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
    ```
    Recipe signature: `upgrade-firmware:` (no args). Verbatim from ublue's `update-firmware` (3 lines). `fox upgrade-firmware` streams output.
 
-4. **FOXEN-04** — `fox upgrade` expanded from `rpm-ostree upgrade` only to also run `flatpak update` and `distrobox upgrade -a` after the ostree update. The current split (`fox upgrade` = rpm-ostree, `fox update` = flatpak) is confusing — `upgrade` should mean "update everything". Implementation:
+4. **FOXEN-04** — `fox upgrade` stages the OS update + distrobox. Flatpaks não entram aqui — são gerenciados declarativamente via `fox sync` (nh home switch). `fox upgrade` é para o sistema (rpm-ostree) + containers (distrobox). Implementation:
    ```
    upgrade *args:
-       #!/usr/bin/bash
-       rpm-ostree upgrade "$@"
-       echo "--- flatpak update ---"
-       flatpak update -y
-       if command -v distrobox >/dev/null 2>&1; then
-         echo "--- distrobox upgrade ---"
-         distrobox upgrade -a
-       fi
+       rpm-ostree upgrade
        @echo "Reboot to apply the staged deployment."
    ```
-   `fox update` stays as `flatpak update {{args}}` (lightweight, no reboot needed). `fox upgrade` becomes the comprehensive "update everything and reboot" verb. `distrobox upgrade` gated on `command -v` so the verb doesn't fail if no distroboxes exist.
+   `distrobox upgrade -a` pode ser adicionado futuramente. `fox sync` é o verbo para atualizar pacotes + flatpaks via nix.
 
 5. **FOXEN-05** — All new verbs pass `just fox-lint` (shellcheck on inline bash within recipe bodies is NOT checked by shellcheck — just recipes contain bash that just evaluates; the pre-flight test coverage (FOXEN-06) covers this gap). `bash -n` on any extracted libexec scripts if the recipe body grows past 10 lines.
 
-**Test**: `just fox-lint && just fox-test` passes. New verbs manually verified: `fox toggle-motd` creates/deletes the marker; `fox cleanup` doesn't error on a system with no podman images; `fox firmware` runs fwupdmgr; `fox upgrade` runs all three update commands.
+**Test**: `just fox-lint && just fox-test` passes. New verbs manually verified: `fox toggle-banner` creates/deletes the marker; `fox clean` doesn't error on a system with no podman images; `fox upgrade-firmware` runs fwupdmgr; `fox upgrade` stages the rpm-ostree deployment.
 
 ---
 
@@ -204,7 +198,7 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 - **Existing systems that have `ublue-os-just` installed**: next rebase (`rpm-ostree upgrade`) removes it automatically since the new image won't include it. Standard atomic workflow.
 - **User runs `ujust` from muscle memory after rebase**: `bash: ujust: command not found`. No mitigation needed — single-user image, one-error-then-remember.
 - **`distrobox` not installed**: `fox upgrade` gates `distrobox upgrade -a` behind `command -v`, so the verb completes without error.
-- **No podman images to prune**: `podman image prune -af` exits 0 with nothing to do. `fox cleanup` is idempotent.
+- **No podman images to prune**: `podman image prune -af` exits 0 with nothing to do. `fox clean` is idempotent.
 - **No fwupd supported hardware**: `fwupdmgr refresh` fails gracefully. `fox firmware` propagates the error. Acceptable — user checks `fwupdmgr status` first.
 - **User created their own `~/.config/no-show-user-motd`**: `fox toggle-motd` removes it (re-enables motd). Second `fox toggle-motd` creates it again (disables). Standard toggle.
 
@@ -226,7 +220,7 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 - [ ] Image does not contain `ublue-os-just` (verified via `rpm -q` in container)
 - [ ] `silverfox.spec/description` `%description` references to `ublue-os-just` cleaned
 - [ ] `fox toggle-banner` creates/deletes `~/.config/no-show-user-motd`
-- [ ] `fox cleanup` runs podman prune + flatpak unused + rpm-ostree cleanup
+- [ ] `fox clean` runs podman prune + rpm-ostree cleanup + nh clean (nix GC)
 - [ ] `fox upgrade-firmware` runs fwupdmgr refresh + get-updates + update
 - [ ] `fox upgrade` runs rpm-ostree upgrade + flatpak update + distrobox upgrade
 - [ ] `/etc/profile.d/silverfox-motd.sh` ships; motd banner displays on login
