@@ -2,8 +2,7 @@
 #
 # Ships:
 #   /usr/bin/fox                                  — bash dispatcher (~20 lines)
-#   /usr/share/silverfox/silverfox.justfile       — top-level Justfile (verbs)
-#   /usr/share/silverfox/home.just                — `mod home` recipes
+#   /usr/share/silverfox/silverfox.justfile       — verb + dotfiles recipes
 #   /usr/libexec/silverfox/chsh.sh                — login-shell switcher
 #
 # Artifacts are pre-built into /var/tmp/fox-prebuilt/ by the Containerfile;
@@ -47,18 +46,24 @@ changelog, config, diff, doctor, toggle-banner, upgrade-firmware.
 %install
 install -D -m 0755 /var/tmp/fox-prebuilt/bin/fox                       %{buildroot}/usr/bin/fox
 install -D -m 0644 /var/tmp/fox-prebuilt/recipes/silverfox.justfile      %{buildroot}/usr/share/silverfox/silverfox.justfile
-install -D -m 0644 /var/tmp/fox-prebuilt/recipes/home.just             %{buildroot}/usr/share/silverfox/home.just
+# home.just removed 2026-05-14; "dotfiles link" and "dotfiles reset"
+# live directly in silverfox.justfile as quoted space-separated recipes.
 install -D -m 0755 /var/tmp/fox-prebuilt/libexec/chsh.sh               %{buildroot}/usr/libexec/silverfox/chsh.sh
 
 %files
 /usr/bin/fox
 %dir /usr/share/silverfox
 /usr/share/silverfox/silverfox.justfile
-/usr/share/silverfox/home.just
 %dir /usr/libexec/silverfox
 /usr/libexec/silverfox/chsh.sh
 
 %changelog
+* Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
+- Add `"dotfiles link"` and `"dotfiles reset"` recipes directly in
+  silverfox.justfile (quoted space-separated, no separate file needed).
+  Route through `fox dotfiles <link|reset>` via dispatcher.
+  Remove home.just (separate-module pattern abandoned).
+  Update `sync` to call `"dotfiles link"` instead of old link-dotfiles.
 * Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
 - Add `home::reset` recipe (home.just): destrói ~/Dotfiles/, recopia
   de /etc/skel/Dotfiles/, reaplica stow. Acionado via `fox home reset`.

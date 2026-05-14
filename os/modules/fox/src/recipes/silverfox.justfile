@@ -10,7 +10,7 @@ chsh shell="":
     /usr/libexec/silverfox/chsh.sh {{shell}}
 
 # Aplica symlinks de ~/Dotfiles em $HOME
-link-dotfiles:
+"dotfiles link":
     #!/usr/bin/bash
     set -euo pipefail
     command -v stow >/dev/null 2>&1 || { echo "stow não encontrado" >&2; exit 1; }
@@ -21,10 +21,29 @@ link-dotfiles:
         done
     echo "dotfiles: symlinks aplicados."
 
+# Destroi ~/Dotfiles/ e recopia do /etc/skel/Dotfiles, depois reaplica stow
+"dotfiles reset":
+    #!/usr/bin/bash
+    set -euo pipefail
+    SKEL_DOTFILES="/etc/skel/Dotfiles"
+    HOME_DOTFILES="$HOME/Dotfiles"
+    [ -d "$SKEL_DOTFILES" ] || { echo "/etc/skel/Dotfiles não encontrado" >&2; exit 1; }
+    echo "Removendo $HOME_DOTFILES..."
+    rm -rf "$HOME_DOTFILES"
+    echo "Copiando de $SKEL_DOTFILES..."
+    cp -a "$SKEL_DOTFILES" "$HOME_DOTFILES"
+    echo "Aplicando symlinks via stow..."
+    command -v stow >/dev/null 2>&1 || { echo "stow não encontrado" >&2; exit 1; }
+    find "$HOME_DOTFILES" -mindepth 1 -maxdepth 1 -type d -print0 \
+      | while IFS= read -r -d '' pkg; do
+          stow -R -d "$HOME_DOTFILES" -t "$HOME" --no-folding "${pkg##*/}"
+        done
+    echo "dotfiles reset: concluído."
+
 # Sync nix config (packages + flatpaks declarativos)
 sync *args:
     #!/usr/bin/bash
-    just -f {{ justfile() }} link-dotfiles
+    just -f {{ justfile() }} "dotfiles link"
     command -v nh >/dev/null 2>&1 && nh home switch --impure
 
 # Stage rpm-ostree upgrade.

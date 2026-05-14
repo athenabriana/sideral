@@ -13,13 +13,13 @@ case "${1:-}" in
     -V|--version)
         awk -F= '/^VERSION_ID=/ {gsub(/"/,"",$2); print $2}' "$OS_RELEASE"
         ;;
-    home)
+    dotfiles)
         if [[ $# -lt 2 ]]; then
-            exec just -f "$JUSTFILE" --list home
+            echo "Usage: fox dotfiles <link|reset>"
         else
             sub="$2"
             shift 2
-            exec just -f "$JUSTFILE" "home::$sub" "$@"
+            exec just -f "$JUSTFILE" "dotfiles $sub" "$@"
         fi
         ;;
     *)
