@@ -24,9 +24,9 @@ on first login:
     atuin/zoxide/mise/fzf; ghostty; nix flake para nh).
 
   - /etc/profile.d/silverfox-skel-merge.sh — no primeiro login copia a
-    árvore inteira de /etc/skel/Dotfiles para $HOME/Dotfiles.
-    Symlinks são gerenciados manualmente via `fox dotfiles link`.
-    Use `fox dotfiles reset` para restaurar o estado original.
+    árvore inteira de /etc/skel/Dotfiles para $HOME/Dotfiles; em todo
+    login roda stow em cada pacote para criar os symlinks em $HOME.
+    Use `fox home reset` para restaurar o estado original do sistema.
 
 %prep
 %setup -q
