@@ -1,4 +1,4 @@
-# sideral.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
+# silverfox.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
 # Verbs: chsh, sync, upgrade, rollback, status, cleanup, changelog,
 # toggle-banner, upgrade-firmware, diff, doctor, config (top-level).
 
@@ -7,7 +7,7 @@ default:
 
 # Switch login shell (no arg = interactive picker; allowlist: bash, zsh)
 chsh shell="":
-    /usr/libexec/sideral/chsh.sh {{shell}}
+    /usr/libexec/silverfox/chsh.sh {{shell}}
 
 # Sync nix config (packages + flatpaks declarativos)
 sync *args:

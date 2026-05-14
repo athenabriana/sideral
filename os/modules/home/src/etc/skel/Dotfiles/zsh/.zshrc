@@ -1,4 +1,4 @@
-# ~/.zshrc — sideral zsh interactive-shell wiring.
+# ~/.zshrc — silverfox zsh interactive-shell wiring.
 #
 # Stow package from Dotfiles/zsh/.zshrc — to customize, replace the
 # symlink with a real file and edit. The skel merge (profile.d) copies
@@ -78,7 +78,7 @@ fi
 # ── Agent shell detection ───────────────────────────────────────────────
 # Same canonical 14-marker list as bash. ${(P)v} is zsh's indirect
 # parameter expansion (equivalent of bash's ${!v}).
-local _sideral_agent_shell=
+local _silverfox_agent_shell=
 local _v
 for _v in AGENT AI_AGENT \
           CLAUDECODE \
@@ -92,16 +92,16 @@ for _v in AGENT AI_AGENT \
           ANTIGRAVITY_AGENT \
           REPL_ID \
           COPILOT_MODEL \
-          SIDERAL_NO_ALIASES; do
+          SILVERFOX_NO_ALIASES; do
     if [[ -n "${(P)_v}" ]]; then
-        _sideral_agent_shell=1
+        _silverfox_agent_shell=1
         break
     fi
 done
 unset _v
 
 # ── eza / bat aliases — only for human-driven shells ────────────────────
-if [[ -z "$_sideral_agent_shell" ]]; then
+if [[ -z "$_silverfox_agent_shell" ]]; then
     if (( ${+commands[eza]} )); then
         alias ls='eza --icons --group-directories-first'
         alias ll='eza --icons --group-directories-first --long --git --header'
@@ -112,13 +112,13 @@ if [[ -z "$_sideral_agent_shell" ]]; then
         alias cat='bat --paging=never --style=plain'
     fi
 fi
-unset _sideral_agent_shell
+unset _silverfox_agent_shell
 
 # ── Ctrl-P — VS-Code-style fzf quick-open ──────────────────────────────
 # zsh's ZLE (line editor) is the equivalent of bash's readline.
 # `zle -N` registers a widget; `bindkey '^P'` binds Ctrl-P.
 if (( ${+commands[fzf]} )); then
-    _sideral_fzf_quick_open() {
+    _silverfox_fzf_quick_open() {
         local file
         if (( ${+commands[rg]} )); then
             file=$(rg --files --hidden --follow --glob '!.git' 2>/dev/null \
@@ -135,14 +135,14 @@ if (( ${+commands[fzf]} )); then
         eval "$editor \"\$file\""
         zle reset-prompt 2>/dev/null
     }
-    zle -N _sideral_fzf_quick_open
-    bindkey '^P' _sideral_fzf_quick_open
+    zle -N _silverfox_fzf_quick_open
+    bindkey '^P' _silverfox_fzf_quick_open
 fi
 
 # ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
 # BUFFER / CURSOR are zsh's editable-line variables (equivalent of
 # bash's READLINE_LINE / READLINE_POINT).
-_sideral_toggle_sudo() {
+_silverfox_toggle_sudo() {
     if [[ "$BUFFER" == sudo\ * ]]; then
         BUFFER="${BUFFER#sudo }"
         (( CURSOR -= 5 ))
@@ -152,12 +152,12 @@ _sideral_toggle_sudo() {
         (( CURSOR += 5 ))
     fi
 }
-zle -N _sideral_toggle_sudo
-bindkey '^[s' _sideral_toggle_sudo  # ^[ = ESC = Alt prefix; s = lowercase
+zle -N _silverfox_toggle_sudo
+bindkey '^[s' _silverfox_toggle_sudo  # ^[ = ESC = Alt prefix; s = lowercase
 
 # ── Ctrl-G — fzf git branch picker → checkout ─────────────────────────
 if (( ${+commands[fzf]} )); then
-    _sideral_fzf_git_checkout() {
+    _silverfox_fzf_git_checkout() {
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
         local branch
         branch=$(git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/ 2>/dev/null \
@@ -167,8 +167,8 @@ if (( ${+commands[fzf]} )); then
         git checkout "$branch"
         zle reset-prompt 2>/dev/null
     }
-    zle -N _sideral_fzf_git_checkout
-    bindkey '^G' _sideral_fzf_git_checkout
+    zle -N _silverfox_fzf_git_checkout
+    bindkey '^G' _silverfox_fzf_git_checkout
 fi
 
 # ── Syntax highlighting (MUST load last) ────────────────────────────────

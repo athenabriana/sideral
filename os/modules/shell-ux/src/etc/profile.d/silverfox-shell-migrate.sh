@@ -1,6 +1,6 @@
-# sideral-shell-migrate.sh — fix broken login shell on login.
+# silverfox-shell-migrate.sh — fix broken login shell on login.
 # If the user's login shell binary no longer exists (e.g. /usr/bin/nu
-# from a pre-removal sideral image), switch to zsh silently. Uses sudo
+# from a pre-removal silverfox image), switch to zsh silently. Uses sudo
 # -n (non-interactive) so a missing sudoers entry fails fast rather
 # than blocking login with a password prompt.
 _current_shell="$(getent passwd "$USER" | cut -d: -f7)"

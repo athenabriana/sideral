@@ -2,11 +2,11 @@
 
 ## Problem Statement
 
-The `fox` feature (shipped 2026-05-11) introduced `/usr/bin/fox` as sideral's operator CLI, replacing the ublue `ujust` extension slot (`60-custom.just`). However, the underlying `ublue-os-just` RPM (inherited from `silverblue-main:44`) is still present in the image. This creates two problems:
+The `fox` feature (shipped 2026-05-11) introduced `/usr/bin/fox` as silverfox's operator CLI, replacing the ublue `ujust` extension slot (`60-custom.just`). However, the underlying `ublue-os-just` RPM (inherited from `silverblue-main:44`) is still present in the image. This creates two problems:
 
 1. **`ujust` still works** — `ujust --list` shows 26 stock ublue recipes alongside `fox`'s 9 verbs. Two operator CLIs for one image: confusing surface, split muscle memory.
 
-2. **`ublue-os-just` ships dependencies sideral doesn't use** — `/usr/lib/ujust/libformatting.sh`, `/usr/lib/ujust/ujust.sh`, the full justfile module tree at `/usr/share/ublue-os/just/*.just`, and the `ublue-motd` binary. Dead weight and source of surprise behavior (e.g., `ujust chsh` from ublue's stock 60-custom.just still works if the old 60-custom.just was only deleted from sideral's tree — wait, it was deleted. But ublue-os-just also has its own 60-custom.just template slot that doesn't exist anymore in sideral. Actually, the issue is just that `ublue-os-just` ships recipes that fox duplicates or supersedes.)
+2. **`ublue-os-just` ships dependencies silverfox doesn't use** — `/usr/lib/ujust/libformatting.sh`, `/usr/lib/ujust/ujust.sh`, the full justfile module tree at `/usr/share/ublue-os/just/*.just`, and the `ublue-motd` binary. Dead weight and source of surprise behavior (e.g., `ujust chsh` from ublue's stock 60-custom.just still works if the old 60-custom.just was only deleted from silverfox's tree — wait, it was deleted. But ublue-os-just also has its own 60-custom.just template slot that doesn't exist anymore in silverfox. Actually, the issue is just that `ublue-os-just` ships recipes that fox duplicates or supersedes.)
 
 3. **Removing `ublue-os-just` kills `/etc/profile.d/user-motd.sh`** — this is the mechanism that displays the `fox`-referencing motd banner on every login. Without a replacement, the motd vanishes.
 
@@ -14,11 +14,11 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 
 ## Goals
 
-- [ ] `ublue-os-just` RPM removed from both `sideral` and `sideral-nvidia` image variants
+- [ ] `ublue-os-just` RPM removed from both `silverfox` and `silverfox-nvidia` image variants
 - [ ] `/usr/bin/ujust` no longer exists in the image
-- [ ] `/etc/profile.d/sideral-motd.sh` ships in `sideral-shell-ux`, replacing ublue's `user-motd.sh` — same behavior (double-source guard, `~/.config/no-show-user-motd` opt-out, `cat /etc/user-motd`)
+- [ ] `/etc/profile.d/silverfox-motd.sh` ships in `silverfox-shell-ux`, replacing ublue's `user-motd.sh` — same behavior (double-source guard, `~/.config/no-show-user-motd` opt-out, `cat /etc/user-motd`)
 - [ ] Useful ujust recipes ported to fox before removal
-- [ ] `%changelog` entries in sideral specs cleaned of future-irrelevant ujust references (historical entries left intact)
+- [ ] `%changelog` entries in silverfox specs cleaned of future-irrelevant ujust references (historical entries left intact)
 - [ ] `README.md`, `Justfile` (build-side), `STATE.md`, `ROADMAP.md` updated
 
 ## Out of Scope
@@ -38,7 +38,7 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 
 **Acceptance**:
 
-1. **FOXEN-01** — `fox toggle-banner` toggles `~/.config/no-show-user-motd`. Implemented as a recipe in `sideral.justfile`:
+1. **FOXEN-01** — `fox toggle-banner` toggles `~/.config/no-show-user-motd`. Implemented as a recipe in `silverfox.justfile`:
    ```
    # Toggle display of the login banner (motd)
    toggle-banner:
@@ -109,11 +109,11 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 
 **Acceptance**:
 
-1. **FOXEN-06** — `/etc/profile.d/sideral-motd.sh` ships in `sideral-shell-ux`:
+1. **FOXEN-06** — `/etc/profile.d/silverfox-motd.sh` ships in `silverfox-shell-ux`:
    ```bash
    # Prevent doublesourcing
-   if [ -z "$SIDERAL_MOTD_SOURCED" ]; then
-     SIDERAL_MOTD_SOURCED="Y"
+   if [ -z "$SILVERFOX_MOTD_SOURCED" ]; then
+     SILVERFOX_MOTD_SOURCED="Y"
      if test -d "$HOME"; then
        if test ! -e "$HOME"/.config/no-show-user-motd; then
          if test -s "/etc/user-motd"; then
@@ -123,18 +123,18 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
      fi
    fi
    ```
-   Same behavior as ublue's `user-motd.sh`: double-source guard, opt-out file check, cats `/etc/user-motd`. Different var name (`SIDERAL_MOTD_SOURCED`) to avoid collision if the ublue version runs first (won't happen after removal, but defensive).
+   Same behavior as ublue's `user-motd.sh`: double-source guard, opt-out file check, cats `/etc/user-motd`. Different var name (`SILVERFOX_MOTD_SOURCED`) to avoid collision if the ublue version runs first (won't happen after removal, but defensive).
 
-2. **FOXEN-07** — `sideral-shell-ux.spec` `%files` adds `/etc/profile.d/sideral-motd.sh`.
+2. **FOXEN-07** — `silverfox-shell-ux.spec` `%files` adds `/etc/profile.d/silverfox-motd.sh`.
 
 3. **FOXEN-08** — `/etc/user-motd` content unchanged (already references `fox` verbs from the fox feature). Verify:
    - `fox` (discovery)
-   - `man sideral` / `fox cheatsheet`
+   - `man silverfox` / `fox cheatsheet`
    - `fox upgrade` / `fox rollback` / `fox update`
    - `fox home factory-reset`
    - No `ujust` references remain
 
-**Test**: Reboot/login shows the sideral motd banner. `touch ~/.config/no-show-user-motd; login` hides it. `rm ~/.config/no-show-user-motd; login` shows it again.
+**Test**: Reboot/login shows the silverfox motd banner. `touch ~/.config/no-show-user-motd; login` hides it. `rm ~/.config/no-show-user-motd; login` shows it again.
 
 ---
 
@@ -156,7 +156,7 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 
 3. **FOXEN-11** — `rpm -q ublue-os-just` returns "package ublue-os-just is not installed" in the built image.
 
-**Test**: `just build` succeeds. `podman run --rm localhost/sideral:dev rpm -q ublue-os-just` exits non-zero with "not installed". `podman run --rm localhost/sideral:dev ujust` exits 127 (not found).
+**Test**: `just build` succeeds. `podman run --rm localhost/silverfox:dev rpm -q ublue-os-just` exits non-zero with "not installed". `podman run --rm localhost/silverfox:dev ujust` exits 127 (not found).
 
 ---
 
@@ -191,7 +191,7 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 
 ### P2: Cleanup of %description blocks
 
-**Story**: RPM `%description` blocks in sideral modules no longer reference ujust.
+**Story**: RPM `%description` blocks in silverfox modules no longer reference ujust.
 
 **Acceptance**:
 
@@ -224,11 +224,11 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
 
 - [ ] `just build` succeeds; `bootc container lint` passes
 - [ ] Image does not contain `ublue-os-just` (verified via `rpm -q` in container)
-- [ ] `sideral.spec/description` `%description` references to `ublue-os-just` cleaned
+- [ ] `silverfox.spec/description` `%description` references to `ublue-os-just` cleaned
 - [ ] `fox toggle-banner` creates/deletes `~/.config/no-show-user-motd`
 - [ ] `fox cleanup` runs podman prune + flatpak unused + rpm-ostree cleanup
 - [ ] `fox upgrade-firmware` runs fwupdmgr refresh + get-updates + update
 - [ ] `fox upgrade` runs rpm-ostree upgrade + flatpak update + distrobox upgrade
-- [ ] `/etc/profile.d/sideral-motd.sh` ships; motd banner displays on login
+- [ ] `/etc/profile.d/silverfox-motd.sh` ships; motd banner displays on login
 - [ ] No `ujust` references remain in `%description` blocks, `README.md`, or build-side `Justfile` (outside `%changelog`)
 - [ ] STATE.md + ROADMAP.md updated

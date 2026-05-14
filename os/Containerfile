@@ -1,15 +1,15 @@
-# sideral — a personal Fedora atomic desktop derived directly from
+# silverfox — a personal Fedora atomic desktop derived directly from
 # ublue-os/silverblue-main. Inherits the stock GNOME desktop unchanged;
 # adds Zen Browser (preinstalled Flatpak from Flathub), a curated
 # flatpak set, ghostty terminal (Terra repo), GNU-stow-seeded user
-# dotfiles + sideral-cli-tools (mise, zed, starship, carapace-bin,
+# dotfiles + silverfox-cli-tools (mise, zed, starship, carapace-bin,
 # zsh, atuin, fzf, etc.), and a narrow RPM layer (rootless podman
 # with docker compatibility shims, kubernetes stack, fonts).
 #
 # Local build:    just build
 # Local rebase:   just rebase
-# CI build:       push to main → GH Actions → ghcr.io/<user>/sideral:latest
-# Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/sideral:latest
+# CI build:       push to main → GH Actions → ghcr.io/<user>/silverfox:latest
+# Remote rebase:  rpm-ostree rebase ostree-unverified-registry:ghcr.io/<user>/silverfox:latest
 #
 # Module layout:
 #   os/modules/<name>/ — RPM modules; each has rpm/<spec>+src/ tree plus
@@ -35,7 +35,7 @@
 ARG BASE_IMAGE="ghcr.io/ublue-os/silverblue-main:44"
 
 # ── Stage 0: man-build ──────────────────────────────────────────────────
-# Render the sideral(7) manpage from pandoc Markdown. A tiny stage
+# Render the silverfox(7) manpage from pandoc Markdown. A tiny stage
 # (fedora-minimal + pandoc + gzip, ~150MB transient) so the pandoc
 # toolchain never lands in the final image. The output is consumed by
 # the Layer-2 RUN below via COPY --from=man-build.
@@ -45,9 +45,9 @@ FROM registry.fedoraproject.org/fedora-minimal:44 AS man-build
 RUN microdnf install -y --setopt=install_weak_deps=0 pandoc gzip && \
     microdnf clean all && \
     mkdir -p /out
-COPY modules/fox/src/man/sideral.md /workspace/sideral.md
-RUN pandoc -s -t man /workspace/sideral.md -o /out/sideral.7 && \
-    gzip -9 /out/sideral.7
+COPY modules/fox/src/man/silverfox.md /workspace/silverfox.md
+RUN pandoc -s -t man /workspace/silverfox.md -o /out/silverfox.7 && \
+    gzip -9 /out/silverfox.7
 
 # ── Stage 1a: stable context ────────────────────────────────────────────
 # Only content that changes rarely: packages.txt + repo files + the
@@ -77,9 +77,9 @@ COPY build /build
 FROM ${BASE_IMAGE}
 
 # Inherits build-time arg used by lib/build-rpms.sh to stamp version.
-# CI overrides via --build-arg SIDERAL_VERSION=YYYYMMDD.<run>; local builds
+# CI overrides via --build-arg SILVERFOX_VERSION=YYYYMMDD.<run>; local builds
 # default to 0.0.0.dev (sentinel for "this didn't come from CI").
-ARG SIDERAL_VERSION=0.0.0.dev
+ARG SILVERFOX_VERSION=0.0.0.dev
 
 # Layer 1 — packages: remove inherited pkgs, stage repos, dnf install all
 # packages.txt. Cache is stable across script and spec file changes.
@@ -91,17 +91,17 @@ RUN --mount=type=bind,from=ctx-packages,source=/,target=/ctx \
     ostree container commit
 
 # Layer 2 — scripts + RPMs: run per-module *.sh scripts (hide-chromium,
-# flatpak preinstall, nvidia apply), then build and install sideral-*
+# flatpak preinstall, nvidia apply), then build and install silverfox-*
 # RPMs inline.
 #
-# Several sideral files conflict with base-image packages on file
+# Several silverfox files conflict with base-image packages on file
 # ownership (/etc/os-release vs fedora-release-common,
 # /etc/containers/policy.json vs containers-common, /etc/zshrc vs zsh).
 # rpm -Uvh --replacefiles transfers ownership cleanly — the standard
 # derivative-distro pattern.
 #
 # `rpm -e --nodeps ublue-os-signing` runs first: silverblue-main:44 ships
-# ublue-os-signing pre-installed, and sideral-base declares Conflicts:
+# ublue-os-signing pre-installed, and silverfox-base declares Conflicts:
 # against it (both own /etc/containers/policy.json). rpm -Uvh refuses
 # package-level Conflicts even with --replacefiles, so we remove the
 # predecessor explicitly. --nodeps is safe here because nothing else in
@@ -111,11 +111,11 @@ RUN --mount=type=bind,from=ctx-packages,source=/,target=/ctx \
 # auto-remove ~73 transitively-pulled packages, several of which are
 # part of the silverblue base. rpm -e removes only the two packages we
 # asked for; the orphaned deps stay put.
-# sideral-fox bridge: the manpage comes from the `man-build` stage; the
+# silverfox-fox bridge: the manpage comes from the `man-build` stage; the
 # bash dispatcher + Justfiles + libexec scripts come directly from the
-# build context. Both land in /var/tmp/fox-prebuilt/ which sideral-fox.spec's
+# build context. Both land in /var/tmp/fox-prebuilt/ which silverfox-fox.spec's
 # %install reads from, then the same RUN cleans the bridge dir up.
-COPY --from=man-build /out/sideral.7.gz                /var/tmp/fox-prebuilt/sideral.7.gz
+COPY --from=man-build /out/silverfox.7.gz                /var/tmp/fox-prebuilt/silverfox.7.gz
 COPY modules/fox/src/bin                               /var/tmp/fox-prebuilt/bin
 COPY modules/fox/src/recipes                           /var/tmp/fox-prebuilt/recipes
 COPY modules/fox/src/libexec                           /var/tmp/fox-prebuilt/libexec
@@ -126,9 +126,9 @@ RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     /ctx/lib/build.sh && \
     dnf5 install -y rpm-build rpmdevtools && \
-    /ctx/lib/build-rpms.sh /ctx/modules /tmp/rpmbuild "${SIDERAL_VERSION}" && \
+    /ctx/lib/build-rpms.sh /ctx/modules /tmp/rpmbuild "${SILVERFOX_VERSION}" && \
     rpm -e --nodeps ublue-os-signing && \
-    rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/sideral-*.rpm && \
+    rpm -Uvh --replacefiles --replacepkgs /tmp/rpmbuild/RPMS/noarch/silverfox-*.rpm && \
     rpm -e rpm-build rpmdevtools && \
     rm -rf /tmp/rpmbuild /var/tmp/fox-prebuilt && \
     ostree container commit

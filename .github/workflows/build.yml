@@ -1,4 +1,4 @@
-name: build-sideral
+name: build-silverfox
 
 on:
   push:
@@ -10,12 +10,12 @@ on:
     branches: [main]
 
 env:
-  IMAGE_DESC: "Personal Fedora atomic desktop — stock GNOME on ublue-os/silverblue-main, ghostty terminal (Terra), Zen Browser (Flatpak from Flathub), curated flatpaks, GNU-stow-seeded user dotfiles, sideral-cli-tools meta-RPM (zsh, starship, carapace-bin, mise, code, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, stow), and rootless podman with docker compatibility shims."
+  IMAGE_DESC: "Personal Fedora atomic desktop — stock GNOME on ublue-os/silverblue-main, ghostty terminal (Terra), Zen Browser (Flatpak from Flathub), curated flatpaks, GNU-stow-seeded user dotfiles, silverfox-cli-tools meta-RPM (zsh, starship, carapace-bin, mise, code, atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc/make/cmake, stow), and rootless podman with docker compatibility shims."
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   R2_ENDPOINT: https://e30740452050b87fd107356bd87f01eb.r2.cloudflarestorage.com
-  R2_BUCKET: sideral
-  R2_PUBLIC_BASE: https://sideral.athenabriana.com
-  ISO_KEY: sideral_x86_64.iso
+  R2_BUCKET: silverfox
+  R2_PUBLIC_BASE: https://silverfox.athenabriana.com
+  ISO_KEY: silverfox_x86_64.iso
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -68,10 +68,10 @@ jobs:
         include:
           - variant: base
             base_image: ghcr.io/ublue-os/silverblue-main:44
-            image_name: sideral
+            image_name: silverfox
           - variant: nvidia
             base_image: ghcr.io/ublue-os/silverblue-nvidia:44
-            image_name: sideral-nvidia
+            image_name: silverfox-nvidia
 
     steps:
       - name: Checkout
@@ -188,8 +188,8 @@ jobs:
         if: steps.dryrun.outputs.skip == 'false'
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
-          echo "image_ref=ghcr.io/${OWNER}/sideral:latest" >> "$GITHUB_OUTPUT"
-          echo "iso_name=sideral-v${{ steps.dryrun.outputs.next_version }}-x86_64.iso" >> "$GITHUB_OUTPUT"
+          echo "image_ref=ghcr.io/${OWNER}/silverfox:latest" >> "$GITHUB_OUTPUT"
+          echo "iso_name=silverfox-v${{ steps.dryrun.outputs.next_version }}-x86_64.iso" >> "$GITHUB_OUTPUT"
 
       - name: Maximise disk space
         if: steps.dryrun.outputs.skip == 'false'

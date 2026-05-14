@@ -23,6 +23,6 @@
 # storage on /var/lib/docker), and rootless podman is the de facto
 # atomic-desktop default. The persistent docker-ce repo, the
 # --allowerasing swap of Fedora's containerd, and the docker-ce
-# Requires in sideral-base all go away with this change.
+# Requires in silverfox-base all go away with this change.
 podman-docker
 podman-compose

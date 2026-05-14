@@ -10,7 +10,7 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 
 **Considered**:
 - Ship `nix-home` as designed and discover frictions in production.
-- Make `sideral-nix` a removable rpm-ostree sub-package so the user can opt out per-deployment if it bites.
+- Make `silverfox-nix` a removable rpm-ostree sub-package so the user can opt out per-deployment if it bites.
 - VM-test current `nix-home` for one hour first, then decide based on empirical signal.
 
 **Why**:
@@ -19,7 +19,7 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
   2. SELinux mislabel of `/nix` store paths — [`nix-installer#1383`](https://github.com/DeterminateSystems/nix-installer/issues/1383), open since 2023, no upstream fix as of late 2025. Recurs after every `nix profile install`. Workaround: perpetual `restorecon -Rv /nix`.
   3. `/nix` and nix-daemon disappearing after `rpm-ostree upgrade` on F42+ — multiple Universal Blue forum reports ([`8500`](https://universal-blue.discourse.group/t/nix-installation-is-gone-after-getting-fedora-42/8500)). Some users abandoned nix entirely.
 - silverblue-main:43 is in the impact zone for all three.
-- Nix's unique value on atomic Fedora is per-user `nix profile install` for ad-hoc CLI tools — a workload sideral does not exercise heavily. The declarative-home-config benefit is recoverable via chezmoi.
+- Nix's unique value on atomic Fedora is per-user `nix profile install` for ad-hoc CLI tools — a workload silverfox does not exercise heavily. The declarative-home-config benefit is recoverable via chezmoi.
 - Cost of pivoting now is low: nix-home is implemented but not VM-verified — no shipping users to migrate. Cost of pivoting later (post-ship) compounds.
 - User explicit fear ("issues and conflicts" + "lots of packages missing") aligned with the research findings; the empirical risk justified the decision without needing a confirmatory VM test.
 
@@ -35,7 +35,7 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 
 **Why**:
 - yadm wins on personal edit ergonomics (no source-tree round-trip).
-- chezmoi wins on the axes that matter for sideral's long-term collaboration model:
+- chezmoi wins on the axes that matter for silverfox's long-term collaboration model:
   - **Agent-friendliness**: explicit source tree, filename-encoded intent (`encrypted_`, `private_`, `executable_`, `dot_`), `chezmoi diff` / `verify` / `--dry-run` give structured signal that AI agents can use safely.
   - **Community recognition**: 19.5k stars vs ~5k, monthly release cadence (v2.70.2 Apr 2026), 226 vs 58 contributors. The de-facto "standard answer" for dotfile management in 2026.
   - **Templating**: full Go `text/template` + sprig, vars including `.chezmoi.osRelease.variantId` (Silverblue/Bluefin/Aurora aware out of the box).
@@ -47,16 +47,16 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 
 ## D-03 · CLI tools as Fedora-layered RPMs (no flatpak, no nix)
 
-**Chose**: All 14 CLI tools (`chezmoi mise starship atuin fzf bat eza ripgrep zoxide gh git-lfs gcc make cmake`) plus `code` installed as RPMs via Fedora's repos, `mise.jdx.dev/rpm/`, or `packages.microsoft.com`. Bundled into a `sideral-cli-tools` meta-package owned by sideral.
+**Chose**: All 14 CLI tools (`chezmoi mise starship atuin fzf bat eza ripgrep zoxide gh git-lfs gcc make cmake`) plus `code` installed as RPMs via Fedora's repos, `mise.jdx.dev/rpm/`, or `packages.microsoft.com`. Bundled into a `silverfox-cli-tools` meta-package owned by silverfox.
 
 **Considered**:
 - Flatpak — limited surface (CLI tools rarely have flatpaks; sandbox conflicts with shell-tool nature of these binaries).
-- Distrobox-only (host stays clean) — breaks the "fresh shell after rebase has all tooling" UX that sideral has shipped since v1.
+- Distrobox-only (host stays clean) — breaks the "fresh shell after rebase has all tooling" UX that silverfox has shipped since v1.
 
 **Why**:
 - All tools have first-party RPMs available (Fedora 43, mise.jdx.dev, packages.microsoft.com).
 - Layered RPMs baked into the image are deterministic and rpm-ostree-native.
-- `sideral-cli-tools` as a meta-package gives the same `rpm-ostree override remove sideral-cli-tools` opt-out path that `sideral-flatpaks` offers — useful for slimmer derivatives.
+- `silverfox-cli-tools` as a meta-package gives the same `rpm-ostree override remove silverfox-cli-tools` opt-out path that `silverfox-flatpaks` offers — useful for slimmer derivatives.
 - mise + chezmoi together cover the "I want a per-user tool fast" gap that nix's `nix profile install` would have filled (mise for runtimes, chezmoi for config).
 
 ---
@@ -66,19 +66,19 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 **Chose**: User runs `chezmoi init --apply <repo-url>` themselves on first login (one command). No systemd user oneshot. An onboarding hint surfaces the command once on first shell (CHM-21..22).
 
 **Considered**:
-- Auto-bootstrap via `sideral-chezmoi-bootstrap.service` (user oneshot reading `$CHEZMOI_REPO` from `~/.config/environment.d/chezmoi.conf` or a marker file).
+- Auto-bootstrap via `silverfox-chezmoi-bootstrap.service` (user oneshot reading `$CHEZMOI_REPO` from `~/.config/environment.d/chezmoi.conf` or a marker file).
 - Interactive prompt on first shell.
 
 **Why**:
 - chezmoi's bootstrap is a single command, not a multi-step pipeline. Auto-running it requires the user to *also* configure where their dotfiles live (env var or marker file) — chicken-and-egg on first login since systemd user units don't see `~/.bash_profile` env vars by default.
 - Manual invocation is one-line documentation; readable, debuggable, no service-failure mode to re-run.
-- nix-home's `sideral-home-manager-setup.service` existed because home-manager bootstrap was heavyweight (channel add → install → switch, ~5 minutes). chezmoi doesn't need that ceremony.
+- nix-home's `silverfox-home-manager-setup.service` existed because home-manager bootstrap was heavyweight (channel add → install → switch, ~5 minutes). chezmoi doesn't need that ceremony.
 
 ---
 
-## D-05 · Shell-init wiring centralized in `/etc/profile.d/sideral-cli-init.sh`
+## D-05 · Shell-init wiring centralized in `/etc/profile.d/silverfox-cli-init.sh`
 
-**Chose**: Single shipped script, `command -v` guarded for each integration, owned by `sideral-shell-ux`.
+**Chose**: Single shipped script, `command -v` guarded for each integration, owned by `silverfox-shell-ux`.
 
 **Considered**:
 - Each user's chezmoi'd `~/.bashrc` declares its own integrations.
@@ -89,7 +89,7 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 - Replaces home-manager's `programs.X.enable = true` declarative wiring with a single image-shipped layer. User gets full integration without configuring anything.
 - `command -v` guards make the script robust against any single tool being absent (e.g., user removed a sub-package).
 - `/etc/profile.d/` is sourced by all login shells — survives even if the user's `~/.bashrc` is empty or hostile.
-- One file, one owner (`sideral-shell-ux`), one place to edit when adding/removing integrations.
+- One file, one owner (`silverfox-shell-ux`), one place to edit when adding/removing integrations.
 
 ---
 
@@ -112,16 +112,16 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 
 ## D-07 · Bitwarden as user-side shell helpers, not first-class
 
-**Chose**: User integrates Bitwarden CLI (`bw`) via shell helpers in their chezmoi'd `~/.bash_profile.d/` if needed. sideral does not ship `bw`-aware machinery.
+**Chose**: User integrates Bitwarden CLI (`bw`) via shell helpers in their chezmoi'd `~/.bash_profile.d/` if needed. silverfox does not ship `bw`-aware machinery.
 
 **Considered**:
 - chezmoi's first-class Bitwarden template func (`bitwarden`, `bitwardenSecrets`) — declare secrets in dotfile templates, chezmoi pulls them at apply time.
-- Ship `bitwarden-cli` as part of `sideral-cli-tools`.
+- Ship `bitwarden-cli` as part of `silverfox-cli-tools`.
 
 **Why**:
 - chezmoi's bitwarden func is built-in to the binary — no extra package needed; user opts in by editing their chezmoi source tree.
 - `bw login` + session-token lifecycle adds setup ceremony that not every user wants from minute one.
-- Keeping sideral neutral on the secrets-source choice (Bitwarden, 1Password, age, gpg, pass, sops) means the image doesn't impose a vault. User picks what they have.
+- Keeping silverfox neutral on the secrets-source choice (Bitwarden, 1Password, age, gpg, pass, sops) means the image doesn't impose a vault. User picks what they have.
 
 ---
 
@@ -154,6 +154,6 @@ Decisions recorded during `/spec-create` 2026-05-01. Reference the decision ID i
 ## Open implementation concerns (not blocking spec)
 
 - **vscode-extensions previously declared in home.nix** (`ms-vscode-remote.remote-ssh`, `ms-vscode-remote.remote-containers`): user installs from marketplace on first VS Code launch, or chezmoi's their `~/.config/Code/User/extensions/` tree. Documented in README as a one-time setup step.
-- **mise toolchain config** (the 12-tool list previously inlined in home.nix's `home.file.".config/mise/config.toml".text`): user owns `~/.config/mise/config.toml` via chezmoi. README provides a starter template snippet for users who want sideral's previous defaults.
+- **mise toolchain config** (the 12-tool list previously inlined in home.nix's `home.file.".config/mise/config.toml".text`): user owns `~/.config/mise/config.toml` via chezmoi. README provides a starter template snippet for users who want silverfox's previous defaults.
 - **atuin sync server** (atuin's optional cloud sync): user opts in via `atuin login` and chezmoi'd `~/.config/atuin/config.toml`. Image stays neutral.
-- **Image size**: rough estimate +100 to +120 MB net (VS Code +115 MB + 13 small RPMs ~30 MB − nix-installer ~25 MB − nix-related infra). If this proves too heavy, consider splitting `code` into a separate `sideral-vscode` sub-package the user can opt out of.
+- **Image size**: rough estimate +100 to +120 MB net (VS Code +115 MB + 13 small RPMs ~30 MB − nix-installer ~25 MB − nix-related infra). If this proves too heavy, consider splitting `code` into a separate `silverfox-vscode` sub-package the user can opt out of.

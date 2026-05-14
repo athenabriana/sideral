@@ -1,4 +1,4 @@
-# Testing — sideral
+# Testing — silverfox
 
 This project has no unit/e2e test suite. The gate checks are:
 
@@ -30,10 +30,10 @@ Only run when explicitly validating a full pass:
    - `mise --version` → resolves; user picks toolchain in their stowed `~/.config/mise/config.toml`
    - `stow --version` → resolves (replaces chezmoi for image-default dotfile seeding)
    - `which docker` → `/usr/bin/docker` (podman-docker shim wrapper)
-   - `systemctl --user is-active podman.socket` → `active` (auto-enabled by sideral-services)
+   - `systemctl --user is-active podman.socket` → `active` (auto-enabled by silverfox-services)
    - `kubectl version --client` + `kind version` + `helm version` → all resolve
    - On nvidia variant: `cat /usr/lib/bootc/kargs.d/00-nvidia.toml` → 4 kargs incl. `nvidia-drm.modeset=1`; `gsettings get org.gnome.mutter experimental-features` → contains `kms-modifiers`
-   - `rpm-ostree status` → sideral current, previous deployment preserved (ATH-08)
+   - `rpm-ostree status` → silverfox current, previous deployment preserved (ATH-08)
    - `which nu` returns empty (nushell removed); `which fish` returns empty
    - `ujust chsh zsh && exec zsh -l` → zsh init loads; starship + atuin + zoxide + zsh-syntax-highlighting + zsh-autosuggestions + carapace completions
    - **Distrobox check**: `distrobox create --image fedora:42 t && distrobox enter t -- echo hello` → succeeds
@@ -49,6 +49,6 @@ Only run when explicitly validating a full pass:
 - RPM name typos fail `dnf5 install` with a clear error — surface the failing package.
 - `extensions.gnome.org` build-time download can fail if the uuid/shell version no longer resolves — check the returned URL before curling.
 - `bootc container lint` is the last step of `just build`; reading failures earlier (dnf, post-install) is faster than waiting for lint.
-- File-conflict errors during the inline `rpm -Uvh --replacefiles` step usually mean a sideral spec ships a path that the base image already owns and `--replacefiles` couldn't reconcile — the conflicting package is in the error message; either remove it from the base via the prune step in `os/lib/build.sh` or drop the conflicting file from the sideral spec.
+- File-conflict errors during the inline `rpm -Uvh --replacefiles` step usually mean a silverfox spec ships a path that the base image already owns and `--replacefiles` couldn't reconcile — the conflicting package is in the error message; either remove it from the base via the prune step in `os/lib/build.sh` or drop the conflicting file from the silverfox spec.
 - `set -o pipefail` + `var=$(... | grep ...)` is a hidden landmine if grep finds nothing. Capture the response into a variable, then `grep ... || true`, then validate.
-- `rpm -e --nodeps ublue-os-signing` MUST run before the inline RPM install — sideral-base declares `Conflicts: ublue-os-signing` (both own /etc/containers/policy.json) and `--replacefiles` doesn't bypass package-level Conflicts.
+- `rpm -e --nodeps ublue-os-signing` MUST run before the inline RPM install — silverfox-base declares `Conflicts: ublue-os-signing` (both own /etc/containers/policy.json) and `--replacefiles` doesn't bypass package-level Conflicts.

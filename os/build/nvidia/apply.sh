@@ -7,7 +7,7 @@
 # What this installs:
 #   • kargs.d/00-nvidia.toml — bootc early-boot kargs (modeset, fbdev,
 #     blacklists). Applied to the bootloader entry on rpm-ostree upgrade.
-#   • modprobe.d/sideral-nvidia.conf → /usr/lib/modprobe.d/ — NVreg
+#   • modprobe.d/silverfox-nvidia.conf → /usr/lib/modprobe.d/ — NVreg
 #     options (VRAM persistence, temp path, GSP firmware, power mgmt).
 
 set -euo pipefail
@@ -24,5 +24,5 @@ mod_dir="$(dirname "$0")"
 log "[nvidia] writing kargs.d/00-nvidia.toml"
 install -Dm644 "$mod_dir/kargs.d/00-nvidia.toml" /usr/lib/bootc/kargs.d/00-nvidia.toml
 
-log "[nvidia] writing modprobe.d/sideral-nvidia.conf"
-install -Dm644 "$mod_dir/modprobe.d/sideral-nvidia.conf" /usr/lib/modprobe.d/sideral-nvidia.conf
+log "[nvidia] writing modprobe.d/silverfox-nvidia.conf"
+install -Dm644 "$mod_dir/modprobe.d/silverfox-nvidia.conf" /usr/lib/modprobe.d/silverfox-nvidia.conf

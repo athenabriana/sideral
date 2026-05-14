@@ -1,5 +1,5 @@
 {
-  description = "sideral user home configuration";
+  description = "silverfox user home configuration";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

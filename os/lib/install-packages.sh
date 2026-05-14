@@ -15,12 +15,12 @@ MODULES=(cli-tools services kubernetes nix)
 BUILD=(fonts nvidia)
 
 # ── 1. Remove inherited base packages ──────────────────────────────────
-# Sideral keeps stock GNOME from silverblue-main intact (gdm + gnome-shell
+# Silverfox keeps stock GNOME from silverblue-main intact (gdm + gnome-shell
 # + gnome-session + mutter + gnome-control-center + gnome-settings-daemon
 # + the appindicator/dash-to-panel extensions all stay). Only prune the
 # packages we actively replace: firefox (Zen Browser via Flatpak), gnome-
 # software (Bazaar via Flatpak), gnome-terminal (ghostty from Terra is
-# the canonical terminal, see sideral-cli-tools).
+# the canonical terminal, see silverfox-cli-tools).
 log "Removing inherited base packages"
 to_remove=()
 for pkg in firefox firefox-langpacks dconf-editor \

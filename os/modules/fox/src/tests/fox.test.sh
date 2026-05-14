@@ -17,11 +17,11 @@ trap 'rm -rf "$TMP"' EXIT
 BINDIR="$TMP/bin"
 mk_fake_just "$BINDIR"
 export PATH="$BINDIR:$PATH"
-export SIDERAL_JUSTFILE="$TMP/fixture.justfile"
-echo "# fixture" >"$SIDERAL_JUSTFILE"
-export SIDERAL_OS_RELEASE="$TMP/os-release"
-cat >"$SIDERAL_OS_RELEASE" <<'EOF'
-NAME="sideral"
+export SILVERFOX_JUSTFILE="$TMP/fixture.justfile"
+echo "# fixture" >"$SILVERFOX_JUSTFILE"
+export SILVERFOX_OS_RELEASE="$TMP/os-release"
+cat >"$SILVERFOX_OS_RELEASE" <<'EOF'
+NAME="silverfox"
 VERSION_ID="20260511.42"
 ID=fedora
 EOF
@@ -32,14 +32,14 @@ run() {
 
 echo "── fox.test.sh ──"
 
-# FOX-03: --version prints VERSION_ID from $SIDERAL_OS_RELEASE.
+# FOX-03: --version prints VERSION_ID from $SILVERFOX_OS_RELEASE.
 actual=$(run --version | grep -v '^FAKEJUST:' || true)
 assert_eq "version_id" "20260511.42" "$actual"
 
 # FOX-02: no-arg invokes fake-just with --list.
 actual=$(run | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "noarg_list" "FAKEJUST:--list" "$actual"
-assert_contains "noarg_justfile" "FAKEJUST:$SIDERAL_JUSTFILE" "$actual"
+assert_contains "noarg_justfile" "FAKEJUST:$SILVERFOX_JUSTFILE" "$actual"
 
 # FOX-02: --help also lists.
 actual=$(run --help | grep '^FAKEJUST:' | tr '\n' ' ')

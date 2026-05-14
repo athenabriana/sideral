@@ -2,7 +2,7 @@
 # titanoboa hook-post-rootfs: install Anaconda into the installer rootfs.
 set -eoux pipefail
 
-IMAGE_REF="ghcr.io/athenabriana/sideral"
+IMAGE_REF="ghcr.io/athenabriana/silverfox"
 IMAGE_TAG="latest"
 
 # ── Live user ───────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ for unit in \
     rpm-ostree-countme.service \
     bootloader-update.service \
     flatpak-preinstall.service \
-    sideral-flatpak-install.service \
+    silverfox-flatpak-install.service \
     fwupd-refresh.timer \
     ; do
     systemctl disable "$unit" 2>/dev/null || true
@@ -43,12 +43,12 @@ dnf install -y \
 # All classic spokes stay visible — Network is required because the
 # kickstart pulls the container image from ghcr.io at install time.
 mkdir -p /etc/anaconda/profile.d
-tee /etc/anaconda/profile.d/sideral.conf <<'EOF'
+tee /etc/anaconda/profile.d/silverfox.conf <<'EOF'
 [Profile]
-profile_id = sideral
+profile_id = silverfox
 
 [Profile Detection]
-os_id = sideral
+os_id = silverfox
 
 [Network]
 default_on_boot = FIRST_WIRED_WITH_LINK
@@ -76,7 +76,7 @@ EOF
 
 # ── Kickstart: GPU detection → pull matching image variant ───────────
 # The ISO carries no image bytes. The %pre script detects NVIDIA at
-# install time and selects sideral-nvidia; everything else gets sideral.
+# install time and selects silverfox-nvidia; everything else gets silverfox.
 # --no-signature-verification: tracked in image-ops feature; drop once
 # sigstore policy is wired up.
 tee -a /usr/share/anaconda/interactive-defaults.ks <<EOF
@@ -85,7 +85,7 @@ URL="${IMAGE_REF}:${IMAGE_TAG}"
 if lspci 2>/dev/null | grep -qiE 'vga.*nvidia|3d.*nvidia|display.*nvidia'; then
     URL="${IMAGE_REF}-nvidia:${IMAGE_TAG}"
 fi
-echo "ostreecontainer --url=\$URL --transport=registry --no-signature-verification" > /tmp/sideral-image.ks
+echo "ostreecontainer --url=\$URL --transport=registry --no-signature-verification" > /tmp/silverfox-image.ks
 %end
-%include /tmp/sideral-image.ks
+%include /tmp/silverfox-image.ks
 EOF

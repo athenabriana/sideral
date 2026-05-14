@@ -1,13 +1,13 @@
-# sideral-shell-ux — system-level shell scaffolding (motd, mise config,
+# silverfox-shell-ux — system-level shell scaffolding (motd, mise config,
 # login-shell migrate, motd display script). Owns four paths under /etc.
 # See %changelog for the prior scope.
 
-Name:           sideral-shell-ux
-Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
+Name:           silverfox-shell-ux
+Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral system-level shell scaffolding (motd, mise system config, login-shell migrate)
+Summary:        silverfox system-level shell scaffolding (motd, mise system config, login-shell migrate)
 License:        MIT
-URL:            https://github.com/athenabriana/sideral
+URL:            https://github.com/athenabriana/silverfox
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
@@ -19,27 +19,27 @@ user-domain): the every-login banner, the motd display script, the
 mise system config, and a rescue script that switches a user's login
 shell to zsh if its binary no longer exists. Everything user-facing
 (interactive-shell wiring, keybindings, AI-agent guard, EDITOR/VISUAL)
-ships via sideral-home's /etc/skel seed instead, copied into new user
+ships via silverfox-home's /etc/skel seed instead, copied into new user
 homes by useradd.
 
 /etc/user-motd:
-  Every-login banner. Displayed by sideral-motd.sh on interactive login
+  Every-login banner. Displayed by silverfox-motd.sh on interactive login
   (profile.d). Lists the common `fox` recipes. Per-user opt-out:
   `fox toggle-banner` or `touch ~/.config/no-show-user-motd`.
 
-/etc/profile.d/sideral-motd.sh:
+/etc/profile.d/silverfox-motd.sh:
   Reads and displays /etc/user-motd on login. Double-source guarded by
-  SIDERAL_MOTD_SOURCED. Replaces ublue-os-just's user-motd.sh (which
+  SILVERFOX_MOTD_SOURCED. Replaces ublue-os-just's user-motd.sh (which
   was removed when ublue-os-just was pruned from the image).
 
 /etc/mise/config.toml:
   System-wide settings (trusted_config_paths, not_found_auto_install,
   etc.). User toolchain declared in user-domain ~/.config/mise/config.toml
-  (seeded by sideral-home's /etc/skel tree on useradd).
+  (seeded by silverfox-home's /etc/skel tree on useradd).
 
-/etc/profile.d/sideral-shell-migrate.sh:
+/etc/profile.d/silverfox-shell-migrate.sh:
   Auto-migrates users whose login shell binary no longer exists (e.g.
-  legacy /usr/bin/fish or /usr/bin/nu accounts after a sideral rebase)
+  legacy /usr/bin/fish or /usr/bin/nu accounts after a silverfox rebase)
   to /usr/bin/zsh. Uses sudo -n so a missing sudoers entry fails fast
   rather than blocking login with a password prompt. Kept through v1.0
   minimum; retire when nobody plausibly still on a removed shell.
@@ -52,41 +52,41 @@ mkdir -p %{buildroot}
 cp -a etc %{buildroot}/
 
 %files
-/etc/profile.d/sideral-motd.sh
-/etc/profile.d/sideral-shell-migrate.sh
+/etc/profile.d/silverfox-motd.sh
+/etc/profile.d/silverfox-shell-migrate.sh
 /etc/user-motd
 /etc/mise/config.toml
 
 %changelog
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-16
-- Add /etc/profile.d/sideral-motd.sh: sideral-owned login-banner display
+- Add /etc/profile.d/silverfox-motd.sh: silverfox-owned login-banner display
   script. Replaces ublue-os-just's user-motd.sh, which is removed as part
   of the ublue-os-just package prune (ublue-os-just no longer in image).
-- %description: update to reference sideral-motd.sh; remove mention of
-  ublue-os-just's user-motd.sh now that sideral owns the path.
+- %description: update to reference silverfox-motd.sh; remove mention of
+  ublue-os-just's user-motd.sh now that silverfox owns the path.
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-15
 - Narrow scope to system-level shell concerns. Drop:
-  • /etc/zshrc (sideral's customized one) — stock Fedora /etc/zshrc
+  • /etc/zshrc (silverfox's customized one) — stock Fedora /etc/zshrc
     from the `zsh` RPM reclaims the path. If the first upgrade after
     landing balks at the file-ownership transfer, ship %ghost /etc/zshrc
     for one release as a soft handoff (open concern, verify in first
     rebase-on-VM test).
   • /usr/share/ublue-os/just/60-custom.just + %dir /usr/share/ublue-os/just
-    — ujust extension slot retired; sideral now owns its own
-    operator CLI via /usr/bin/fox + /usr/share/sideral/sideral.justfile
-    (sideral-fox RPM).
+    — ujust extension slot retired; silverfox now owns its own
+    operator CLI via /usr/bin/fox + /usr/share/silverfox/silverfox.justfile
+    (silverfox-fox RPM).
   • /usr/lib/systemd/user/rclone-gdrive.service — gdrive integration
     retired with the fox feature; rclone + fuse3 dropped from
-    sideral-cli-tools Requires in the same release.
+    silverfox-cli-tools Requires in the same release.
 - Rewrite /etc/user-motd: every `ujust <recipe>` row → `fox <recipe>`;
-  `tools` row → `man sideral` (alias: `fox cheatsheet`); add `fox home
+  `tools` row → `man silverfox` (alias: `fox cheatsheet`); add `fox home
   factory-reset` row; drop `gdrive-setup`, `apply-defaults` rows.
 - %description rewritten for narrowed scope.
 * Mon May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-14
 - Move all interactive-shell wiring to chezmoi-managed user dotfiles
-  (sideral-chezmoi-defaults). Drop /etc/profile.d/sideral-cli-init.sh,
-  /etc/zsh/sideral-cli-init.zsh, /usr/share/nushell/vendor/autoload/
-  sideral-cli-init.nu. /etc/zshrc trimmed to just `umask 022`.
+  (silverfox-chezmoi-defaults). Drop /etc/profile.d/silverfox-cli-init.sh,
+  /etc/zsh/silverfox-cli-init.zsh, /usr/share/nushell/vendor/autoload/
+  silverfox-cli-init.nu. /etc/zshrc trimmed to just `umask 022`.
 - Rationale: shell behavior is per-user; locking it under root-owned,
   rpm-ostree-read-only paths meant every tweak required a full image
   rebuild + rebase. Chezmoi-managed paths in $HOME are user-writable,
@@ -98,19 +98,19 @@ cp -a etc %{buildroot}/
   around nushell's parse-time `source` keyword that broke the runtime
   cmd-pipe-save-source pattern on every cold shell.
 * Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-13
-- Remove sideral-shell-seed.service + /usr/libexec/sideral-shell-seed.
-  Dotfile seeding replaced by sideral-chezmoi-defaults (profile.d auto-
+- Remove silverfox-shell-seed.service + /usr/libexec/silverfox-shell-seed.
+  Dotfile seeding replaced by silverfox-chezmoi-defaults (profile.d auto-
   apply on first login). Extract two surviving behaviors into profile.d:
-  sideral-shell-migrate.sh (broken-login-shell → zsh; sudo -n for safety)
-  and sideral-nushell-plugins.sh (register /usr/lib/nushell/plugins/ into
+  silverfox-shell-migrate.sh (broken-login-shell → zsh; sudo -n for safety)
+  and silverfox-nushell-plugins.sh (register /usr/lib/nushell/plugins/ into
   user plugin.msgpackz on first encounter).
 * Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-12
-- Fish → Nushell migration. Remove /etc/fish/conf.d/sideral-cli-init.fish.
-  Add /usr/share/nushell/vendor/autoload/sideral-cli-init.nu (env-phase
+- Fish → Nushell migration. Remove /etc/fish/conf.d/silverfox-cli-init.fish.
+  Add /usr/share/nushell/vendor/autoload/silverfox-cli-init.nu (env-phase
   wiring: starship, atuin, zoxide, view command, agent detection,
   EDITOR/VISUAL; no eza/bat aliases — nushell has structured ls).
-- Add sideral-shell-seed.service (systemd user unit, WantedBy=default.target)
-  + /usr/libexec/sideral-shell-seed script. Idempotent on every session:
+- Add silverfox-shell-seed.service (systemd user unit, WantedBy=default.target)
+  + /usr/libexec/silverfox-shell-seed script. Idempotent on every session:
   auto-migrates broken login shell to /usr/bin/zsh, seeds ~/.bashrc,
   ~/.zshrc, ~/.config/nushell/{env,config}.nu, ~/.config/mise/config.toml
   if missing. Never overwrites existing files.
@@ -131,7 +131,7 @@ cp -a etc %{buildroot}/
 - Add `ujust theme <wallpaper>` recipe to 60-custom.just: runs matugen,
   seeds per-user config from /etc/xdg on first use, signals ghostty
   via SIGUSR1, writes ghostty palette to config-matugen and helix theme
-  to ~/.config/helix/themes/sideral.toml.
+  to ~/.config/helix/themes/silverfox.toml.
 - Add `ujust niri` recipe to 60-custom.just: niri+Noctalia keybind
   cheatsheet with theming instructions and config override paths.
   Modeled on existing `ujust tools` shape (libformatting.sh, OSC-8
@@ -155,23 +155,23 @@ cp -a etc %{buildroot}/
   unit, sticks across reboots). Replaces the previous three-recipe
   init/mount/unmount split with one auto-mount-forever flow.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
-- Add /etc/zsh/sideral-cli-init.zsh + /etc/zshrc — zsh port of the
+- Add /etc/zsh/silverfox-cli-init.zsh + /etc/zshrc — zsh port of the
   bash/fish init. Same 14-marker agent detection, same eza/bat
   aliases, same Ctrl+P fzf quick-open (via zsh's ZLE widget +
   bindkey '^P'). The shipped /etc/zshrc replaces Fedora's stock
   zsh package /etc/zshrc via rpm -Uvh --replacefiles — content is
-  minimal (umask + source sideral-cli-init.zsh).
+  minimal (umask + source silverfox-cli-init.zsh).
 - Add /etc/user-motd — every-login banner picked up by ublue-os-
   just's /etc/profile.d/user-motd.sh. Lists the common `ujust`
   recipes. User opt-out via touch ~/.config/no-show-user-motd.
-- Drop /etc/profile.d/sideral-onboarding.sh — replaced by the motd
+- Drop /etc/profile.d/silverfox-onboarding.sh — replaced by the motd
   (works for any login shell, not just bash; shows on every login,
   not just the first; consistent with bluefin's first-run UX).
 - Extend 60-custom.just: `ujust chsh` now accepts zsh as a third
   option, and a new `ujust chezmoi-init <repo>` recipe replaces the
   removed onboarding hint with an actually-actionable command.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-6
-- Add /usr/share/ublue-os/just/60-custom.just — sideral's ujust recipe
+- Add /usr/share/ublue-os/just/60-custom.just — silverfox's ujust recipe
   drop-in. Fills the `import? "60-custom.just"` slot left by ublue-os/
   main's justfile for downstreams. First recipe: `ujust chsh [shell]`,
   defaulting to fish, switches login shell via sudo usermod -s
@@ -179,7 +179,7 @@ cp -a etc %{buildroot}/
   `ujust chsh bash` to switch back, `ujust` (no args) to list all
   recipes including ublue's stock set.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
-- Add /etc/fish/conf.d/sideral-cli-init.fish — fish port of the bash
+- Add /etc/fish/conf.d/silverfox-cli-init.fish — fish port of the bash
   init. Same tool wiring (starship/atuin/zoxide/mise/fzf), same
   EDITOR=hx + VISUAL=code, same agent-shell detection list (14
   markers), same Ctrl+P → fzf quick-open, same eza/bat aliases. Fish
@@ -189,17 +189,17 @@ cp -a etc %{buildroot}/
   remain functional out of the box.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
 - Module refactor: source tree moved to os/modules/shell-ux/src/.
-  /etc/profile.d/sideral-kind-podman.sh ownership transferred to
-  sideral-kubernetes (kubernetes module owns its K8s-tooling-specific
+  /etc/profile.d/silverfox-kind-podman.sh ownership transferred to
+  silverfox-kubernetes (kubernetes module owns its K8s-tooling-specific
   shell wiring). Spec name kept for upgrade safety. No file conflict
-  on image build — sideral-kubernetes claims the path cleanly via
+  on image build — silverfox-kubernetes claims the path cleanly via
   rpm -Uvh --replacefiles in the inline-RPM step.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
-- Add sideral-kind-podman.sh (subsequently moved to sideral-kubernetes
+- Add silverfox-kind-podman.sh (subsequently moved to silverfox-kubernetes
   in -4).
 * Fri May 01 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
-- Replace sideral-hm-status.sh (home-manager bootstrap waiter, retired
-  alongside nix-home) with sideral-cli-init.sh (CHM-11/12) and
-  sideral-onboarding.sh (CHM-21/22).
+- Replace silverfox-hm-status.sh (home-manager bootstrap waiter, retired
+  alongside nix-home) with silverfox-cli-init.sh (CHM-11/12) and
+  silverfox-onboarding.sh (CHM-21/22).
 * Thu Apr 23 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
-- Initial: poll-and-source bootstrap UX (sideral-hm-status.sh)
+- Initial: poll-and-source bootstrap UX (silverfox-hm-status.sh)

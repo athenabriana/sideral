@@ -1,28 +1,28 @@
-# sideral-home — user-domain seed via /etc/skel.
+# silverfox-home — user-domain seed via /etc/skel.
 #
-# Ships sideral's image-default dotfiles as a stow source tree at
+# Ships silverfox's image-default dotfiles as a stow source tree at
 # /etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/, plus five
 # pre-farmed relative symlinks at /etc/skel/{.bashrc,.zshrc,.config/...}.
 # `useradd` (traditional Unix, cp -a semantics) copies the whole tree
 # into new user homes, preserving symlinks. From that moment forward the
-# dotfiles are user-domain — sideral never modifies them. Image upgrades
+# dotfiles are user-domain — silverfox never modifies them. Image upgrades
 # that change defaults affect only future-created users; existing users
 # own their copy.
 #
 # To customize a single file: replace the symlink with a real file.
 # Dotfiles stays intact across rebases — edit freely.
 
-Name:           sideral-home
-Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
+Name:           silverfox-home
+Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral user-domain seed (/etc/skel stow tree + pre-farmed symlinks)
+Summary:        silverfox user-domain seed (/etc/skel stow tree + pre-farmed symlinks)
 License:        MIT
-URL:            https://github.com/athenabriana/sideral
+URL:            https://github.com/athenabriana/silverfox
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 %description
-Ships sideral's image-default user dotfiles via /etc/skel:
+Ships silverfox's image-default user dotfiles via /etc/skel:
 
   - /etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/ — six stow
     packages holding the real config content (bash + zsh rcs with
@@ -36,7 +36,7 @@ Ships sideral's image-default user dotfiles via /etc/skel:
 
 useradd copies the whole tree (cp -a semantics preserves symlinks) into
 new user homes. The Dotfiles stow tree gives users `stow`-friendly
-ergonomics without sideral owning the post-useradd state.
+ergonomics without silverfox owning the post-useradd state.
 
 %prep
 %setup -q
@@ -79,11 +79,11 @@ cp -a etc %{buildroot}/
 
 %changelog
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
-- Initial. Replaces sideral-stow-defaults: image-default dotfiles now
+- Initial. Replaces silverfox-stow-defaults: image-default dotfiles now
   seed via /etc/skel + useradd (cp -a), not via stow-on-first-login
   against a read-only ostree path. Source tree migrated as-is from
-  os/modules/dotfiles/src/usr/share/sideral/stow/ to
-  os/modules/home/src/etc/skel/.config/sideral/stow/. Five pre-farmed
+  os/modules/dotfiles/src/usr/share/silverfox/stow/ to
+  os/modules/home/src/etc/skel/.config/silverfox/stow/. Five pre-farmed
   relative symlinks at /etc/skel/{.bashrc,.zshrc,.config/...} resolve
   into the stow tree at useradd time, preserving symlink-into-stow
   ergonomics inside $HOME. mise user pins ship without the JVM block

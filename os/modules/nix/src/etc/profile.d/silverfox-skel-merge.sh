@@ -1,4 +1,4 @@
-# sideral-skel-merge.sh — auto-merge novos defaults do /etc/skel.
+# silverfox-skel-merge.sh — auto-merge novos defaults do /etc/skel.
 #
 # Em todo login:
 #   1. Copia arquivos NOVOS do skel (que não existem em $HOME)
@@ -11,11 +11,11 @@ if [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     return
 fi
 
-[ -n "${SIDERAL_SKEL_MERGE_RAN:-}" ] && return
-SIDERAL_SKEL_MERGE_RAN=1
+[ -n "${SILVERFOX_SKEL_MERGE_RAN:-}" ] && return
+SILVERFOX_SKEL_MERGE_RAN=1
 
 SKEL_DIR="${SKEL_DIR:-/etc/skel}"
-PENDING_FILE="$HOME/.config/sideral/.skel-pending"
+PENDING_FILE="$HOME/.config/silverfox/.skel-pending"
 : "${HOME:?HOME must be set}"
 
 [ -d "$SKEL_DIR" ] || return
@@ -74,10 +74,10 @@ while IFS= read -r -d '' top; do
 done < <(find "$SKEL_DIR" -mindepth 1 -maxdepth 1 -print0 2>/dev/null)
 
 if [ ${#pending[@]} -gt 0 ]; then
-    mkdir -p "$HOME/.config/sideral"
+    mkdir -p "$HOME/.config/silverfox"
     printf '%s\n' "${pending[@]}" > "$PENDING_FILE"
     echo
-    echo "⚡ sideral: novos defaults do sistema disponíveis"
+    echo "⚡ silverfox: novos defaults do sistema disponíveis"
     echo "   Revise os arquivos conflitantes e resolva manualmente:"
     for p in "${pending[@]}"; do
         echo "     • $p"

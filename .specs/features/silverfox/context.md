@@ -1,4 +1,4 @@
-# sideral — Decisions
+# silverfox — Decisions
 
 Discussion outcomes for ambiguities flagged in `spec.md`. Each row is the canonical answer for implementation.
 
@@ -19,7 +19,7 @@ Discussion outcomes for ambiguities flagged in `spec.md`. Each row is the canoni
 
 ## 3. Repo rename
 
-**Decision:** Rename repo folder `~/Code/sideral` → `~/Code/sideral`. Image name is `sideral`.
+**Decision:** Rename repo folder `~/Code/silverfox` → `~/Code/silverfox`. Image name is `silverfox`.
 
 ## 4. Default wallpapers
 
@@ -82,20 +82,20 @@ Rationale vs the other options considered:
 
 **Note on Bazaar duplication (historical, pre-2026-05-01):** since `bazaar` RPM included the app GUI, we dropped `io.github.kolunmi.Bazaar` from the flatpak manifest. After the 2026-05-01 swap, Bazaar is gone from the image entirely; the flatpak was NOT re-added (clean break). Final flatpak list remains **8 apps**.
 
-**Pre-configured defaults:** Ship captured dconf settings as `/etc/dconf/db/local.d/00-sideral-gnome-shell` (dash-to-panel icon/position, appindicator layout, rounded-corners radius, tiling-shell tiles config) plus `/etc/dconf/db/local.d/20-sideral-gnome-software` (`packaging-format-preference=['flatpak:flathub','flatpak','rpm']`, added 2026-05-01). Every user gets these defaults; they can override per-user.
+**Pre-configured defaults:** Ship captured dconf settings as `/etc/dconf/db/local.d/00-silverfox-gnome-shell` (dash-to-panel icon/position, appindicator layout, rounded-corners radius, tiling-shell tiles config) plus `/etc/dconf/db/local.d/20-silverfox-gnome-software` (`packaging-format-preference=['flatpak:flathub','flatpak','rpm']`, added 2026-05-01). Every user gets these defaults; they can override per-user.
 
 ## 7. Tailscale (deferred)
 
-**Decision:** Defer to a later spec. Not in sideral P1-P3.
+**Decision:** Defer to a later spec. Not in silverfox P1-P3.
 
 ## 8. Package scope — surgical, not a full bluefin fork
 
-**Decision:** Earlier intent to "add everything bluefin/bluefin-dx adds" was trimmed back after walking through individual packages. The final sideral layer is **surgical**: a short list of RPMs the user explicitly named + our sideral-specific extras. Bluefin's full FEDORA_PACKAGES list is **not** replicated.
+**Decision:** Earlier intent to "add everything bluefin/bluefin-dx adds" was trimmed back after walking through individual packages. The final silverfox layer is **surgical**: a short list of RPMs the user explicitly named + our silverfox-specific extras. Bluefin's full FEDORA_PACKAGES list is **not** replicated.
 
 > ⚠ **D-08 SUPERSEDED 2026-04-23.** The original RPM list below was trimmed in two waves. See live state in [STATE.md](../../project/STATE.md) "2026-04-23 cleanup" entry and [nix-home/context.md](../nix-home/context.md) D-04..D-15 for the new architecture. The historical content is preserved unchanged below for posterity.
 >
 > **Tracking summary** — what changed since this decision was written:
-> - **Wave 1 (nix-home, NXH-01..40, ~2026-04 mid):** mise moved from RPM to nix; `sideral-mise-install.service` removed; `act`, `atuin`, `direnv` dropped from mise toolchain or moved to home-manager; `/etc/skel/.bashrc` replaced by home-manager-generated `~/.bashrc`.
+> - **Wave 1 (nix-home, NXH-01..40, ~2026-04 mid):** mise moved from RPM to nix; `silverfox-mise-install.service` removed; `act`, `atuin`, `direnv` dropped from mise toolchain or moved to home-manager; `/etc/skel/.bashrc` replaced by home-manager-generated `~/.bashrc`.
 > - **Wave 2 (RPM cleanup, 2026-04-23):** every plain-CLI moved to home.nix or removed:
 >   - **→ home.nix**: `gh`, `starship`, `gcc`/`make`/`cmake`, `git-lfs`/`subtree`/`credential-libsecret`, `code` (VS Code).
 >   - **→ flatpak (settled)**: `helium-bin` replaced by `app.zen_browser.zen` 2026-04-23 after a Silverblue `/opt` cpio conflict on a live host. 2026-05-01 churn — re-RPM via `imput/helium` COPR (same `/opt` conflict in buildah), `.flatpak` bundle from `ShyVortex/helium-flatpak` (no remote → no `flatpak update`), community `helium` Flatpak remote from `MarioGK/helium-flatpak` (Pages serves an empty ostree despite workflow success), MarioGK release bundle (works but no usable update remote). After 4 failed Helium packaging attempts, **dropped Helium and reverted to `app.zen_browser.zen` from Flathub** — the same swap that worked 2026-04-23. Standard Flathub install/update, no maintainer-trust gymnastics.
@@ -123,7 +123,7 @@ Rationale vs the other options considered:
 
 **Editor (VS Code — mirrors bluefin-dx pattern):** ⚠ moved to home.nix in 2026-04-23 cleanup
 - ~~`code` from Microsoft's `packages.microsoft.com/yumrepos/vscode` repo~~ — now via `programs.vscode` in home.nix
-- ~~`system_files/usr/lib/systemd/user/sideral-vscode-setup.service`~~ — service deleted; extensions now declared via `programs.vscode.extensions = with pkgs.vscode-extensions; [ ms-vscode-remote.remote-ssh, ms-vscode-remote.remote-containers ]`
+- ~~`system_files/usr/lib/systemd/user/silverfox-vscode-setup.service`~~ — service deleted; extensions now declared via `programs.vscode.extensions = with pkgs.vscode-extensions; [ ms-vscode-remote.remote-ssh, ms-vscode-remote.remote-containers ]`
 
 **Terminal:** Ptyxis (shipped by silverblue-main base) is the terminal. **Kitty dropped** — no layering, no dotfile.
 
@@ -132,7 +132,7 @@ Rationale vs the other options considered:
 
 **Browser:** ✓ Zen Browser from Flathub (settled 2026-05-01 after Helium packaging failed 4 ways)
 - Source: `app.zen_browser.zen` from Flathub. Standard listing, GPG-verified, maintained by the Zen project — no extra remotes, no maintainer-trust gymnastics.
-- Mechanism: `os/build.sh` registers two system-wide flatpak remotes (`flathub`, `fedora` oci+registry) and runs `flatpak install --system` for every entry in `/etc/flatpak-manifest`. All 8 curated flatpaks land in `/var/lib/flatpak` before the image is shipped; ostree factory-seeds them to deployed systems on first boot. `sideral-flatpak-install.service` repurposed as forward-compat self-heal — every boot it re-applies remotes + manifest so future image rebases that add new entries install on existing user systems.
+- Mechanism: `os/build.sh` registers two system-wide flatpak remotes (`flathub`, `fedora` oci+registry) and runs `flatpak install --system` for every entry in `/etc/flatpak-manifest`. All 8 curated flatpaks land in `/var/lib/flatpak` before the image is shipped; ostree factory-seeds them to deployed systems on first boot. `silverfox-flatpak-install.service` repurposed as forward-compat self-heal — every boot it re-applies remotes + manifest so future image rebases that add new entries install on existing user systems.
 - Update cadence: standard `flatpak update`, run nightly by inherited `ublue-os-update-services`.
 - Why not Helium: tried 4 ways and each broke. (1) `imput/helium` COPR: RPM packages `/opt/` itself → `/opt/helium` cpio unpack conflict on both live Silverblue host (2026-04-23) and OCI buildah (2026-05-01 attempt #1). (2) ShyVortex `.flatpak` bundle from GH Releases (2026-05-01 attempt #2): bundles have no remote → `flatpak update` can't refresh them, frozen between image rebases. (3) MarioGK community ostree remote at `mariogk.github.io/helium-flatpak/` (2026-05-01 attempt #3): the descriptor URL serves a near-empty ostree (only `summary` + `config`, no `objects/`/`refs/`/`deltas/` deployed despite workflow success), so `flatpak install` fails. (4) MarioGK release bundle install at image build (2026-05-01 attempt #4): builds clean, but the bundle's auto-generated remote points to the same broken Pages, so still no usable update path. Each Helium attempt added more packaging machinery for less working software; Flathub-listed Zen reverses the trade.
 
@@ -145,7 +145,7 @@ Rationale vs the other options considered:
 
 **Mise — Pattern A (user-level install, auto-triggered on first login):** ⚠ replaced by Pattern B (nix-home)
 - Image now **does ship a mise binary** in `~/.nix-profile/bin/` via `home.packages = [ pkgs.mise ]`.
-- `sideral-mise-install.service` **deleted**; `sideral-home-manager-setup.service` materializes mise + the rest of home.nix on first user login.
+- `silverfox-mise-install.service` **deleted**; `silverfox-home-manager-setup.service` materializes mise + the rest of home.nix on first user login.
 - mise config inlined in home.nix via `home.file.".config/mise/config.toml".text = ''…''` (was `/etc/skel/.config/mise/config.toml`).
 - Toolchain reduced from 15 → **12 tools**: dropped `act` (use `nix profile install` ad-hoc), `direnv` (declined entirely), `atuin` (now `programs.atuin.enable`).
 - Distrobox now shares the host's `/nix` via `/etc/distrobox/distrobox.conf` auto-mount; mise itself is host-only (was host+distrobox via `~/.local/bin`).
@@ -174,7 +174,7 @@ Rationale vs the other options considered:
 - `fish`, `zsh`, `bash-color-prompt`, `ibus-mozc`, `mozc`, `samba-*`, `krb5-workstation`, `adcli` — not part of user's workflow
 - `tailscale` — deferred
 
-### Sideral specifics — current (post-cleanup)
+### Silverfox specifics — current (post-cleanup)
 
 - Build-time GNOME extension fetch: `tilingshell@ferrarodomenico.com` + `rounded-window-corners@fxgn` from extensions.gnome.org (`gnome-extensions/post-install.sh`)
 - `fonts/post-install.sh`: Source Serif 4 + Source Sans 3 from Adobe GitHub releases
@@ -183,20 +183,20 @@ Rationale vs the other options considered:
 
 ### /etc + /usr files shipped — current (post-cleanup)
 
-- `/etc/dconf/db/local.d/{00-sideral-focus, 00-sideral-gnome-shell, 10-sideral-keybinds}` — captured GNOME defaults
+- `/etc/dconf/db/local.d/{00-silverfox-focus, 00-silverfox-gnome-shell, 10-silverfox-keybinds}` — captured GNOME defaults
 - `/etc/distrobox/distrobox.conf` — auto-mount `/nix`, `/var/lib/nix`, `/etc/nix` into every distrobox container ⊕ added 2026-04-23
-- `/etc/flatpak-manifest` + `/etc/systemd/system/sideral-flatpak-install.service` — 8-app auto-install
-- `/etc/os-release` rewritten with `ID=sideral`, `NAME="Sideral OS"`
-- `/etc/profile.d/sideral-hm-status.sh` — first-shell bootstrap UX (poll home-manager-setup-done marker, source env when ready)
+- `/etc/flatpak-manifest` + `/etc/systemd/system/silverfox-flatpak-install.service` — 8-app auto-install
+- `/etc/os-release` rewritten with `ID=silverfox`, `NAME="Silverfox OS"`
+- `/etc/profile.d/silverfox-hm-status.sh` — first-shell bootstrap UX (poll home-manager-setup-done marker, source env when ready)
 - `/etc/selinux/targeted/contexts/files/file_contexts.local` — `/nix` SELinux fcontext rules (mapping to `usr_t`/`bin_t`/`lib_t`)
-- `/etc/systemd/system/sideral-nix-install.service` — first-boot nix installer (multi-target.wants symlink)
-- `/etc/systemd/system/sideral-nix-relabel.{service,path}` — auto-restorecon on `/nix/store` mutations (multi-target.wants symlink for the .path)
+- `/etc/systemd/system/silverfox-nix-install.service` — first-boot nix installer (multi-target.wants symlink)
+- `/etc/systemd/system/silverfox-nix-relabel.{service,path}` — auto-restorecon on `/nix/store` mutations (multi-target.wants symlink for the .path)
 - `/etc/yum.repos.d/docker-ce.repo` — kept for `rpm-ostree upgrade` to pull docker-ce + containerd.io updates
 - ~~`/etc/yum.repos.d/vscode.repo`~~ — **deleted** 2026-04-23 (VS Code now via home.nix)
-- `/usr/lib/systemd/user/sideral-home-manager-setup.service` + `default.target.wants/` symlink — first-login home-manager bootstrap
-- ~~`/usr/lib/systemd/user/sideral-vscode-setup.service`~~ — **deleted** 2026-04-23
-- ~~`/usr/lib/systemd/user/sideral-mise-install.service`~~ — **deleted** in nix-home migration
-- `/usr/libexec/nix-installer` — pinned binary, run by `sideral-nix-install.service`
+- `/usr/lib/systemd/user/silverfox-home-manager-setup.service` + `default.target.wants/` symlink — first-login home-manager bootstrap
+- ~~`/usr/lib/systemd/user/silverfox-vscode-setup.service`~~ — **deleted** 2026-04-23
+- ~~`/usr/lib/systemd/user/silverfox-mise-install.service`~~ — **deleted** in nix-home migration
+- `/usr/libexec/nix-installer` — pinned binary, run by `silverfox-nix-install.service`
 
 ### /etc/skel shipped (user defaults) — current
 
@@ -216,7 +216,7 @@ Bash (from base) remains the default. No fish/zsh layered. Bashrc is now home-ma
 
 **Decision:** Focus follows mouse (sloppy), no auto-raise.
 **Why:** With tiling-shell, windows don't overlap, so auto-raise is irrelevant; sloppy focus gives the hover-to-focus feel without the jitter of `mouse` mode.
-**Implementation:** Ship `system_files/etc/dconf/db/local.d/00-sideral-focus` with:
+**Implementation:** Ship `system_files/etc/dconf/db/local.d/00-silverfox-focus` with:
 ```ini
 [org/gnome/desktop/wm/preferences]
 focus-mode='sloppy'

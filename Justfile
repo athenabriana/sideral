@@ -1,9 +1,9 @@
-# Sideral OS — local build + rebase recipes.
+# Silverfox OS — local build + rebase recipes.
 #   list:    `just`
 #   build:   `just build`
 #   rebase:  `just rebase`
 
-image_name := "sideral"
+image_name := "silverfox"
 image_tag  := "dev"
 registry   := env_var_or_default("REGISTRY", "localhost")
 
@@ -35,10 +35,10 @@ fox-lint:
 fox-test:
     bash os/modules/fox/src/tests/fox.test.sh
 
-# Render sideral(7) locally for preview (requires pandoc on $PATH)
+# Render silverfox(7) locally for preview (requires pandoc on $PATH)
 fox-gen-man:
-    pandoc -s -t man os/modules/fox/src/man/sideral.md -o /tmp/sideral.7
-    @echo "Preview: man -l /tmp/sideral.7"
+    pandoc -s -t man os/modules/fox/src/man/silverfox.md -o /tmp/silverfox.7
+    @echo "Preview: man -l /tmp/silverfox.7"
 
 # Rebase host to the locally-built image (requires reboot after)
 rebase:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-rpms.sh — build every sideral-* binary RPM inline from os/modules/.
+# build-rpms.sh — build every silverfox-* binary RPM inline from os/modules/.
 #
 # Walks <modules-dir>/<module>/rpm/*.spec. Each spec has a sibling
 # <modules-dir>/<module>/src/ tree that becomes Source0 (tarballed as
@@ -12,16 +12,16 @@
 #
 # Usage:    os/lib/build-rpms.sh <modules-dir> <output-topdir> [version]
 #
-# Default version: $_SIDERAL_VERSION env, else "0.0.0.dev". CI sets
-# _SIDERAL_VERSION="$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}".
+# Default version: $_SILVERFOX_VERSION env, else "0.0.0.dev". CI sets
+# _SILVERFOX_VERSION="$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}".
 #
-# Output:   <output-topdir>/RPMS/noarch/sideral-*.rpm
+# Output:   <output-topdir>/RPMS/noarch/silverfox-*.rpm
 
 set -euo pipefail
 
 MOD_ROOT="${1:?usage: build-rpms.sh <modules-dir> <output-topdir> [version]}"
 TOPDIR="${2:?usage: build-rpms.sh <modules-dir> <output-topdir> [version]}"
-VERSION="${3:-${_SIDERAL_VERSION:-0.0.0.dev}}"
+VERSION="${3:-${_SILVERFOX_VERSION:-0.0.0.dev}}"
 
 [ -d "$MOD_ROOT" ] || { echo "modules dir not found: $MOD_ROOT" >&2; exit 1; }
 
@@ -67,7 +67,7 @@ for moddir in "$MOD_ROOT"/*/; do
 
         rpmbuild -bb \
             --define "_topdir $TOPDIR" \
-            --define "_sideral_version $VERSION" \
+            --define "_silverfox_version $VERSION" \
             --define "dist .fc44" \
             "$TOPDIR/SPECS/$spec_name.spec" >&2
     done
@@ -76,11 +76,11 @@ done
 rm -rf "$TOPDIR/_stage"
 
 # Sanity: spec count matches built RPM count.
-produced="$(find "$TOPDIR/RPMS" -name 'sideral-*.rpm' | wc -l)"
+produced="$(find "$TOPDIR/RPMS" -name 'silverfox-*.rpm' | wc -l)"
 if [ "$expected_count" != "$produced" ]; then
     echo "rpmbuild produced $produced RPMs, expected $expected_count" >&2
     exit 1
 fi
 
 echo "built $produced RPMs under $TOPDIR/RPMS/" >&2
-find "$TOPDIR/RPMS" -name 'sideral-*.rpm' -print
+find "$TOPDIR/RPMS" -name 'silverfox-*.rpm' -print

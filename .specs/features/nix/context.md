@@ -1,4 +1,4 @@
-# Sideral — Nix + nh — Context
+# Silverfox — Nix + nh — Context
 
 **Gathered:** 2026-05-10 (updated 2026-05-13)
 **Spec:** `.specs/features/nix/spec.md`
@@ -8,7 +8,7 @@
 
 ## Feature Boundary
 
-Ship nix + nh on the sideral image so user-level packages (CLI tools, runtimes, flatpaks) are declared in a single `flake.nix` and applied via `fox home sync`. Nix is installed by a first-boot oneshot (Determinate installer, ostree planner). `nh` replaces home-manager entirely — `nh home switch` applies user config, `nh clean` handles garbage collection. The stow tree owns dotfiles; the nix flake is a stow package like bash/zsh/ghostty/zed. No `fox.toml` abstraction layer — user writes `flake.nix` directly. Fox wraps the workflow: `init`, `sync`, `diff`, `edit`.
+Ship nix + nh on the silverfox image so user-level packages (CLI tools, runtimes, flatpaks) are declared in a single `flake.nix` and applied via `fox home sync`. Nix is installed by a first-boot oneshot (Determinate installer, ostree planner). `nh` replaces home-manager entirely — `nh home switch` applies user config, `nh clean` handles garbage collection. The stow tree owns dotfiles; the nix flake is a stow package like bash/zsh/ghostty/zed. No `fox.toml` abstraction layer — user writes `flake.nix` directly. Fox wraps the workflow: `init`, `sync`, `diff`, `edit`.
 
 ---
 
@@ -16,7 +16,7 @@ Ship nix + nh on the sideral image so user-level packages (CLI tools, runtimes, 
 
 ### D-01 — Image-baked binary, first-boot activation
 
-- **Decision:** The Determinate `nix-installer` binary is pre-downloaded at image build time and staged at `/usr/libexec/nix-installer`. A systemd oneshot (`sideral-nix-bootstrap.service`) runs the installer on first boot. User does NOT run any install command post-rebase.
+- **Decision:** The Determinate `nix-installer` binary is pre-downloaded at image build time and staged at `/usr/libexec/nix-installer`. A systemd oneshot (`silverfox-nix-bootstrap.service`) runs the installer on first boot. User does NOT run any install command post-rebase.
 - **Why:** The installer is designed to run on a deployed atomic system, not inside a `podman build` sandbox (it creates systemd units, the `/nix` mount, and nixbld users against the real root). Pre-downloading at build time avoids "first boot needs curl" while keeping execution in the right environment.
 - **Trade accepted:** Nix not available on first login — oneshot must complete first (~30s-2min). Not an RPM, not removable via `rpm-ostree override remove`.
 
@@ -28,7 +28,7 @@ Ship nix + nh on the sideral image so user-level packages (CLI tools, runtimes, 
 
 ### D-03 — No prepare-root.conf — systemd .mount unit handles composefs
 
-- **Decision:** Sideral does NOT ship a custom `/etc/ostree/prepare-root.conf`. The Determinate installer's `ostree` planner creates a systemd `.mount` unit bind-mounting `/var/lib/nix` to `/nix`. Works with any composefs state.
+- **Decision:** Silverfox does NOT ship a custom `/etc/ostree/prepare-root.conf`. The Determinate installer's `ostree` planner creates a systemd `.mount` unit bind-mounting `/var/lib/nix` to `/nix`. Works with any composefs state.
 - **Why:** Shipping `prepare-root.conf` from the image creates an OSTree conflict boundary. The `.mount` unit approach avoids the problem entirely — `/var/lib/nix` is in `/var`, always writable.
 - **Trade accepted:** Depends on systemd boot ordering (`After=ostree-remount.service`, `BindsTo=var.mount`). Verified by upstream testing.
 
@@ -44,20 +44,20 @@ Ship nix + nh on the sideral image so user-level packages (CLI tools, runtimes, 
 - **Why:** Users own their `flake.lock`. Image stays neutral.
 - **Trade accepted:** First `fox home init` downloads nixpkgs + nh packages (~2-5 min). Only happens once.
 
-### D-06 — No coupling to existing sideral packaging
+### D-06 — No coupling to existing silverfox packaging
 
-- **Decision:** `sideral-cli-tools`, `sideral-flatpaks`, `sideral-home` stay unchanged. Nix is additive — no tool migrates from RPM to nix as part of this feature.
+- **Decision:** `silverfox-cli-tools`, `silverfox-flatpaks`, `silverfox-home` stay unchanged. Nix is additive — no tool migrates from RPM to nix as part of this feature.
 - **Why:** Migration is per-user choice. `command -v` guards in shell init handle the case where a tool is available via both paths.
 
 ### D-07 — Direct flake.nix, no fox.toml generator
 
-- **Decision:** User writes `~/.config/sideral/flake.nix` directly. No `fox.toml` → flake generator layer.
+- **Decision:** User writes `~/.config/silverfox/flake.nix` directly. No `fox.toml` → flake generator layer.
 - **Why:** `nh home switch` expects a home-manager-compatible flake. Any generator would be incomplete. For a single-user image, the extra layer adds maintenance burden with zero gain.
 - **Trade accepted:** User must learn basic nix syntax to add packages. The starter flake.nix provides commented examples for common cases.
 
 ### D-08 — Flake is a stow package
 
-- **Decision:** The `flake.nix` lives at `~/.config/sideral/stow/nix/.config/sideral/flake.nix`. Stow creates `~/.config/sideral/flake.nix` as a symlink. `nh home switch` runs against the symlink target — editing the flake edits the real file inside the stow tree.
+- **Decision:** The `flake.nix` lives at `~/.config/silverfox/stow/nix/.config/silverfox/flake.nix`. Stow creates `~/.config/silverfox/flake.nix` as a symlink. `nh home switch` runs against the symlink target — editing the flake edits the real file inside the stow tree.
 - **Why:** Stow is the existing dotfile layer. Making the nix flake a stow package means zero new patterns: `fox home sync` runs `stow -R nix` before `nh home switch`, `fox home factory-reset` skips the nix stow package (doesn't wipe user's flake).
 - **Trade accepted:** Two-step sync (stow + nh home switch). The stow step is near-instant (~100ms); the nh switch is the slow part.
 
@@ -90,20 +90,20 @@ os/modules/
 │   │   ├── usr/libexec/
 │   │   │   └── nix-installer          [pre-downloaded at build]
 │   │   ├── usr/lib/systemd/system/
-│   │   │   └── sideral-nix-bootstrap.service
+│   │   │   └── silverfox-nix-bootstrap.service
 │   │   └── etc/sudoers.d/
 │   │       └── nix-sudo-env
 │   ├── rpm/
-│   │   └── sideral-nix.spec
+│   │   └── silverfox-nix.spec
 │   └── nixbld-users.sh                [creates users 30000-30031 at build]
 │
 ├── home/                   EXISTING — stow packages (bash, zsh, ghostty, zed, mise)
 │                            [nix stow package added to src tree at
-│                             .config/sideral/stow/nix/.config/nix/flake.nix]
+│                             .config/silverfox/stow/nix/.config/nix/flake.nix]
 │
 └── fox/                    EXISTING — justfile dispatcher
     └── src/recipes/
-        └── sideral.justfile            [add home-init, home-sync (nh home switch),
+        └── silverfox.justfile            [add home-init, home-sync (nh home switch),
                                          home-diff, home-edit, nix-doctor,
                                          update cleanup for nh clean]
 ```

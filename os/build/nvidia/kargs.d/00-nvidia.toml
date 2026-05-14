@@ -1,4 +1,4 @@
-# bootc kargs for the sideral-nvidia variant. Applied to the bootloader
+# bootc kargs for the silverfox-nvidia variant. Applied to the bootloader
 # entry on `rpm-ostree upgrade` + reboot. Mirrors bluefin/bazzite-nvidia.
 #   • rd.driver.blacklist=nouveau, modprobe.blacklist=nouveau —
 #     keep nouveau out of both initramfs and the running kernel.

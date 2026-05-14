@@ -1,8 +1,8 @@
-# Sideral — Nix + nh
+# Silverfox — Nix + nh
 
 ## Problem Statement
 
-Sideral's user-level config is split across RPM-layered CLI tools (`sideral-cli-tools`), mise-managed runtimes, system-level flatpak installs, and a stow tree of dotfiles. Adding, removing, or updating anything requires touching at least two places (e.g., rebuild the image for a new RPM, or edit flake.nix + run a command). There is no single source of truth for "what packages does this user want."
+Silverfox's user-level config is split across RPM-layered CLI tools (`silverfox-cli-tools`), mise-managed runtimes, system-level flatpak installs, and a stow tree of dotfiles. Adding, removing, or updating anything requires touching at least two places (e.g., rebuild the image for a new RPM, or edit flake.nix + run a command). There is no single source of truth for "what packages does this user want."
 
 This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the declarative user backend. Nix is installed by a first-boot oneshot (Determinate installer, ostree planner). `nh` replaces `home-manager switch` and `nix-collect-garbage` with a unified CLI (`nh home switch`, `nh clean`). The stow tree continues to own dotfiles (bashrc, starship, ghostty, zed config). Fox wraps common operations: `fox home sync/diff/edit`.
 
@@ -14,15 +14,15 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 - [ ] A starter `flake.nix` ships at `~/.config/nix/flake.nix` with working nh-compatible home configuration (packages + programs + services)
 - [ ] `fox home sync` runs `nh home switch` to apply the flake
 - [ ] `fox home edit` opens the flake.nix, `fox home diff` shows pending changes
-- [ ] Existing sideral integrations (rpm-ostree, podman, mise, stow seeds) coexist with nix without conflict
+- [ ] Existing silverfox integrations (rpm-ostree, podman, mise, stow seeds) coexist with nix without conflict
 
 ## Out of Scope
 
 | Feature | Reason |
 |---|---|
-| NixOS modules | Sideral remains rpm-ostree atomic, not NixOS. |
+| NixOS modules | Silverfox remains rpm-ostree atomic, not NixOS. |
 | Pinned nixpkgs revision in the image | User pins in their own `flake.lock`. |
-| Migration of existing RPM-layered tools to nix | Per-user manual choice. `sideral-cli-tools` still ships image-default tools. |
+| Migration of existing RPM-layered tools to nix | Per-user manual choice. `silverfox-cli-tools` still ships image-default tools. |
 | nix-flatpak / home-manager | `nh home` replaces both. |
 | `fox.toml` → flake generator | User writes `flake.nix` directly. No extra abstraction layer. |
 
@@ -32,20 +32,20 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 
 ### P1: Nix ready after first boot ⭐ MVP
 
-**Story:** Rebase to a sideral image including this feature, reboot — nix is available system-wide without running any installer.
+**Story:** Rebase to a silverfox image including this feature, reboot — nix is available system-wide without running any installer.
 
 **Acceptance:**
 
 1. **NIX-01** — Determinate `nix-installer` binary is pre-downloaded at image build time and staged at `/usr/libexec/nix-installer`.
-2. **NIX-02** — `sideral-nix-bootstrap.service` runs on first boot (system oneshot, `After=network-online.target ostree-remount.service`), executes `nix-installer install ostree --persistence /var/lib/nix --no-confirm`.
-3. **NIX-03** — Service is guarded by `ConditionPathExists=!/var/lib/sideral/nix-setup-done`; writes marker on success, retries on failure.
+2. **NIX-02** — `silverfox-nix-bootstrap.service` runs on first boot (system oneshot, `After=network-online.target ostree-remount.service`), executes `nix-installer install ostree --persistence /var/lib/nix --no-confirm`.
+3. **NIX-03** — Service is guarded by `ConditionPathExists=!/var/lib/silverfox/nix-setup-done`; writes marker on success, retries on failure.
 4. **NIX-04** — After service completes, `nix --version` resolves on every user shell (bash + zsh).
 5. **NIX-05** — `/nix` is a bind-mount from `/var/lib/nix` (verified by `findmnt /nix`).
 6. **NIX-06** — `nix-daemon.service` is active and enabled, created by the installer.
 7. **NIX-07** — Sudoers snippet at `/etc/sudoers.d/nix-sudo-env` adds `/nix/var/nix/profiles/default/bin` to `secure_path`.
 8. **NIX-08** — Works with any composefs state (enabled, disabled, root.transient) — no `prepare-root.conf` changes needed.
 
-**Test:** Fresh VM rebase → reboot → `systemctl status sideral-nix-bootstrap.service` (exited 0) → `nix --version` → `findmnt /nix` shows `/var/lib/nix` source.
+**Test:** Fresh VM rebase → reboot → `systemctl status silverfox-nix-bootstrap.service` (exited 0) → `nix --version` → `findmnt /nix` shows `/var/lib/nix` source.
 
 ---
 
@@ -69,7 +69,7 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 
 **Acceptance:**
 
-1. **NIX-12** — A starter `flake.nix` and `flake.lock` ship at `/etc/skel/.config/sideral/stow/nix/.config/nix/flake.nix`.
+1. **NIX-12** — A starter `flake.nix` and `flake.lock` ship at `/etc/skel/.config/silverfox/stow/nix/.config/nix/flake.nix`.
 2. **NIX-13** — `fox home init` copies stow tree, runs `stow -R nix`, then `nix profile install nixpkgs#nh` and `nh home switch -c $(whoami)` (NH_FLAKE resolves to ~/.config/nix).
 3. **NIX-14** — `nh` is NOT pre-installed in the image — `nix profile install` fetches it on first init.
 4. **NIX-15** — After init, `nh home --version` resolves and `nh home switch` succeeds.
@@ -90,7 +90,7 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 4. **NIX-19** — Starter flake has commented `programs.mise.enable = true` section.
 5. **NIX-20** — Starter flake has commented `services.flatpak.packages` section with flathub remote.
 
-**Test:** `cat /etc/skel/.config/sideral/stow/nix/.config/nix/flake.nix` shows all sections with examples.
+**Test:** `cat /etc/skel/.config/silverfox/stow/nix/.config/nix/flake.nix` shows all sections with examples.
 
 ---
 
@@ -100,7 +100,7 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 
 **Acceptance:**
 
-1. **NIX-21** — `~/.config/nix/flake.nix` is a symlink to `~/.config/sideral/stow/nix/.config/nix/flake.nix`.
+1. **NIX-21** — `~/.config/nix/flake.nix` is a symlink to `~/.config/silverfox/stow/nix/.config/nix/flake.nix`.
 2. **NIX-22** — `fox home sync` runs `stow -R nix` before `nh home switch` — stow re-asserts broken symlinks.
 3. **NIX-23** — `fox home edit` opens `~/.config/nix/flake.nix` (the symlink target, directly editable).
 4. **NIX-24** — `fox home diff` runs `nh home switch --dry` (or equivalent build-only mode) and shows closure diff.
@@ -148,8 +148,8 @@ This spec ships **nix + [nh](https://github.com/nix-community/nh)** as the decla
 
 ## Edge Cases
 
-- **First boot offline**: `sideral-nix-bootstrap.service` fails, marker absent, retries on next boot. No user-facing error.
-- **`/nix` absent after failed bootstrap**: `fox nix-doctor` flags bootstrap-not-done, hints `systemctl start sideral-nix-bootstrap`.
+- **First boot offline**: `silverfox-nix-bootstrap.service` fails, marker absent, retries on next boot. No user-facing error.
+- **`/nix` absent after failed bootstrap**: `fox nix-doctor` flags bootstrap-not-done, hints `systemctl start silverfox-nix-bootstrap`.
 - **`fox home init` before nix bootstrap completes**: Fails with clear "nix not ready" message. User waits for bootstrap or reboots.
 - **Fresh rebase with new starter `flake.nix`**: Existing user's `~/.config/nix/flake.nix` is untouched (skel only applies at `fox home init` time).
 - **`fox home factory-reset` with custom flake**: The nix stow package is preserved. Factory-reset seeds bash/zsh/ghostty/zed stow packages from skel but does NOT touch `~/.config/nix/flake.nix`.

@@ -1,4 +1,4 @@
-# sideral default ghostty config — Alt-prefixed tabs/splits/panel.
+# silverfox default ghostty config — Alt-prefixed tabs/splits/panel.
 
 # --- tabs (Alt+H/L cycle, Alt+Shift+H/L move) ---
 keybind = alt+t=new_tab

@@ -1,7 +1,7 @@
-# sideral — system-wide mise settings.
+# silverfox — system-wide mise settings.
 #
 # Applies to all users. Tools live in ~/.config/mise/config.toml
-# (seeded by sideral-stow-defaults via GNU stow on first login) so
+# (seeded by silverfox-stow-defaults via GNU stow on first login) so
 # they are user-owned. This file handles behavior only.
 
 [settings]

@@ -1,25 +1,25 @@
-# sideral-cli-tools — meta-package pulling the day-to-day CLI tooling.
+# silverfox-cli-tools — meta-package pulling the day-to-day CLI tooling.
 # Also ships /etc/yum.repos.d/carapace.repo so rpm-ostree upgrade continues
 # resolving carapace-bin updates on a running system.
 #
 # Tools split by source:
 #   • Fedora 44 main:         stow, atuin, fzf, bat, eza, ripgrep,
 #                             zoxide, gh, git-lfs, gcc, make, cmake, zsh
-#   • mise.jdx.dev/rpm:       mise              (repo shipped via sideral-base)
+#   • mise.jdx.dev/rpm:       mise              (repo shipped via silverfox-base)
 #   • repo.terra.fyralabs.com: starship, ghostty, zed (repo shipped by this package)
 #   • yum.fury.io/rsteube:    carapace-bin      (repo shipped by this package)
 #
 # zed is set as both $EDITOR and $VISUAL by the /etc/skel-seeded user
 # .bashrc / .zshrc. bash is the default shell; zsh is reached via
-# `fox chsh zsh`. User dotfiles ship via sideral-home's /etc/skel tree
+# `fox chsh zsh`. User dotfiles ship via silverfox-home's /etc/skel tree
 # (useradd seeds them once; user-domain thereafter).
 
-Name:           sideral-cli-tools
-Version:        %{?_sideral_version}%{!?_sideral_version:0.0.0}
+Name:           silverfox-cli-tools
+Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
-Summary:        sideral CLI toolset (stow, starship, carapace-bin, mise, zed, ghostty + Fedora RPMs)
+Summary:        silverfox CLI toolset (stow, starship, carapace-bin, mise, zed, ghostty + Fedora RPMs)
 License:        MIT
-URL:            https://github.com/athenabriana/sideral
+URL:            https://github.com/athenabriana/silverfox
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
@@ -45,9 +45,9 @@ Requires:       ghostty
 Requires:       zed
 
 %description
-Meta-package: depends on the RPM-packaged CLI tools sideral wires into
+Meta-package: depends on the RPM-packaged CLI tools silverfox wires into
 the user shell. Shell init lives in user-domain ~/.bashrc and ~/.zshrc
-(seeded once from /etc/skel by useradd, owned by sideral-home). Zed is
+(seeded once from /etc/skel by useradd, owned by silverfox-home). Zed is
 the default editor for both EDITOR and VISUAL — git, sudoedit, mise
 edit, and any tool that spawns an editor opens a Zed buffer and blocks
 until it closes (`zed --wait`). bash is the default login shell; zsh is
@@ -70,21 +70,21 @@ cp -a etc %{buildroot}/
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-14
 - Drop Requires: rclone + fuse3 — gdrive integration retired with the
   fox feature. Users wanting Google Drive `rpm-ostree install rclone
-  fuse3` and write their own user unit (sideral doesn't own that
+  fuse3` and write their own user unit (silverfox doesn't own that
   workflow anymore). Also drops the rclone-gdrive.service unit shipped
-  by sideral-shell-ux + the ujust gdrive-setup/gdrive-remove recipes.
+  by silverfox-shell-ux + the ujust gdrive-setup/gdrive-remove recipes.
 - Add `just` to the cli-tools/packages.txt (NOT as a Requires here —
-  it's a Requires of sideral-fox, but installed in Layer 1 so
-  sideral-fox's rpm -Uvh in Layer 2 resolves its dep graph).
+  it's a Requires of silverfox-fox, but installed in Layer 1 so
+  silverfox-fox's rpm -Uvh in Layer 2 resolves its dep graph).
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-13
 - Swap editors: drop Requires: helix + code, add Requires: zed. Zed
   is the GPU-accelerated GUI editor from Terra (stable channel) and
-  now serves as both $EDITOR and $VISUAL — sideral-stow-defaults'
+  now serves as both $EDITOR and $VISUAL — silverfox-stow-defaults'
   bash/zsh rcs export EDITOR='zed --wait' and VISUAL='zed --wait'
   so git commit, sudoedit, mise edit, crontab -e, less's `v` key, etc.
   all open a Zed buffer and block until close. The terra.repo this
   package already ships handles `dnf upgrade` continuity for zed;
-  /etc/yum.repos.d/vscode.repo retires from sideral-base in lockstep.
+  /etc/yum.repos.d/vscode.repo retires from silverfox-base in lockstep.
 * Sun May 04 2026 GitHub Actions <noreply@github.com> - 0.0.0-12
 - Restore nushell via atim/nushell COPR (not in Fedora 44 main or Terra).
   Ship /etc/yum.repos.d/nushell.repo (gpg-signed COPR) so rpm-ostree
@@ -107,7 +107,7 @@ cp -a etc %{buildroot}/
   /usr/bin by the same script for nushell-plugins-install.sh to find.
 * Sun May 03 2026 GitHub Actions <noreply@github.com> - 0.0.0-8
 - Replace Requires: fish with Requires: nushell. Fish removed from
-  sideral; nushell is the third interactive shell. Switch via
+  silverfox; nushell is the third interactive shell. Switch via
   `ujust chsh nu`. carapace added as sole tab-completion backend
   for bash, zsh, and nushell (pre-built binary, see build.sh).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-7
@@ -121,25 +121,25 @@ cp -a etc %{buildroot}/
 - Add Requires: zsh-syntax-highlighting + zsh-autosuggestions. Brings
   vanilla zsh to fish-parity for the two killer interactive features
   (red-on-invalid command coloring + greyed-out autosuggestions from
-  history). Both Fedora main, source-loaded by sideral-cli-init.zsh
+  history). Both Fedora main, source-loaded by silverfox-cli-init.zsh
   with the upstream-required ordering (autosuggestions first, syntax-
   highlighting last so it wraps every ZLE widget). No plugin manager
   needed for two source lines; oh-my-zsh / prezto / zinit remain
   user-level options on top of this.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-5
 - Add Requires: zsh as a third interactive-shell option alongside
-  bash (default) and fish. Sideral ships parallel init for all three:
-  /etc/profile.d/sideral-cli-init.sh + /etc/fish/conf.d/sideral-cli-
-  init.fish + /etc/zsh/sideral-cli-init.zsh. Switch via the new
+  bash (default) and fish. Silverfox ships parallel init for all three:
+  /etc/profile.d/silverfox-cli-init.sh + /etc/fish/conf.d/silverfox-cli-
+  init.fish + /etc/zsh/silverfox-cli-init.zsh. Switch via the new
   `ujust chsh {bash,fish,zsh}` recipe (60-custom.just).
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-4
 - Add Requires: fish. Friendly-interactive-shell alternative to bash
   with first-class syntax highlighting, autosuggestions, and smarter
-  tab completion built in. Sideral ships parallel init for both
-  shells (sideral-shell-ux ships sideral-cli-init.{sh,fish}); per-
+  tab completion built in. Silverfox ships parallel init for both
+  shells (silverfox-shell-ux ships silverfox-cli-init.{sh,fish}); per-
   user opt-in via `chsh -s /usr/bin/fish` after deployment.
 * Sat May 02 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
-- Add Requires: helix. Pairs with /etc/profile.d/sideral-cli-init.sh
+- Add Requires: helix. Pairs with /etc/profile.d/silverfox-cli-init.sh
   exporting EDITOR=hx (and VISUAL=code split, since -4), so git,
   sudoedit, mise, less, and every other CLI tool that spawns an
   editor drops into Helix by default. VS Code (`code`) remains the

@@ -1,4 +1,4 @@
-# sideral — Tasks
+# silverfox — Tasks
 
 Status legend: `[ ]` pending · `[~]` in progress · `[x]` done · `[!]` blocked
 `[P]` = safe to run in parallel with other `[P]` tasks in the same phase.
@@ -25,19 +25,19 @@ Traceability: each task lists the ATH-XX requirement IDs it satisfies.
 - **Gate:** none (pure deletion).
 - **Satisfies:** spec goal "Zero reference to hyprland/ags/astal/waybar/rofi/wlogout/swaync".
 
-### T002 [x] Rename image `fedora-sideral` → `sideral`
+### T002 [x] Rename image `fedora-silverfox` → `silverfox`
 - **What:** Rename the image everywhere it appears.
 - **Where:**
   - `Containerfile` (header comments)
   - `Justfile` (`image_name`)
   - `.github/workflows/build.yml` (`name`, `env.IMAGE_NAME`, `env.IMAGE_DESC`)
   - `README.md` (later rewritten in T012 — leave for now)
-- **Done when:** `rg -l 'fedora-sideral' .` returns nothing except possibly `.specs/` context.
+- **Done when:** `rg -l 'fedora-silverfox' .` returns nothing except possibly `.specs/` context.
 - **Gate:** none (text-only).
-- **Satisfies:** spec goal "Image `ghcr.io/<user>/sideral:latest`".
+- **Satisfies:** spec goal "Image `ghcr.io/<user>/silverfox:latest`".
 
 ### T003 [x] Rewrite `/etc/os-release` at build time
-- **What:** Ensure the built image self-identifies as Sideral OS. Done via `sed` in `build.sh` (folded into T007); this task only confirms the expected lines and documents the decision.
+- **What:** Ensure the built image self-identifies as Silverfox OS. Done via `sed` in `build.sh` (folded into T007); this task only confirms the expected lines and documents the decision.
 - **Where:** `build.sh` step (implemented in T007).
 - **Satisfies:** ATH-02, ATH-08 (reported identity in `rpm-ostree status`).
 
@@ -89,13 +89,13 @@ Traceability: each task lists the ATH-XX requirement IDs it satisfies.
   1. Enables build-time COPRs: `imput/helium` (stays), plus any temporary ones.
   2. Adds `docker-ce.repo` via `dnf5 config-manager addrepo` (or relies on the shipped file once `system_files` is copied; shipped file is the clean path).
   3. Iterates `FEATURES=(gnome devtools browser container fonts gnome-extensions)` — for each, installs `packages.txt` with `dnf5 install -y --setopt=install_weak_deps=False`, then runs `post-install.sh` if executable.
-  4. Rewrites `/etc/os-release`: `ID=sideral`, `NAME="Sideral OS"`, `PRETTY_NAME="Sideral OS 43 (Silverblue)"`.
+  4. Rewrites `/etc/os-release`: `ID=silverfox`, `NAME="Silverfox OS"`, `PRETTY_NAME="Silverfox OS 43 (Silverblue)"`.
   5. Runs `dconf update` to compile `/etc/dconf/db/local` from the `local.d/` snippets.
   6. Disables temporary COPRs; leaves `imput/helium` enabled.
   7. `dnf5 clean all`; strips caches.
 - **Where:** `build_files/build.sh`.
 - **Depends on:** T002, T004, T006.
-- **Done when:** `just build` completes; `bootc container lint` exits 0; `podman run --rm <img> cat /etc/os-release | grep -q 'ID=sideral'`.
+- **Done when:** `just build` completes; `bootc container lint` exits 0; `podman run --rm <img> cat /etc/os-release | grep -q 'ID=silverfox'`.
 - **Gate:** `just build` (full).
 - **Satisfies:** ATH-01 (CI build works), ATH-02/ATH-08 (identity), extension/flatpak/VS Code prereqs.
 
@@ -137,8 +137,8 @@ Traceability: each task lists the ATH-XX requirement IDs it satisfies.
     flathub net.nokyan.Resources
     flathub it.mijorus.smile
     ```
-  - `system_files/etc/systemd/system/sideral-flatpak-install.service` — `Type=oneshot`, `ConditionPathExists=!/var/lib/sideral/flatpak-install-done`, reads the manifest, runs `flatpak install -y --noninteractive` per ref (skips already-installed), writes the sentinel on success, exits non-blocking on network failure.
-  - Enable via `system_files/etc/systemd/system/multi-user.target.wants/sideral-flatpak-install.service` symlink.
+  - `system_files/etc/systemd/system/silverfox-flatpak-install.service` — `Type=oneshot`, `ConditionPathExists=!/var/lib/silverfox/flatpak-install-done`, reads the manifest, runs `flatpak install -y --noninteractive` per ref (skips already-installed), writes the sentinel on success, exits non-blocking on network failure.
+  - Enable via `system_files/etc/systemd/system/multi-user.target.wants/silverfox-flatpak-install.service` symlink.
 - **Depends on:** none.
 - **Done when:** All three paths exist; service file passes `systemd-analyze verify` (checked inside the built image during a VM run, not in CI).
 - **Gate:** `just build` (must at least produce a valid unit file; `bootc lint` catches malformed units).
@@ -146,14 +146,14 @@ Traceability: each task lists the ATH-XX requirement IDs it satisfies.
 
 ### T011 [x] Audit existing system_files already in tree
 - **What:** Confirm every file that already exists matches the spec; fix drift if any.
-  - `system_files/etc/dconf/db/local.d/00-sideral-focus` ✓
-  - `system_files/etc/dconf/db/local.d/00-sideral-gnome-shell` ✓
-  - `system_files/etc/dconf/db/local.d/10-sideral-keybinds` ✓
+  - `system_files/etc/dconf/db/local.d/00-silverfox-focus` ✓
+  - `system_files/etc/dconf/db/local.d/00-silverfox-gnome-shell` ✓
+  - `system_files/etc/dconf/db/local.d/10-silverfox-keybinds` ✓
   - `system_files/etc/yum.repos.d/vscode.repo` ✓ (enabled=1 per decision)
-  - `system_files/usr/lib/systemd/user/sideral-mise-install.service` ✓ (installs mise + eagerly installs act/atuin/direnv)
-  - `system_files/usr/lib/systemd/user/sideral-vscode-setup.service` ✓ (installs 3 extensions + marker)
-  - `system_files/usr/lib/systemd/user/default.target.wants/sideral-mise-install.service` (symlink) ✓
-  - `system_files/usr/lib/systemd/user/default.target.wants/sideral-vscode-setup.service` (symlink) ✓
+  - `system_files/usr/lib/systemd/user/silverfox-mise-install.service` ✓ (installs mise + eagerly installs act/atuin/direnv)
+  - `system_files/usr/lib/systemd/user/silverfox-vscode-setup.service` ✓ (installs 3 extensions + marker)
+  - `system_files/usr/lib/systemd/user/default.target.wants/silverfox-mise-install.service` (symlink) ✓
+  - `system_files/usr/lib/systemd/user/default.target.wants/silverfox-vscode-setup.service` (symlink) ✓
 - **Depends on:** none.
 - **Done when:** Read each file; verify content; log any fixes in STATE.md.
 - **Gate:** none.
@@ -175,15 +175,15 @@ Traceability: each task lists the ATH-XX requirement IDs it satisfies.
 - **What:** New narrative: GNOME + tiling-shell on silverblue-main:43, 5 extensions, 7 flatpaks, 15-tool mise, Helium browser, VS Code editor. Drop every Hyprland reference.
 - **Where:** `README.md`.
 - **Depends on:** T001, T002.
-- **Done when:** `rg -l 'hyprland|ags|astal|waybar|rofi|wlogout|kitty|bluefin-dx' README.md` returns empty; image name everywhere is `sideral`.
+- **Done when:** `rg -l 'hyprland|ags|astal|waybar|rofi|wlogout|kitty|bluefin-dx' README.md` returns empty; image name everywhere is `silverfox`.
 - **Gate:** none (docs).
 - **Satisfies:** spec "Zero reference to hyprland/bluefin in runtime artifacts".
 
 ### T014 [x] Update `.github/workflows/build.yml`
-- **What:** Rename workflow + env to `sideral`; rewrite `IMAGE_DESC` to GNOME/silverblue narrative; keep cosign + tagging logic.
+- **What:** Rename workflow + env to `silverfox`; rewrite `IMAGE_DESC` to GNOME/silverblue narrative; keep cosign + tagging logic.
 - **Where:** `.github/workflows/build.yml`.
 - **Depends on:** T002.
-- **Done when:** `name: build-sideral`, `IMAGE_NAME: sideral`, `IMAGE_DESC` mentions GNOME + tiling-shell, no Hyprland/AGS/astal references.
+- **Done when:** `name: build-silverfox`, `IMAGE_NAME: silverfox`, `IMAGE_DESC` mentions GNOME + tiling-shell, no Hyprland/AGS/astal references.
 - **Gate:** YAML is syntactically valid (`gh workflow view` or a quick `python -c 'import yaml,sys; yaml.safe_load(sys.stdin)'`).
 - **Satisfies:** ATH-01.
 

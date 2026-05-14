@@ -1,4 +1,4 @@
-# sideral-nix-init.sh — nix auto-stow + first-login init.
+# silverfox-nix-init.sh — nix auto-stow + first-login init.
 #
 # 1. Stow nix flake symlink em todo login.
 # 2. Auto-personaliza placeholder __USER__ no flake.
@@ -8,8 +8,8 @@ if [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     return
 fi
 
-[ -n "${SIDERAL_NIX_INIT_RAN:-}" ] && return
-SIDERAL_NIX_INIT_RAN=1
+[ -n "${SILVERFOX_NIX_INIT_RAN:-}" ] && return
+SILVERFOX_NIX_INIT_RAN=1
 
 # Stow nix flake (every login, idempotent)
 if command -v stow >/dev/null 2>&1 && [ -d "$HOME/Dotfiles/nix" ]; then
@@ -27,8 +27,8 @@ fi
 if command -v nh >/dev/null 2>&1 \
   && command -v nix >/dev/null 2>&1 \
   && [ -f "$flake_file" ] \
-  && [ ! -f "$HOME/.config/sideral/.nix-first-init-done" ]; then
+  && [ ! -f "$HOME/.config/silverfox/.nix-first-init-done" ]; then
     nh home switch --impure 2>/dev/null || true
-    mkdir -p "$HOME/.config/sideral"
-    touch "$HOME/.config/sideral/.nix-first-init-done"
+    mkdir -p "$HOME/.config/silverfox"
+    touch "$HOME/.config/silverfox/.nix-first-init-done"
 fi

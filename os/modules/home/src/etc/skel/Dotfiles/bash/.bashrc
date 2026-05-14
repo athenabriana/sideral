@@ -1,4 +1,4 @@
-# ~/.bashrc — sideral bash interactive-shell wiring.
+# ~/.bashrc — silverfox bash interactive-shell wiring.
 #
 # Stow package from Dotfiles/bash/.bashrc — to customize, replace the
 # symlink with a real file and edit. The skel merge (profile.d) copies
@@ -9,8 +9,8 @@
 # shellcheck source=/dev/null
 
 # Re-entry guard: harmless to source twice, but skip the work.
-[ -n "${SIDERAL_BASHRC_RAN:-}" ] && return 0
-SIDERAL_BASHRC_RAN=1
+[ -n "${SILVERFOX_BASHRC_RAN:-}" ] && return 0
+SILVERFOX_BASHRC_RAN=1
 
 # System-wide bashrc — locale, flatpak XDG_DATA_DIRS, completion stub, etc.
 [ -f /etc/bashrc ] && source /etc/bashrc
@@ -80,7 +80,7 @@ fi
 # Guarded by `[[ $- == *i* ]]` because `bind -x` requires readline —
 # non-interactive shells (agent `bash -c …`) silently skip the bind.
 if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
-    _sideral_fzf_quick_open() {
+    _silverfox_fzf_quick_open() {
         local file editor
         if command -v rg >/dev/null 2>&1; then
             file=$(rg --files --hidden --follow --glob '!.git' 2>/dev/null \
@@ -95,7 +95,7 @@ if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
         fi
         eval "$editor \"\$file\""
     }
-    bind -x '"\C-p": _sideral_fzf_quick_open'
+    bind -x '"\C-p": _silverfox_fzf_quick_open'
 fi
 
 # ── Alt-S — toggle `sudo ` prefix on current line ─────────────────────
@@ -103,7 +103,7 @@ fi
 # remove. READLINE_LINE / READLINE_POINT are bash-readline's editable-
 # line variables (zsh equivalent: BUFFER / CURSOR).
 if [[ $- == *i* ]]; then
-    _sideral_toggle_sudo() {
+    _silverfox_toggle_sudo() {
         if [[ "$READLINE_LINE" == sudo\ * ]]; then
             READLINE_LINE="${READLINE_LINE#sudo }"
             READLINE_POINT=$((READLINE_POINT - 5))
@@ -113,14 +113,14 @@ if [[ $- == *i* ]]; then
             READLINE_POINT=$((READLINE_POINT + 5))
         fi
     }
-    bind -x '"\eS": _sideral_toggle_sudo'
+    bind -x '"\eS": _silverfox_toggle_sudo'
 fi
 
 # ── Ctrl-G — fzf git branch picker → checkout ─────────────────────────
 # Pops fzf over local + remote branches (origin/foo de-duped to foo).
 # Selection runs `git checkout`. No-ops cleanly outside a git repo.
 if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
-    _sideral_fzf_git_checkout() {
+    _silverfox_fzf_git_checkout() {
         git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
         local branch
         branch=$(git for-each-ref --format='%(refname:short)' refs/heads/ refs/remotes/ 2>/dev/null \
@@ -129,7 +129,7 @@ if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
         [ -z "$branch" ] && return
         git checkout "$branch"
     }
-    bind -x '"\C-g": _sideral_fzf_git_checkout'
+    bind -x '"\C-g": _silverfox_fzf_git_checkout'
 fi
 
 # ── eza / bat aliases — only for human-driven interactive shells ───────
@@ -152,10 +152,10 @@ fi
 #   ANTIGRAVITY_AGENT    Antigravity
 #   REPL_ID              Replit
 #   COPILOT_MODEL        GitHub Copilot CLI
-#   SIDERAL_NO_ALIASES   manual opt-out
+#   SILVERFOX_NO_ALIASES   manual opt-out
 # Plain `\ls` / `\cat` (backslash-escaped) hit the GNU coreutils binary
 # regardless — useful in scripts that want deterministic POSIX output.
-_sideral_agent_shell=""
+_silverfox_agent_shell=""
 for _v in \
     AGENT AI_AGENT \
     CLAUDECODE \
@@ -169,15 +169,15 @@ for _v in \
     ANTIGRAVITY_AGENT \
     REPL_ID \
     COPILOT_MODEL \
-    SIDERAL_NO_ALIASES; do
+    SILVERFOX_NO_ALIASES; do
     if [ -n "${!_v:-}" ]; then
-        _sideral_agent_shell=1
+        _silverfox_agent_shell=1
         break
     fi
 done
 unset _v
 
-if [ -z "$_sideral_agent_shell" ]; then
+if [ -z "$_silverfox_agent_shell" ]; then
     if command -v eza >/dev/null 2>&1; then
         alias ls='eza --icons --group-directories-first'
         alias ll='eza --icons --group-directories-first --long --git --header'
@@ -189,4 +189,4 @@ if [ -z "$_sideral_agent_shell" ]; then
         # bare `bat` keeps the full pager + theme + line numbers
     fi
 fi
-unset _sideral_agent_shell
+unset _silverfox_agent_shell

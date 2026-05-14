@@ -1,9 +1,9 @@
 {
-  "name": "sideral",
+  "name": "silverfox",
   "version": "0.0.0-development",
   "private": true,
   "description": "Personal Fedora atomic desktop — release tooling deps only.",
-  "repository": "github:athenabriana/sideral",
+  "repository": "github:athenabriana/silverfox",
   "license": "MIT",
   "devDependencies": {
     "semantic-release": "^24.2.0",

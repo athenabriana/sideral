@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# fox — sideral operator CLI (bash dispatcher around `just`).
-# Reads SIDERAL_JUSTFILE and SIDERAL_OS_RELEASE from env (test injection).
+# fox — silverfox operator CLI (bash dispatcher around `just`).
+# Reads SILVERFOX_JUSTFILE and SILVERFOX_OS_RELEASE from env (test injection).
 set -euo pipefail
 
-JUSTFILE="${SIDERAL_JUSTFILE:-/usr/share/sideral/sideral.justfile}"
-OS_RELEASE="${SIDERAL_OS_RELEASE:-/etc/os-release}"
+JUSTFILE="${SILVERFOX_JUSTFILE:-/usr/share/silverfox/silverfox.justfile}"
+OS_RELEASE="${SILVERFOX_OS_RELEASE:-/etc/os-release}"
 
 case "${1:-}" in
     ""|-h|--help)

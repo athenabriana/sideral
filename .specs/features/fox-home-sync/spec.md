@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Sideral tem dois sistemas de user-level packages fora do stow: flatpak (apps) e rpm-ostree (system packages). Não há um arquivo único que declare "quais flatpaks e RPMs esse usuário quer" — nem uma forma de aplicar ou capturar esse estado.
+Silverfox tem dois sistemas de user-level packages fora do stow: flatpak (apps) e rpm-ostree (system packages). Não há um arquivo único que declare "quais flatpaks e RPMs esse usuário quer" — nem uma forma de aplicar ou capturar esse estado.
 
 Mise é gerenciado pelo stow (`~/.config/mise/config.toml`) e pelo próprio `mise install` — fox não precisa tocar.
 
@@ -23,15 +23,15 @@ Este spec unifica flatpak + rpm em `~/.config/fox/config.toml`. `fox home apply`
 | Mise | Gerenciado pelo stow + `mise install`. Fox não precisa. |
 | nix / home-manager | Spec arquivada |
 | Auto-apply/capture em hook | Manual: você decide direção e roda |
-| `sideral-cli-tools` RPM | Inalterado — ferramentas base continuam na imagem |
-| `sideral-flatpaks` serviço | Inalterado — coexiste, mas apply pode remover defaults se não estiverem no config |
+| `silverfox-cli-tools` RPM | Inalterado — ferramentas base continuam na imagem |
+| `silverfox-flatpaks` serviço | Inalterado — coexiste, mas apply pode remover defaults se não estiverem no config |
 
 ---
 
 ## Stow tree
 
 ```
-~/.config/sideral/stow/
+~/.config/silverfox/stow/
   ├── bash/
   ├── zsh/
   ├── ghostty/
@@ -80,7 +80,7 @@ packages = [
 
 ### P1: fox home apply ⭐ MVP
 
-1. **TOM-01** — Starter `fox/config.toml` em `/etc/skel/.config/sideral/stow/home/.config/fox/config.toml`.
+1. **TOM-01** — Starter `fox/config.toml` em `/etc/skel/.config/silverfox/stow/home/.config/fox/config.toml`.
 2. **TOM-02** — `~/.config/fox/config.toml` é symlink para `stow/home/.config/fox/config.toml`.
 3. **TOM-03** — `fox home apply` reconcilia `[flatpaks.remotes]` (adiciona faltando, remove extras).
 4. **TOM-04** — `fox home apply` reconcilia `[flatpaks.packages]` (instala faltando, remove extras).
@@ -126,7 +126,7 @@ packages = [
 ### `os/modules/home/` — stow packages e RPM spec
 - **Adicionar**: stow package `home/` com `.config/fox/config.toml`
 - **Manter**: `mise/` (inalterado), `bash/`, `zsh/`, `ghostty/`, `zed/`
-- **RPM spec `sideral-home.spec`**: adicionar entradas de `home/`
+- **RPM spec `silverfox-home.spec`**: adicionar entradas de `home/`
 
 ### `os/modules/fox/` — justfile recipes
 - **Adicionar**: `home init`, `home apply`, `home capture`, `home diff`, `home edit`, `home status`

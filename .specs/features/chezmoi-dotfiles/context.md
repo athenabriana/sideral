@@ -2,7 +2,7 @@
 
 ## D-01: First-login auto-apply uses `--force` (silent)
 
-**Decision**: The `/etc/profile.d/sideral-chezmoi-defaults.sh` script uses `--force` on the
+**Decision**: The `/etc/profile.d/silverfox-chezmoi-defaults.sh` script uses `--force` on the
 initial apply. No diff prompts on first login, even for rebased users who may have
 customized files.
 
@@ -14,7 +14,7 @@ silently. Rebased users who care about their customizations should use
 
 ## D-02: `.bashrc` and `.zshrc` are chezmoi-managed
 
-**Decision**: Both `.bashrc` and `.zshrc` are included in `/usr/share/sideral/chezmoi/`
+**Decision**: Both `.bashrc` and `.zshrc` are included in `/usr/share/silverfox/chezmoi/`
 as `dot_bashrc` and `dot_zshrc`. The image can update them via `ujust apply-defaults`,
 which will prompt the user if they've customized either file.
 
