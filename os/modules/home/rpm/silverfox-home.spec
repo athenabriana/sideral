@@ -1,42 +1,33 @@
-# silverfox-home — user-domain seed via /etc/skel.
+# silverfox-home — user-domain seed via /etc/skel + skel-merge.
 #
-# Ships silverfox's image-default dotfiles as a stow source tree at
-# /etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/, plus five
-# pre-farmed relative symlinks at /etc/skel/{.bashrc,.zshrc,.config/...}.
-# `useradd` (traditional Unix, cp -a semantics) copies the whole tree
-# into new user homes, preserving symlinks. From that moment forward the
-# dotfiles are user-domain — silverfox never modifies them. Image upgrades
-# that change defaults affect only future-created users; existing users
-# own their copy.
-#
-# To customize a single file: replace the symlink with a real file.
-# Dotfiles stays intact across rebases — edit freely.
+# Ships a stow source tree at /etc/skel/Dotfiles/{bash,zsh,ghostty,zed,nix}/
+# and a profile.d script that copies new Dotfiles to $HOME/Dotfiles on login
+# and runs stow on each package.
 
 Name:           silverfox-home
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
-Summary:        silverfox user-domain seed (/etc/skel stow tree + pre-farmed symlinks)
+Summary:        silverfox user-domain seed (/etc/skel Dotfiles + skel-merge)
 License:        MIT
 URL:            https://github.com/athenabriana/silverfox
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
+Requires:       stow
+
 %description
-Ships silverfox's image-default user dotfiles via /etc/skel:
+Ships silverfox's image-default user dotfiles via /etc/skel and applies them
+on first login:
 
-  - /etc/skel/Dotfiles/{bash,zsh,mise,ghostty,zed,nix}/ — six stow
-    packages holding the real config content (bash + zsh rcs with
-    starship/atuin/zoxide/mise/fzf wiring, mise user toolchain pins,
-    ghostty config, zed settings with vim_mode + helix_normal, nix
-    starter flake for nh).
-  - /etc/skel/{.bashrc, .zshrc} — top-level relative symlinks into the
-    Dotfiles stow tree.
-  - /etc/skel/.config/{mise/config.toml, ghostty/config, zed/settings.json}
-    — depth-2 relative symlinks into the Dotfiles stow tree.
+  - /etc/skel/Dotfiles/{bash,zsh,ghostty,zed,nix}/ — stow packages com as
+    configurações padrão (zshrc com starship/atuin/zoxide/mise/fzf, ghostty,
+    zed, nix flake para nh).
 
-useradd copies the whole tree (cp -a semantics preserves symlinks) into
-new user homes. The Dotfiles stow tree gives users `stow`-friendly
-ergonomics without silverfox owning the post-useradd state.
+  - /etc/profile.d/silverfox-skel-merge.sh — em todo login copia arquivos
+    novos de /etc/skel/Dotfiles para $HOME/Dotfiles (ignora existentes) e
+    roda stow em cada pacote para criar os symlinks em $HOME.
+
+Arquivos já existentes em $HOME nunca são modificados.
 
 %prep
 %setup -q
@@ -51,10 +42,6 @@ cp -a etc %{buildroot}/
 /etc/skel/Dotfiles/bash/.bashrc
 %dir /etc/skel/Dotfiles/zsh
 /etc/skel/Dotfiles/zsh/.zshrc
-%dir /etc/skel/Dotfiles/mise
-%dir /etc/skel/Dotfiles/mise/.config
-%dir /etc/skel/Dotfiles/mise/.config/mise
-/etc/skel/Dotfiles/mise/.config/mise/config.toml
 %dir /etc/skel/Dotfiles/ghostty
 %dir /etc/skel/Dotfiles/ghostty/.config
 %dir /etc/skel/Dotfiles/ghostty/.config/ghostty
@@ -68,23 +55,9 @@ cp -a etc %{buildroot}/
 %dir /etc/skel/Dotfiles/nix/.config/nix
 /etc/skel/Dotfiles/nix/.config/nix/flake.nix
 /etc/skel/Dotfiles/nix/.config/nix/flake.lock
-/etc/skel/.bashrc
-/etc/skel/.zshrc
-%dir /etc/skel/.config/mise
-/etc/skel/.config/mise/config.toml
-%dir /etc/skel/.config/ghostty
-/etc/skel/.config/ghostty/config
-%dir /etc/skel/.config/zed
-/etc/skel/.config/zed/settings.json
+/etc/profile.d/silverfox-skel-merge.sh
 
 %changelog
-* Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
-- Initial. Replaces silverfox-stow-defaults: image-default dotfiles now
-  seed via /etc/skel + useradd (cp -a), not via stow-on-first-login
-  against a read-only ostree path. Source tree migrated as-is from
-  os/modules/dotfiles/src/usr/share/silverfox/stow/ to
-  os/modules/home/src/etc/skel/.config/silverfox/stow/. Five pre-farmed
-  relative symlinks at /etc/skel/{.bashrc,.zshrc,.config/...} resolve
-  into the stow tree at useradd time, preserving symlink-into-stow
-  ergonomics inside $HOME. mise user pins ship without the JVM block
-  (9 toolchains: node, bun, pnpm, python, uv, go, rust, zig, act).
+* Wed May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
+- Simplifica: remove symlinks diretos do skel, skel-merge copia Dotfiles e
+  aplica stow automaticamente no login. Script migrado do módulo nix.

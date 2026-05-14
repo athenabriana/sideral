@@ -5,7 +5,7 @@
 #     that runs the Determinate nix-installer with ostree planner
 #   • multi-user.target.wants/ enablement symlink
 #   • /etc/sudoers.d/nix-sudo-env — adds nix profile bin to sudo secure_path
-#   • /etc/profile.d/silverfox-nix-init.sh — auto-stow + first-login nh init
+#   • /etc/profile.d/silverfox-nix-init.sh — __USER__ substitution + first-login nh init
 #
 # The nix-installer binary is pre-downloaded at build time by
 # nix-installer-download.sh (staged at /usr/libexec/nix-installer).
@@ -43,10 +43,9 @@ Ships:
     nix-installed commands (e.g. nh) are found when running with sudo.
 
   /etc/profile.d/silverfox-nix-init.sh
-    Runs `stow -R nix` on every login to keep the flake symlink in
-    sync. On the very first login per user: installs nh via nix
-    profile and runs `nh home switch --impure` to apply the starter
-    flake. Guarded by a per-user sentinel file.
+    Substitutes __USER__ placeholder no flake na primeira vez.
+    No primeiro login: instala nh via nix profile e roda
+    `nh home switch --impure`. Guarded por sentinel file por usuário.
 
 Pre-downloaded at build time: nix-installer binary at /usr/libexec/.
 Pre-created at build time: nixbld group (GID 30000) and users
@@ -64,7 +63,6 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/multi-user.target.wants/silverfox-nix-bootstrap.service
 /etc/sudoers.d/nix-sudo-env
 /etc/profile.d/silverfox-nix-init.sh
-/etc/profile.d/silverfox-skel-merge.sh
 
 %changelog
 * Wed May 13 2026 GitHub Actions <noreply@github.com> - 0.0.0-1

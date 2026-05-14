@@ -9,13 +9,23 @@ default:
 chsh shell="":
     /usr/libexec/silverfox/chsh.sh {{shell}}
 
+# Aplica symlinks de ~/Dotfiles em $HOME
+link-dotfiles:
+    #!/usr/bin/bash
+    set -euo pipefail
+    command -v stow >/dev/null 2>&1 || { echo "stow não encontrado" >&2; exit 1; }
+    [ -d "$HOME/Dotfiles" ] || { echo "~/Dotfiles não existe" >&2; exit 1; }
+    find "$HOME/Dotfiles" -mindepth 1 -maxdepth 1 -type d -print0 \
+      | while IFS= read -r -d '' pkg; do
+          stow -R -d "$HOME/Dotfiles" -t "$HOME" --no-folding "${pkg##*/}"
+        done
+    echo "dotfiles: symlinks aplicados."
+
 # Sync nix config (packages + flatpaks declarativos)
 sync *args:
     #!/usr/bin/bash
-    if command -v nh >/dev/null 2>&1; then
-      stow -R -d "$HOME/Dotfiles" -t "$HOME" nix 2>/dev/null || true
-      nh home switch --impure
-    fi
+    just -f {{ justfile() }} link-dotfiles
+    command -v nh >/dev/null 2>&1 && nh home switch --impure
 
 # Stage rpm-ostree upgrade.
 upgrade *args:

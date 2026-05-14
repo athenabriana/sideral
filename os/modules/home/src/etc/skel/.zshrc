@@ -1,1 +1,0 @@
-Dotfiles/zsh/.zshrc

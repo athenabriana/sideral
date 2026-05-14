@@ -24,20 +24,39 @@
             homeDirectory = "/home/__USER__";
             stateVersion = "24.11";
             packages = [
-              # pkgs.bat
-              # pkgs.eza
-              # pkgs.ripgrep
-              # pkgs.fd
-              # pkgs.jq
-              # pkgs.yq
-              # pkgs.btop
-              # pkgs.lazygit
-              # pkgs.delta
-              # pkgs.tealdeer
-              # pkgs.du-dust
-              # pkgs.procs
-              # pkgs.sd
             ];
+          };
+
+          programs.mise = {
+            enable = true;
+
+            globalConfig = {
+              settings = {
+                experimental = true;
+                trusted_config_paths = ["/"];
+                not_found_auto_install = true;
+                idiomatic_version_file_enable_tools = ["node" "python" "java" "ruby" "go" "rust"];
+                jobs = 8;
+                http_timeout = "60s";
+                status = {
+                  missing_tools = "if_other_versions_installed";
+                  show_env = false;
+                  show_tools = false;
+                };
+              };
+
+              tools = {
+                node = "lts";
+                bun = "latest";
+                pnpm = "latest";
+                python = "latest";
+                uv = "latest";
+                go = "latest";
+                rust = "stable";
+                zig = "latest";
+                act = "latest";
+              };
+            };
           };
 
           services.flatpak = {

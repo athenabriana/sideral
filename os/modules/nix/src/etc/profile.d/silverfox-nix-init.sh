@@ -11,11 +11,6 @@ fi
 [ -n "${SILVERFOX_NIX_INIT_RAN:-}" ] && return
 SILVERFOX_NIX_INIT_RAN=1
 
-# Stow nix flake (every login, idempotent)
-if command -v stow >/dev/null 2>&1 && [ -d "$HOME/Dotfiles/nix" ]; then
-    stow -R -d "$HOME/Dotfiles" -t "$HOME" nix 2>/dev/null || true
-fi
-
 # Auto-personaliza: troca placeholder __USER__ pelo username real
 # Só roda se achar __USER__ (starter flake, não modificado)
 flake_file="$HOME/.config/nix/flake.nix"
