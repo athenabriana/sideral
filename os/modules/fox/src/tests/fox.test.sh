@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# fox.test.sh — integration tests for /usr/bin/fox (the bash dispatcher).
-# Uses a fake-just stub on PATH + a fixture /etc/os-release.
+# fox.test.sh — integration tests for /usr/bin/fox (exec-just passthrough).
+# Uses a fake-just stub on PATH.
 set -euo pipefail
 
 export SUITE=fox
@@ -19,12 +19,6 @@ mk_fake_just "$BINDIR"
 export PATH="$BINDIR:$PATH"
 export SILVERFOX_JUSTFILE="$TMP/fixture.justfile"
 echo "# fixture" >"$SILVERFOX_JUSTFILE"
-export SILVERFOX_OS_RELEASE="$TMP/os-release"
-cat >"$SILVERFOX_OS_RELEASE" <<'EOF'
-NAME="silverfox"
-VERSION_ID="20260511.42"
-ID=fedora
-EOF
 
 run() {
     "$FOX" "$@" 2>&1
@@ -32,55 +26,49 @@ run() {
 
 echo "── fox.test.sh ──"
 
-# FOX-03: --version prints VERSION_ID from $SILVERFOX_OS_RELEASE.
-actual=$(run --version | grep -v '^FAKEJUST:' || true)
-assert_eq "version_id" "20260511.42" "$actual"
-
-# FOX-02: no-arg invokes fake-just with --list.
-actual=$(run | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "noarg_list" "FAKEJUST:--list" "$actual"
+# FOX-02: no-arg passes -f <justfile> to just with no extra args.
+actual=$(run | grep '^FAKEJUST:' | tr '\n' ' ')
 assert_contains "noarg_justfile" "FAKEJUST:$SILVERFOX_JUSTFILE" "$actual"
 
-# FOX-02: --help also lists.
+# FOX-02: --help passes through to just unchanged.
 actual=$(run --help | grep '^FAKEJUST:' | tr '\n' ' ')
-assert_contains "help_list" "FAKEJUST:--list" "$actual"
+assert_contains "help_passthrough" "FAKEJUST:--help" "$actual"
 
-# FOXEN-01: fox toggle-banner → just toggle-banner.
-actual=$(run toggle-banner | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "toggle-banner_pass" "FAKEJUST:toggle-banner" "$actual"
+# fox motd-toggle → just motd-toggle.
+actual=$(run motd-toggle | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "motd-toggle_pass" "FAKEJUST:motd-toggle" "$actual"
 
-# FOXEN-03: fox upgrade-firmware → just upgrade-firmware.
-actual=$(run upgrade-firmware | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "upgrade-firmware_pass" "FAKEJUST:upgrade-firmware" "$actual"
+# fox firmware-upgrade → just firmware-upgrade.
+actual=$(run firmware-upgrade | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "firmware-upgrade_pass" "FAKEJUST:firmware-upgrade" "$actual"
 
-# FOXEN-02: fox clean → just clean.
+# fox clean → just clean.
 actual=$(run clean | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "clean_pass" "FAKEJUST:clean" "$actual"
 actual=$(run clean -bm | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "clean_flag" "FAKEJUST:-bm" "$actual"
 
-# FOX-04 / FOX-05: unknown verb passes through.
+# FOX-04 / FOX-05: unknown verb passes through unchanged.
 actual=$(run xyzzy | grep '^FAKEJUST:' | tail -n1)
 assert_eq "passthrough_verb" "FAKEJUST:xyzzy" "$actual"
 
-# FOXEN-04 / FOX-05: fox upgrade with flags → just upgrade with flags.
-actual=$(run upgrade --allow-downgrade | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "upgrade_pass" "FAKEJUST:upgrade" "$actual"
+# fox os-upgrade with flags passes flags through.
+actual=$(run os-upgrade --allow-downgrade | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "upgrade_pass" "FAKEJUST:os-upgrade" "$actual"
 assert_contains "upgrade_flag" "FAKEJUST:--allow-downgrade" "$actual"
 
-# FOX-12: fox status --json passes --json.
-actual=$(run status --json | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+# fox os-status --json passes --json through.
+actual=$(run os-status --json | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "status_json" "FAKEJUST:--json" "$actual"
 
-# FOX-05: fox home factory-reset --yes → just home::factory-reset --yes.
-actual=$(run home factory-reset --yes | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "home_sub_xform" "FAKEJUST:home::factory-reset" "$actual"
-assert_contains "home_sub_yes" "FAKEJUST:--yes" "$actual"
+# fox home-sync passes through as a single arg.
+actual=$(run home-sync | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "home_sync_pass" "FAKEJUST:home-sync" "$actual"
 
-# FOX-05: fox home (no sub) → just --list home.
-actual=$(run home | grep '^FAKEJUST:' | tr '\n' ' ')
-assert_contains "home_nosub_list" "FAKEJUST:--list" "$actual"
-assert_contains "home_nosub_arg"  "FAKEJUST:home" "$actual"
+# Multiple args all pass through (e.g. home-diff extra-flag).
+actual=$(run home-diff --verbose | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "multi_arg_verb" "FAKEJUST:home-diff" "$actual"
+assert_contains "multi_arg_flag" "FAKEJUST:--verbose" "$actual"
 
 # FOX-04: just's exit code propagates.
 mk_fake_just "$BINDIR" 7
