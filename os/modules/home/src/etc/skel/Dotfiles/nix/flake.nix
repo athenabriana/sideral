@@ -32,9 +32,9 @@
         modules = [
           "${nix-flatpak}/modules/home-manager.nix"
           silverfox.homeManagerModules.syspkgs
-          ./home
-          ./mise
-          ./flatpak
+          ./modules/home.nix
+          ./modules/mise.nix
+          ./modules/flatpak.nix
         ];
       };
     };

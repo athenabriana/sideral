@@ -45,50 +45,52 @@ cp -a etc %{buildroot}/
 %dir /etc/skel/Dotfiles/nix/modules
 /etc/skel/Dotfiles/nix/modules/home.nix
 /etc/skel/Dotfiles/nix/modules/mise.nix
+/etc/skel/Dotfiles/nix/modules/mise.toml
 /etc/skel/Dotfiles/nix/modules/flatpak.nix
-%dir /etc/skel/Dotfiles/shell
-/etc/skel/Dotfiles/shell/.bashrc
-/etc/skel/Dotfiles/shell/.zshrc
-%dir /etc/skel/Dotfiles/shell/.config
-%dir /etc/skel/Dotfiles/shell/.config/shell
-/etc/skel/Dotfiles/shell/.config/shell/00-path.sh
-/etc/skel/Dotfiles/shell/.config/shell/10-editor.sh
-/etc/skel/Dotfiles/shell/.config/shell/20-nix.sh
-/etc/skel/Dotfiles/shell/.config/shell/30-agent-detect.sh
-/etc/skel/Dotfiles/shell/.config/shell/40-aliases.sh
-/etc/skel/Dotfiles/shell/.config/shell/50-mise-shims.sh
-/etc/skel/Dotfiles/shell/.config/starship.toml
-%dir /etc/skel/Dotfiles/ghostty
-%dir /etc/skel/Dotfiles/ghostty/.config
-%dir /etc/skel/Dotfiles/ghostty/.config/ghostty
-/etc/skel/Dotfiles/ghostty/.config/ghostty/config
-/etc/skel/Dotfiles/ghostty/.config/ghostty/config-base16
-%dir /etc/skel/Dotfiles/flavours
-%dir /etc/skel/Dotfiles/flavours/.config
-%dir /etc/skel/Dotfiles/flavours/.config/flavours
-/etc/skel/Dotfiles/flavours/.config/flavours/config.toml
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/ghostty
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/ghostty/templates
-/etc/skel/Dotfiles/flavours/.config/flavours/templates/ghostty/templates/default.mustache
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/zed
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/zed/templates
-/etc/skel/Dotfiles/flavours/.config/flavours/templates/zed/templates/default.mustache
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-theme
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-theme/templates
-/etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-theme/templates/default.mustache
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-all
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-all/templates
-/etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-all/templates/default.mustache
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-colors
-%dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-colors/templates
-/etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-colors/templates/default.mustache
-%dir /etc/skel/Dotfiles/zed
-%dir /etc/skel/Dotfiles/zed/.config
-%dir /etc/skel/Dotfiles/zed/.config/zed
-/etc/skel/Dotfiles/zed/.config/zed/settings.json
-%dir /etc/skel/Dotfiles/zed/.config/zed/themes
-/etc/skel/Dotfiles/zed/.config/zed/themes/base16-dark.json
+%dir /etc/skel/Dotfiles/stow
+%dir /etc/skel/Dotfiles/stow/shell
+/etc/skel/Dotfiles/stow/shell/.bashrc
+/etc/skel/Dotfiles/stow/shell/.zshrc
+%dir /etc/skel/Dotfiles/stow/shell/.config
+%dir /etc/skel/Dotfiles/stow/shell/.config/shell
+/etc/skel/Dotfiles/stow/shell/.config/shell/00-path.sh
+/etc/skel/Dotfiles/stow/shell/.config/shell/10-editor.sh
+/etc/skel/Dotfiles/stow/shell/.config/shell/20-nix.sh
+/etc/skel/Dotfiles/stow/shell/.config/shell/30-agent-detect.sh
+/etc/skel/Dotfiles/stow/shell/.config/shell/40-aliases.sh
+/etc/skel/Dotfiles/stow/shell/.config/shell/50-mise-shims.sh
+/etc/skel/Dotfiles/stow/shell/.config/starship.toml
+%dir /etc/skel/Dotfiles/stow/ghostty
+%dir /etc/skel/Dotfiles/stow/ghostty/.config
+%dir /etc/skel/Dotfiles/stow/ghostty/.config/ghostty
+/etc/skel/Dotfiles/stow/ghostty/.config/ghostty/config
+/etc/skel/Dotfiles/stow/ghostty/.config/ghostty/config-base16
+%dir /etc/skel/Dotfiles/stow/flavours
+%dir /etc/skel/Dotfiles/stow/flavours/.config
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours
+/etc/skel/Dotfiles/stow/flavours/.config/flavours/config.toml
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/ghostty
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/ghostty/templates
+/etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/ghostty/templates/default.mustache
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/zed
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/zed/templates
+/etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/zed/templates/default.mustache
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-theme
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-theme/templates
+/etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-theme/templates/default.mustache
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-wallpaper-all
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-wallpaper-all/templates
+/etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-wallpaper-all/templates/default.mustache
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-wallpaper-colors
+%dir /etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-wallpaper-colors/templates
+/etc/skel/Dotfiles/stow/flavours/.config/flavours/templates/cosmic-wallpaper-colors/templates/default.mustache
+%dir /etc/skel/Dotfiles/stow/zed
+%dir /etc/skel/Dotfiles/stow/zed/.config
+%dir /etc/skel/Dotfiles/stow/zed/.config/zed
+/etc/skel/Dotfiles/stow/zed/.config/zed/settings.json
+%dir /etc/skel/Dotfiles/stow/zed/.config/zed/themes
+/etc/skel/Dotfiles/stow/zed/.config/zed/themes/base16-dark.json
 /etc/profile.d/silverfox-home-sync.sh
 
 %changelog
