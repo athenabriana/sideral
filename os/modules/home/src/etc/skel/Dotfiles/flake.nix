@@ -63,6 +63,15 @@
                     trusted_config_paths = [ "/" ];
                     auto_install = true;
                     not_found_auto_install = true;
+                    idiomatic_version_file_enable_tools = [
+                      "bun"
+                      "go"
+                      "node"
+                      "pnpm"
+                      "python"
+                      "rust"
+                      "terraform"
+                    ];
                     status = {
                       missing_tools = "always";
                     };
@@ -76,7 +85,6 @@
                     uv = "latest";
                     go = "latest";
                     rust = "stable";
-                    zig = "latest";
                   };
                 };
               };
