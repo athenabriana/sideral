@@ -1,10 +1,9 @@
 # silverfox-home-sync.sh — bootstrap e sync do home do usuário em todo login.
 #
 # Roda uma vez por sessão:
-#   1. fox dotfiles-init  — copia skel + substitui __USER__ (idempotente)
-#   2. fox dotfiles-link  — aplica stow em cada pacote (pula nix/)
-#   3. nh home switch     — sync home-manager em background
-#   4. flavours / cosmic / ghostty — aplica tema default se necessário
+#   1. fox dotfiles-sync — copia skel + substitui __USER__ + stow (idempotente)
+#   2. nh home switch     — sync home-manager em background
+#   3. flavours / cosmic / ghostty — aplica tema default se necessário
 
 if [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     return
@@ -16,10 +15,9 @@ SILVERFOX_HOME_SYNC_RAN=1
 : "${HOME:?HOME must be set}"
 
 # Delega bootstrap (skel-copy + __USER__ substitution) e stow ao fox.
-# fox dotfiles-init é idempotente; dotfiles-link refaz symlinks no-op.
+# fox dotfiles-sync é idempotente.
 if command -v fox >/dev/null 2>&1; then
-    fox dotfiles-init >/dev/null 2>&1 || true
-    fox dotfiles-link >/dev/null 2>&1 || true
+    fox dotfiles-sync >/dev/null 2>&1 || true
 fi
 
 # Sincroniza home-manager nix em background para não travar o login

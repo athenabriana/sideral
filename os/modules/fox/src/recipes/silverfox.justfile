@@ -1,6 +1,6 @@
 # silverfox.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
-# Verbs: chsh, clean, doctor, dotfiles-init, dotfiles-link, edit,
-# firmware-upgrade, home-diff, home-theme, motd-toggle, os-changelog,
+# Verbs: chsh, clean, doctor, dotfiles-sync, edit,
+# firmware-upgrade, diff, home-theme, motd-toggle, os-changelog,
 # os-rollback, os-status, os-upgrade, sync (top-level).
 
 default:
@@ -39,9 +39,8 @@ clean *args:
       rpm-ostree cleanup "$@"
     fi
 
-# Idempotente; para reset: rm -rf ~/Dotfiles && fox dotfiles-init.
-# Bootstrap ~/Dotfiles do skel + substitui __USER__ + adopta arquivos legados
-dotfiles-init:
+# Inicializa ~/Dotfiles do skel (se ausente) + substitui __USER__ + stow
+dotfiles-sync:
     #!/usr/bin/bash
     set -euo pipefail
     SKEL="/etc/skel/Dotfiles"
@@ -57,24 +56,21 @@ dotfiles-init:
             sed -i "s/__USER__/$USER/g" "$f"
         fi
     done
-    # stow --adopt: arquivos regulares pré-existentes no $HOME são absorvidos
-    # para dentro do Dotfiles e substituídos por symlinks (preserva edições).
-    # Pula nix/ — flake source, não é stow package.
     if command -v stow >/dev/null 2>&1; then
         find "$HOME_DOTFILES" -mindepth 1 -maxdepth 1 -type d -print0 \
           | while IFS= read -r -d '' pkg; do
               case "${pkg##*/}" in
                 nix) continue ;;
               esac
-              stow --adopt -d "$HOME_DOTFILES" -t "$HOME" --no-folding "${pkg##*/}" 2>/dev/null || true
+              stow -R -d "$HOME_DOTFILES" -t "$HOME" --no-folding "${pkg##*/}" 2>/dev/null || true
             done
     fi
-    echo "dotfiles: inicializado."
+    echo "dotfiles: sincronizado."
 
 # Abre ~/Dotfiles no zed (se disponível) ou no file manager (xdg-open)
 edit:
     #!/usr/bin/bash
-    [ -d "$HOME/Dotfiles" ] || { echo "~/Dotfiles não existe — rode 'fox dotfiles-init'" >&2; exit 1; }
+    [ -d "$HOME/Dotfiles" ] || { echo "~/Dotfiles não existe — rode 'fox dotfiles-sync'" >&2; exit 1; }
     if command -v zed >/dev/null 2>&1; then
         exec zed "$HOME/Dotfiles"
     elif command -v xdg-open >/dev/null 2>&1; then
@@ -84,21 +80,6 @@ edit:
         exit 1
     fi
 
-# Aplica symlinks de ~/Dotfiles em $HOME via stow (pula nix/ — flake source)
-dotfiles-link:
-    #!/usr/bin/bash
-    set -euo pipefail
-    command -v stow >/dev/null 2>&1 || { echo "stow não encontrado" >&2; exit 1; }
-    [ -d "$HOME/Dotfiles" ] || { echo "~/Dotfiles não existe — rode 'fox dotfiles-init'" >&2; exit 1; }
-    find "$HOME/Dotfiles" -mindepth 1 -maxdepth 1 -type d -print0 \
-      | while IFS= read -r -d '' pkg; do
-          case "${pkg##*/}" in
-            nix) continue ;;
-          esac
-          stow -R -d "$HOME/Dotfiles" -t "$HOME" --no-folding "${pkg##*/}"
-        done
-    echo "dotfiles: symlinks aplicados."
-
 # Atualiza firmware do dispositivo (fwupdmgr)
 firmware-upgrade:
     fwupdmgr refresh --force
@@ -106,7 +87,7 @@ firmware-upgrade:
     fwupdmgr update
 
 # Mostra pending nix config changes (dry-run)
-home-diff:
+diff:
     #!/usr/bin/bash
     nh home switch --impure --dry 2>/dev/null \
       || echo "Dry-run not available. Run 'fox sync' to apply."
@@ -151,8 +132,7 @@ doctor:
 # Sync nix config (dotfiles + pacotes + flatpaks declarativos)
 sync *args:
     #!/usr/bin/bash
-    just -f {{ justfile() }} dotfiles-init
-    just -f {{ justfile() }} dotfiles-link
+    just -f {{ justfile() }} dotfiles-sync
     if command -v nh >/dev/null 2>&1; then
         echo "nix/home-manager: aplicando configuração…"
         _flake="${NH_FLAKE:-$HOME/Dotfiles/nix}"

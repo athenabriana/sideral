@@ -65,9 +65,9 @@ assert_contains "status_json" "FAKEJUST:--json" "$actual"
 actual=$(run sync | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "sync_pass" "FAKEJUST:sync" "$actual"
 
-# Multiple args all pass through (e.g. home-diff extra-flag).
-actual=$(run home-diff --verbose | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "multi_arg_verb" "FAKEJUST:home-diff" "$actual"
+# Multiple args all pass through (e.g. diff extra-flag).
+actual=$(run diff --verbose | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "multi_arg_verb" "FAKEJUST:diff" "$actual"
 assert_contains "multi_arg_flag" "FAKEJUST:--verbose" "$actual"
 
 # FOX-04: just's exit code propagates.

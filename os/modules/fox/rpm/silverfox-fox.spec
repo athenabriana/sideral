@@ -36,8 +36,8 @@ Requires:       shadow-utils
 %description
 silverfox-fox ships the `fox` operator CLI: a 3-line bash dispatcher at
 /usr/bin/fox that routes argv into /usr/share/silverfox/silverfox.justfile
-via `just`. Verbs: chsh, clean, doctor, dotfiles-init, dotfiles-link, edit,
-firmware-upgrade, home-diff, home-theme, motd-toggle, os-changelog,
+via `just`. Verbs: chsh, clean, doctor, dotfiles-sync, edit,
+firmware-upgrade, diff, home-theme, motd-toggle, os-changelog,
 os-rollback, os-status, os-upgrade, sync.
 
 %prep
