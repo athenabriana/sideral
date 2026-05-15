@@ -59,7 +59,7 @@ dotfiles-sync:
     if command -v stow >/dev/null 2>&1 && [ -d "$HOME_DOTFILES/stow" ]; then
         find "$HOME_DOTFILES/stow" -mindepth 1 -maxdepth 1 -type d -print0 \
           | while IFS= read -r -d '' pkg; do
-              stow -R -d "$HOME_DOTFILES/stow" -t "$HOME" --no-folding "${pkg##*/}" 2>/dev/null || true
+              stow -R -d "$HOME_DOTFILES/stow" -t "$HOME" "${pkg##*/}" || true
             done
     fi
     echo "dotfiles: sincronizado."
