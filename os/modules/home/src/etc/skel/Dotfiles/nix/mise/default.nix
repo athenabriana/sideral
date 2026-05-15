@@ -1,4 +1,4 @@
-# modules/mise/default.nix — mise runtime version manager.
+# mise/default.nix — mise runtime version manager.
 #
 # Global defaults under [tools] are installed on `nh home switch` and
 # resolved unless overridden by an idiomatic file (.nvmrc, devEngines

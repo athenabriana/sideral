@@ -50,7 +50,7 @@ dotfiles-sync:
         echo "Copiando $SKEL → $HOME_DOTFILES…"
         cp -a "$SKEL" "$HOME_DOTFILES"
     fi
-    for f in "$HOME_DOTFILES/nix/flake.nix" "$HOME_DOTFILES/nix/modules/home/default.nix"; do
+    for f in "$HOME_DOTFILES/nix/flake.nix" "$HOME_DOTFILES/nix/home/default.nix"; do
         if [ -f "$f" ] && grep -q '__USER__' "$f" 2>/dev/null; then
             echo "Substituindo __USER__ → $USER em $(basename "$f")…"
             sed -i "s/__USER__/$USER/g" "$f"

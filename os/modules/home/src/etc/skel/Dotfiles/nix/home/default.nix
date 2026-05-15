@@ -1,4 +1,4 @@
-# modules/home/default.nix — user identity + globally-installed packages.
+# home/default.nix — user identity + globally-installed packages.
 #
 # username/homeDirectory use the __USER__ placeholder which is
 # substituted at first-login by silverfox-home-sync.sh. To customize,

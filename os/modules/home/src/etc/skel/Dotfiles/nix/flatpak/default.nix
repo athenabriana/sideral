@@ -1,4 +1,4 @@
-# modules/flatpak/default.nix — flatpak apps managed declaratively via nix-flatpak.
+# flatpak/default.nix — flatpak apps managed declaratively via nix-flatpak.
 #
 # Adds Flathub remote and the silverfox default app set. Edit this list
 # and run `fox sync` to install/remove apps.
