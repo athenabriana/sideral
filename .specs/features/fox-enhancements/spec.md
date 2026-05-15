@@ -58,7 +58,7 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
    - `podman image prune -af`
    - `rpm-ostree cleanup -prm`
    - `nh clean` (nix store GC, guarded by `command -v nh`)
-   Flatpaks são gerenciados via nix-flatpak (`nh home switch`) — não há `flatpak uninstall --unused`. Recipe body:
+    Flatpaks are managed via nix-flatpak (`nh home switch`) — there is no `flatpak uninstall --unused`. Recipe body:
    ```
    # Clean podman images, rpm-ostree metadata, and nix store
    clean *args:
@@ -83,13 +83,13 @@ Some ujust recipes *are* genuinely useful and should be ported to fox before the
    ```
    Recipe signature: `upgrade-firmware:` (no args). Verbatim from ublue's `update-firmware` (3 lines). `fox upgrade-firmware` streams output.
 
-4. **FOXEN-04** — `fox upgrade` stages the OS update + distrobox. Flatpaks não entram aqui — são gerenciados declarativamente via `fox sync` (nh home switch). `fox upgrade` é para o sistema (rpm-ostree) + containers (distrobox). Implementation:
+4. **FOXEN-04** — `fox upgrade` stages the OS update + distrobox. Flatpaks don't go here — they are managed declaratively via `fox sync` (nh home switch). `fox upgrade` is for the system (rpm-ostree) + containers (distrobox). Implementation:
    ```
    upgrade *args:
        rpm-ostree upgrade
        @echo "Reboot to apply the staged deployment."
    ```
-   `distrobox upgrade -a` pode ser adicionado futuramente. `fox sync` é o verbo para atualizar pacotes + flatpaks via nix.
+    `distrobox upgrade -a` can be added in the future. `fox sync` is the verb for updating packages + flatpaks via nix.
 
 5. **FOXEN-05** — All new verbs pass `just fox-lint` (shellcheck on inline bash within recipe bodies is NOT checked by shellcheck — just recipes contain bash that just evaluates; the pre-flight test coverage (FOXEN-06) covers this gap). `bash -n` on any extracted libexec scripts if the recipe body grows past 10 lines.
 

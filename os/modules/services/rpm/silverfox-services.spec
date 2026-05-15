@@ -1,14 +1,3 @@
-# silverfox-services — container-related systemd units + config.
-#
-# Ships (post 2026-05-02 module refactor):
-#   • /usr/lib/systemd/user/sockets.target.wants/podman.socket → ../podman.socket
-#     Auto-enables the rootless podman API socket for every user on first
-#     login. Required so podman-docker's /etc/profile.d/podman-docker.sh
-#     (which sets DOCKER_HOST=unix:///run/user/$UID/podman/podman.sock)
-#     points at a live socket — and so `docker compose` / `podman-compose`
-#     against compose.yaml just works without `systemctl --user enable
-#     podman.socket` as a per-user setup step.
-
 Name:           silverfox-services
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}

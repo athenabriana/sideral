@@ -1,6 +1,3 @@
-# starship prompt — usa cores ANSI nomeadas que herdam do palette do
-# terminal (ghostty é tematizado via flavours, então o starship segue junto).
-
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
@@ -31,7 +28,6 @@ show_always = false
 style = "bold cyan"
 ssh_only = true
 
-# ── language / toolchain modules ──
 [nodejs]
 style = "bold green"
 
@@ -62,7 +58,6 @@ style = "bold yellow"
 [zig]
 style = "bold yellow"
 
-# ── cloud / containers ──
 [gcloud]
 style = "bold blue"
 

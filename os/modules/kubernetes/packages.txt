@@ -1,20 +1,3 @@
-# Kubernetes layer.
-#
-# Sources:
-#   • Fedora 44 main:    kind, helm
-#   • pkgs.k8s.io/core:  kubectl (repo shipped via silverfox-kubernetes)
-#
-#   kind    — Kubernetes-IN-Docker. Spins up real K8s clusters as
-#             podman containers (no VM). Default backend for Podman
-#             Desktop's "Create new cluster". Pair with the
-#             KIND_EXPERIMENTAL_PROVIDER=podman env var that
-#             silverfox-shell-ux ships in /etc/profile.d/.
-#   helm    — Kubernetes package manager. Templates YAML manifests
-#             into "charts" (`helm install foo bitnami/postgresql`
-#             replaces ~15 `kubectl apply`s). Podman Desktop's Helm
-#             panel shells out to this binary.
-#   kubectl — Kubernetes CLI (stable channel, pkgs.k8s.io/core).
-
 kind
 helm
 kubectl

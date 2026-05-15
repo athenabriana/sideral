@@ -1,4 +1,3 @@
-# Fonts layered from Fedora main.
 cascadia-code-fonts
 jetbrains-mono-fonts-all
 adwaita-fonts-all

@@ -6,9 +6,9 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ## Current
 
-- **`nix+nh` (revived 2026-05-13)** — Declarative user config via nix + nh. Determinate installer on first boot, `/nix` persists via `/var/lib/nix` bind-mount. `nh home switch` substitui home-manager. `nh clean` pra GC. Starter flake.nix em `/etc/skel` como stow package. 33 requirements. Spec em `.specs/features/nix/`.
+- **`nix+nh` (revived 2026-05-13)** — Declarative user config via nix + nh. Determinate installer on first boot, `/nix` persists via `/var/lib/nix` bind-mount. `nh home switch` replaces home-manager. `nh clean` for GC. Starter flake.nix in `/etc/skel` as stow package. 33 requirements. Spec in `.specs/features/nix/`.
 
-- **`fox-enhancements` (in flight, 2026-05-11)** — port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM. `fox` gains `toggle-banner`, `upgrade-firmware`, expanded `upgrade` (ostree), `clean` (podman + rpm-ostree + nix GC via nh). Flatpaks gerenciados por nix-flatpak — removidos do `upgrade` e do `clean`. `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh`. `ublue-os-just` pruned from image build. 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
+- **`fox-enhancements` (in flight, 2026-05-11)** — port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM. `fox` gains `toggle-banner`, `upgrade-firmware`, expanded `upgrade` (ostree), `clean` (podman + rpm-ostree + nix GC via nh). Flatpaks managed by nix-flatpak — removed from `upgrade` and `clean`. `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh`. `ublue-os-just` pruned from image build. 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
 
 ## Previous (shipped)
 
@@ -49,9 +49,9 @@ Features in flight, queued, and parked. Updated as decisions are made.
 
 ### `fox-home-sync` (v2 of the fox feature) — **superseded by nix-flatpak**
 
-O primeiro backend previsto (flatpaks declarativos) foi coberto pelo `services.flatpak.packages` via nix-flatpak no flake.nix. `fox sync` (nh home switch) aplica flatpaks + pacotes de forma declarativa e atômica. Não há mais necessidade de um reconciliador separado para flatpaks.
+The first planned backend (declarative flatpaks) was covered by `services.flatpak.packages` via nix-flatpak in flake.nix. `fox sync` (nh home switch) applies flatpaks + packages declaratively and atomically. There's no longer a need for a separate reconciler for flatpaks.
 
-Se um backend novo surgir (dconf snapshots, systemd-user units) pode reentrar como feature separada. Spec preservada em `.specs/features/fox-home-sync/` se existir.
+If a new backend emerges (dconf snapshots, systemd-user units) it can re-enter as a separate feature. Spec preserved in `.specs/features/fox-home-sync/` if it exists.
 
 ### `gnome-extras`
 

@@ -1,23 +1,3 @@
-# silverfox-nix — nix bootstrap module: first-boot installer + sudoers config
-#
-# Ships:
-#   • /etc/systemd/system/silverfox-nix-bootstrap.service — first-boot oneshot
-#     that runs the Determinate nix-installer with ostree planner
-#   • multi-user.target.wants/ enablement symlink
-#   • /etc/sudoers.d/nix-sudo-env — adds nix profile bin to sudo secure_path
-#
-# __USER__ substitution and `nh home switch` on login are handled by
-# silverfox-home-sync.sh (shipped by silverfox-home).
-#
-# The nix-installer binary is pre-downloaded at build time by
-# nix-installer-download.sh (staged at /usr/libexec/nix-installer).
-# nixbld users (30001-30032) are pre-created by nixbld-users.sh.
-# Both run inside os/lib/build.sh as part of the nix module.
-#
-# The installer creates the nix-daemon service, the /nix mount unit,
-# and the nix build users (skipped when pre-created). The service
-# writes /var/lib/silverfox/nix-setup-done on success.
-
 Name:           silverfox-nix
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}

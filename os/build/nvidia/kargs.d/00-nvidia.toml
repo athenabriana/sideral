@@ -1,14 +1,1 @@
-# bootc kargs for the silverfox-nvidia variant. Applied to the bootloader
-# entry on `rpm-ostree upgrade` + reboot. Mirrors bluefin/bazzite-nvidia.
-#   • rd.driver.blacklist=nouveau, modprobe.blacklist=nouveau —
-#     keep nouveau out of both initramfs and the running kernel.
-#     /usr/lib/modprobe.d/nvidia.conf already does the modprobe-level
-#     blacklist, but the karg covers the early-userspace window before
-#     modprobe rules apply.
-#   • nvidia-drm.modeset=1 — required for Wayland DRM/KMS path.
-#   • nvidia-drm.fbdev=1 — fbdev emulation; required on kernel ≥6.11 to
-#     avoid TTY black-screens (default since driver 570, explicit is safer).
-#   • initcall_blacklist=simpledrm_platform_driver_init — prevents
-#     simpledrm from binding the framebuffer at boot, so the handoff
-#     to nvidia-drm is clean.
 kargs = ["rd.driver.blacklist=nouveau", "modprobe.blacklist=nouveau", "nvidia-drm.modeset=1", "nvidia-drm.fbdev=1", "initcall_blacklist=simpledrm_platform_driver_init"]

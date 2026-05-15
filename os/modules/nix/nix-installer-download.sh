@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# nix-installer-download.sh — download Determinate nix-installer binary
-# at image build time and stage it at /usr/libexec/nix-installer.
-# Also creates the empty /nix directory needed for composefs compatibility
-# (the systemd .mount unit will bind-mount /var/lib/nix over this).
 set -euo pipefail
 
 NIX_INSTALLER_URL="${NIX_INSTALLER_URL:-https://install.determinate.systems/nix/nix-installer-x86_64-linux}"

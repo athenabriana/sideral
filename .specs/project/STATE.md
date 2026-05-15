@@ -3,8 +3,8 @@
 Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ## Current focus
-- **`nix+nh` (revived 2026-05-13).** Declarative user config via nix + nh. Sem home-manager — `nh home switch` faz tudo. 33 requirements. Spec em `.specs/features/nix/`.
-- **`fox-enhancements` (2026-05-11).** Port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM from the image entirely. `fox` gains: `toggle-banner` (new), `upgrade-firmware` (new), `clean` (renamed de `cleanup`; cobre podman + rpm-ostree + nix GC via nh — sem flatpak, gerenciado por nix). `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh` (replaces ublue's `user-motd.sh`). 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
+- **`nix+nh` (revived 2026-05-13).** Declarative user config via nix + nh. No home-manager needed — `nh home switch` does it all. 33 requirements. Spec in `.specs/features/nix/`.
+- **`fox-enhancements` (2026-05-11).** Port useful ujust recipes to fox, ship silverfox-owned motd display script, and remove the inherited `ublue-os-just` RPM from the image entirely. `fox` gains: `toggle-banner` (new), `upgrade-firmware` (new), `clean` (renamed from `cleanup`; covers podman + rpm-ostree + nix GC via nh — no flatpak, managed by nix). `silverfox-shell-ux` gains `/etc/profile.d/silverfox-motd.sh` (replaces ublue's `user-motd.sh`). 17 testable requirements. Spec at `.specs/features/fox-enhancements/`.
 
 ## Past features (shipped)
 
@@ -71,10 +71,10 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 
 ### CLI tools (2026-05-14 — nix como fonte da verdade)
 - `silverfox-cli-tools.spec` Requires graph (bootstrap only, 8 names): `stow starship carapace-bin zsh zsh-syntax-highlighting zsh-autosuggestions ghostty zed`.
-- **Ferramentas dia-a-dia** (atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake) movidas para `home.packages` no flake.nix — gerenciadas por `nh home switch`. Sem duplicação RPM + nix.
-- **mise** via `programs.mise.enable = true` no flake.nix. Sem mise.jdx.dev/rpm/.
-- `/etc/mise/config.toml` ships settings only (`trusted_config_paths`, etc.). Ferramentas declaradas em `tools {}` no flake.nix via `programs.mise.globalConfig`.
-- **chezmoi removido** do stack — nunca foi usado. Dotfiles via stow exclusivamente.
+- **Day-to-day tools** (atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake) moved to `home.packages` in flake.nix — managed by `nh home switch`. No RPM + nix duplication.
+- **mise** via `programs.mise.enable = true` in flake.nix. No mise.jdx.dev/rpm/.
+- `/etc/mise/config.toml` ships settings only (`trusted_config_paths`, etc.). Tools declared in `tools {}` in flake.nix via `programs.mise.globalConfig`.
+- **chezmoi removed** from the stack — never used. Dotfiles via stow exclusively.
 
 ### Shells (2026-05-11 — two shells, /etc/skel seeded)
 - **Two shells**: bash (default) and zsh. fish dropped entirely (not in cli-tools, not in `fox chsh` allowlist, not in `/etc/skel`). nu was already gone (2026-05-10 dotfile-seeding rework).
@@ -110,10 +110,10 @@ Persistent memory: decisions, blockers, lessons, todos, deferred ideas.
 - Source Serif 4 + Source Sans 3 fetched from Adobe GitHub at image build (`os/modules/fonts/post.sh`); `cascadia-code-fonts`, `jetbrains-mono-fonts-all`, `adwaita-fonts-all`, `opendyslexic-fonts` from Fedora main.
 
 ### Flatpaks (2026-05-14 — nix-flatpak como fonte da verdade)
-- **Gerenciados via `services.flatpak.packages`** no flake.nix do usuário (nix-flatpak module). `nh home switch` instala, remove, e atualiza. Sem `/etc/flatpak-manifest`, sem `silverfox-flatpak-install.service`, sem purge list.
-- Apps curados declarados no starter flake.nix: Zen Browser, Flatseal, Extension Manager, Podman Desktop, Resources, Smile, Web App Hub, Pika Backup.
-- Remote `flathub` configurado no flake (`remotes` block). Único remote.
-- `fox sync` = `nh home switch` — é o único verbo necessário para reconciliar flatpaks.
+- **Managed via `services.flatpak.packages`** in the user's flake.nix (nix-flatpak module). `nh home switch` installs, removes, and updates. No `/etc/flatpak-manifest`, no `silverfox-flatpak-install.service`, no purge list.
+- Curated apps declared in the starter flake.nix: Zen Browser, Flatseal, Extension Manager, Podman Desktop, Resources, Smile, Web App Hub, Pika Backup.
+- Remote `flathub` configured in the flake (`remotes` block). Single remote.
+- `fox sync` = `nh home switch` — the only verb needed to reconcile flatpaks.
 
 ### Distrobox
 - `/etc/distrobox/distrobox.conf` lives in `silverfox-services` (was silverfox-base; moved 2026-05-02). Defaults only — no `/nix` mounts.

@@ -1,22 +1,7 @@
-# CLI tools layer — all packages that satisfy silverfox-cli-tools' Requires
-# (plus `just`, which is a Requires of silverfox-fox — but installed here
-# in Layer 1 so rpm -Uvh of silverfox-fox in Layer 2 resolves its deps).
-#
-# Sources:
-#   • Fedora 44 main:        stow, atuin, fzf, bat, eza, ripgrep,
-#                            zoxide, gh, git-lfs, gcc, make, cmake,
-#                            zsh, just, gum, chromium + zsh plugins
-#   • repo.terra.fyralabs.com: starship, ghostty, zed (repo shipped via silverfox-cli-tools)
-#   • yum.fury.io/rsteube:   carapace-bin (repo shipped via silverfox-cli-tools)
-#
-# mise is intentionally NOT here — it's installed per-user via the
-# home-manager flake (programs.mise.enable) in silverfox-home's
-# /etc/skel seed.
+# CLI tools — silverfox-cli-tools Requires. mise is per-user via home-manager flake.
 
 stow
 starship
-# carapace-bin — multi-shell tab-completion bridge (fury.io repo).
-# Wires up bash + zsh completions for 1000+ CLI tools.
 carapace-bin
 atuin
 fzf
@@ -29,41 +14,11 @@ git-lfs
 gcc
 make
 cmake
-# zsh — alternative interactive shell. Switch via `fox chsh zsh` (default
-# is bash). The /etc/skel-seeded ~/.zshrc wires it up with all CLI tools
-# on first useradd. (fish dropped 2026-05-11 with the fox feature; bash
-# and zsh are the only silverfox-supported login shells.)
 zsh
-# zsh-syntax-highlighting + zsh-autosuggestions — bring zsh to
-# parity with fish's two killer interactive features (red-on-invalid
-# command coloring + greyed-out autosuggestions from history). Both
-# from Fedora main, source-loaded by the /etc/skel-seeded ~/.zshrc — no
-# plugin manager needed for two source lines. Users who want bigger
-# plugin stacks (oh-my-zsh, prezto, zinit) install at user level on top.
 zsh-syntax-highlighting
 zsh-autosuggestions
-# just — task runner; backbone of the `fox` operator CLI. /usr/bin/fox is
-# a ~20-line bash dispatcher that calls `just -f /usr/share/silverfox/
-# silverfox.justfile <verb>`. Standalone Rust binary in Fedora 44 main.
 just
-# gum — Charmbracelet TUI toolkit used by fox recipes: gum choose (chsh),
-# gum filter + gum spin (theme-apply), gum confirm (clean/dotfiles-reset/
-# os-rollback). Installed here in Layer 1 so rpm -Uvh of silverfox-fox
-# (which declares Requires: gum) resolves cleanly in Layer 2.
 gum
-# chromium — second browser, useful for headless automation (puppeteer/
-# playwright), web-app debugging, and as a fallback when Zen Browser
-# can't render a particular site. Installed but HIDDEN from the GNOME
-# app grid via hide-chromium.sh in this same module — the .desktop
-# file gets `NoDisplay=true` patched in. Invokable from the shell as
-# `chromium-browser`.
 chromium
-# ghostty — GPU-accelerated terminal (Terra repo). Per-user config
-# symlinked into ~/.config/ghostty/config by silverfox-stow-defaults on
-# first login.
 ghostty
-# zed — GPU-accelerated, collaborative GUI editor (Terra repo, stable
-# channel). Set as $EDITOR and $VISUAL by silverfox-stow-defaults so git
-# commit, sudoedit, mise edit, etc. all open a Zed buffer and block
-# until it closes (`zed --wait`). Replaces the previous helix/code split.
 zed

@@ -1,9 +1,5 @@
-# silverfox-home-sync.sh — bootstrap do home do usuário em todo login.
-#
-# Roda uma vez por sessão:
-#   fox dotfiles-sync — copia skel + substitui __USER__ + stow (idempotente)
-#
-# O resto (nix pkgs, temas) fica sob demanda via `fox sync` e `fox theme-sync`.
+# silverfox-home-sync.sh — user home bootstrap on every login.
+# Runs once per session via fox dotfiles-sync.
 
 if [ -z "${BASH_VERSION-}" ] && [ -z "${ZSH_VERSION-}" ]; then
     return

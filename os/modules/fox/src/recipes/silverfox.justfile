@@ -1,12 +1,6 @@
-# silverfox.justfile — operator-CLI recipe surface, dispatched by /usr/bin/fox.
-# Verbs: chsh, clean, doctor, dotfiles-sync, edit,
-# firmware-upgrade, diff, home-theme, motd-toggle, os-changelog,
-# os-rollback, os-status, os-upgrade, sync (top-level).
-
 default:
     @just -f {{ justfile() }} --list
 
-# Switch login shell (no arg = gum choose; allowlist: bash, zsh)
 chsh shell="":
     #!/usr/bin/bash
     set -euo pipefail
@@ -26,12 +20,10 @@ chsh shell="":
     sudo usermod -s "/usr/bin/$target" "$USER"
     echo "Done. Log out and back in, or 'exec $target -l' to swap now."
 
-# Clean podman images, rpm-ostree metadata, and nix store;
-# with explicit args, passes through to rpm-ostree cleanup
 clean *args:
     #!/usr/bin/bash
     if [ $# -eq 0 ]; then
-      gum confirm "Limpar imagens podman, cache rpm-ostree e nix store?" || exit 0
+      gum confirm "Clean podman images, rpm-ostree cache, and nix store?" || exit 0
       podman image prune -af
       rpm-ostree cleanup -prm
       command -v nh >/dev/null 2>&1 && nh clean || echo "nh not installed, skipping nix cleanup"
@@ -39,57 +31,52 @@ clean *args:
       rpm-ostree cleanup "$@"
     fi
 
-# Inicializa ~/Dotfiles do skel (se ausente) + substitui __USER__ + stow
 dotfiles-sync:
     #!/usr/bin/bash
     set -euo pipefail
     SKEL="/etc/skel/Dotfiles"
     HOME_DOTFILES="$HOME/Dotfiles"
-    [ -d "$SKEL" ] || { echo "/etc/skel/Dotfiles não encontrado" >&2; exit 1; }
+    [ -d "$SKEL" ] || { echo "/etc/skel/Dotfiles not found" >&2; exit 1; }
     if [ ! -d "$HOME_DOTFILES" ]; then
-        echo "~/Dotfiles ausente — restaurando de $SKEL…"
+        echo "~/Dotfiles missing — restoring from $SKEL…"
         cp -a "$SKEL" "$HOME_DOTFILES"
     fi
-    for f in "$HOME_DOTFILES/home-manager/flake.nix"; do
-        if [ -f "$f" ] && grep -q '__USER__' "$f" 2>/dev/null; then
-            echo "Substituindo __USER__ → $USER em $(basename "$f")…"
+    while IFS= read -r -d '' f; do
+        if grep -q '__USER__' "$f" 2>/dev/null; then
+            echo "Replacing __USER__ → $USER in ${f#"$HOME_DOTFILES/home-manager/"}"
             sed -i "s/__USER__/$USER/g" "$f"
         fi
-    done
+    done < <(find "$HOME_DOTFILES/home-manager" -type f -print0 2>/dev/null || true)
     if command -v stow >/dev/null 2>&1 && [ -d "$HOME_DOTFILES/stow" ]; then
         find "$HOME_DOTFILES/stow" -mindepth 1 -maxdepth 1 -type d -print0 \
           | while IFS= read -r -d '' pkg; do
               stow -R -d "$HOME_DOTFILES/stow" -t "$HOME" "${pkg##*/}" || true
             done
     fi
-    echo "dotfiles: sincronizado."
+    echo "dotfiles: synced."
 
-# Abre ~/Dotfiles no zed (se disponível) ou no file manager (xdg-open)
 edit:
     #!/usr/bin/bash
-    [ -d "$HOME/Dotfiles" ] || { echo "~/Dotfiles não existe — rode 'fox dotfiles-sync'" >&2; exit 1; }
+    [ -d "$HOME/Dotfiles" ] || { echo "~/Dotfiles does not exist — run 'fox dotfiles-sync'" >&2; exit 1; }
     if command -v zed >/dev/null 2>&1; then
         exec zed "$HOME/Dotfiles"
     elif command -v xdg-open >/dev/null 2>&1; then
         exec xdg-open "$HOME/Dotfiles"
     else
-        echo "Nem zed nem xdg-open encontrados" >&2
+        echo "Neither zed nor xdg-open found" >&2
         exit 1
     fi
 
-# Atualiza firmware do dispositivo (fwupdmgr)
 firmware-upgrade:
     fwupdmgr refresh --force
     fwupdmgr get-updates
     fwupdmgr update
 
-# Mostra pending nix config changes (dry-run)
 diff:
     #!/usr/bin/bash
     nh home switch --impure --dry 2>/dev/null \
       || echo "Dry-run not available. Run 'fox sync' to apply."
 
-# Diagnose nix + nh health — version, daemon, mount, SELinux, flake
 doctor:
     #!/usr/bin/bash
     echo "=== nix version ==="
@@ -122,26 +109,24 @@ doctor:
       echo "found: $_flake_dir/flake.nix"
       [ -f "$_flake_dir/flake.lock" ] && echo "lock: ok" || echo "lock: ausente (run 'nix flake update' para gerar)"
     else
-      echo "flake não encontrado em $_flake_dir"
+      echo "flake not found at $_flake_dir"
       echo "Run 'fox sync' to bootstrap from skel."
     fi
 
-# Sync nix config (dotfiles + pacotes + flatpaks declarativos)
 sync *args:
     #!/usr/bin/bash
     just -f {{ justfile() }} dotfiles-sync
     if command -v nh >/dev/null 2>&1; then
-        echo "nix/home-manager: aplicando configuração…"
+        echo "nix/home-manager: applying configuration…"
         _flake="${NH_HOME_FLAKE:-$HOME/Dotfiles/home-manager}"
         if [ -f "$_flake/flake.lock" ]; then
-            nix flake update silverfox --flake "$_flake" 2>/dev/null || true
+            (cd "$_flake" && nix flake update silverfox 2>/dev/null) || true
         fi
-        nh home switch --impure
+        nh home switch --impure "$_flake"
     else
-        echo "nh não encontrado — pulando sincronização nix."
+        echo "nh not found — skipping nix sync."
     fi
 
-# Aplica tema padrão (flavours + cosmic + ghostty reload)
 theme-sync:
     #!/usr/bin/bash
     set -euo pipefail
@@ -149,20 +134,20 @@ theme-sync:
         _data="${XDG_DATA_HOME:-$HOME/.local/share}/flavours"
         if [ ! -d "$_data/base16/schemes" ]; then
             echo "flavours: baixando temas…"
-            flavours update all 2>&1 || echo "flavours: aviso — alguns temas não puderam ser baixados."
+            flavours update all 2>&1 || echo "flavours: warning — some themes could not be downloaded."
         fi
         _current=$(flavours current 2>/dev/null || true)
         if [ -z "$_current" ]; then
-            echo "flavours: nenhum tema ativo (use 'fox theme-pick')."
+            echo "flavours: no active theme (use 'fox theme-pick')."
             exit 0
         fi
-        echo "flavours: reaplicando $_current…"
+        echo "flavours: reapplying $_current…"
         flavours apply "$_current"
         _cosmic_theme="$HOME/.cache/silverfox/cosmic-theme.ron"
         if command -v cosmic-settings >/dev/null 2>&1 && [ -f "$_cosmic_theme" ]; then
             cosmic-settings appearance import "$_cosmic_theme" >/dev/null 2>&1 \
-                && echo "cosmic: tema importado." \
-                || echo "cosmic: aviso — import falhou."
+                && echo "cosmic: theme imported." \
+                || echo "cosmic: warning — import failed."
         fi
         if pgrep -x ghostty >/dev/null 2>&1; then
             gdbus call --session --dest com.mitchellh.ghostty \
@@ -173,20 +158,19 @@ theme-sync:
         fi
     fi
 
-# Mostra padrão da distro e tema atual; oferece lista para escolher e aplicar
 theme-pick:
     #!/usr/bin/bash
     set -euo pipefail
     _default_dark="onedark"
     _default_light="one-light"
     _actual_current=$(flavours current 2>/dev/null || true)
-    echo "padrão da distro : $_default_dark / $_default_light"
-    echo "tema atual       : ${_actual_current:-(nenhum)}"
+    echo "distro default : $_default_dark / $_default_light"
+    echo "current theme  : ${_actual_current:-(none)}"
     echo ""
     _data="${XDG_DATA_HOME:-$HOME/.local/share}/flavours"
     if [ ! -d "$_data/base16/schemes" ]; then
-        gum confirm "Temas não baixados. Baixar agora?" || exit 0
-        flavours update all 2>&1 || echo "aviso: alguns temas não puderam ser baixados."
+        gum confirm "Themes not downloaded. Download now?" || exit 0
+        flavours update all 2>&1 || echo "warning: some themes could not be downloaded."
     fi
     _chosen=$(
         {
@@ -201,10 +185,10 @@ theme-pick:
                 | grep -vxF "$_default_dark" \
                 | grep -vxF "$_default_light" \
                 | grep -vxF "${_actual_current:-__none__}"
-        } | gum filter --placeholder "buscar tema…"
+        } | gum filter --placeholder "search theme…"
     ) || exit 0
     if [ -z "$_chosen" ]; then exit 0; fi
-    gum spin --spinner dot --title "Aplicando $_chosen…" -- flavours apply "$_chosen"
+    gum spin --spinner dot --title "Applying $_chosen…" -- flavours apply "$_chosen"
     _cosmic_theme="$HOME/.cache/silverfox/cosmic-theme.ron"
     if command -v cosmic-settings >/dev/null 2>&1 && [ -f "$_cosmic_theme" ]; then
         cosmic-settings appearance import "$_cosmic_theme" >/dev/null 2>&1 || true
@@ -216,9 +200,8 @@ theme-pick:
             || pkill -USR2 ghostty 2>/dev/null \
             || true
     fi
-    echo "tema aplicado: $_chosen"
+    echo "theme applied: $_chosen"
 
-# Toggle display of the login banner
 motd-toggle:
     #!/usr/bin/bash
     if test -e "${HOME}/.config/no-show-user-motd"; then
@@ -230,22 +213,18 @@ motd-toggle:
       echo "Banner disabled."
     fi
 
-# Show RPM diff vs the pending or previous deployment
 os-changelog *args:
     rpm-ostree db diff {{args}}
 
-# Roll back to the previous rpm-ostree deployment
 os-rollback *args:
     #!/usr/bin/bash
-    gum confirm "Fazer rollback para o deployment anterior?" || exit 0
+    gum confirm "Rollback to the previous deployment?" || exit 0
     rpm-ostree rollback {{args}}
     echo "Reboot to apply."
 
-# Show rpm-ostree deployment status
 os-status *args:
     rpm-ostree status {{args}}
 
-# Stage rpm-ostree upgrade
 os-upgrade *args:
     rpm-ostree upgrade
     @echo "Reboot to apply the staged deployment."

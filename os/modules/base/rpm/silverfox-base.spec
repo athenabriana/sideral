@@ -1,16 +1,3 @@
-# silverfox-base — meta-package + system identity + container trust policy.
-#
-# Owns:    /etc/os-release
-#          /etc/containers/policy.json  (absorbed from silverfox-signing)
-# Requires: every silverfox-* sub-package + transitive third-party deps
-#
-# What is NOT here anymore (post 2026-05-02 module refactor):
-#   • /etc/distrobox/distrobox.conf  → moved to silverfox-services (services module)
-#   • /etc/yum.repos.d/kubernetes.repo + /etc/profile.d/silverfox-kind-podman.sh
-#                                    → moved to silverfox-kubernetes (kubernetes module)
-# Both moves are intentional — each capability now owns its own files
-# under os/modules/<capability>/. Spec name kept for upgrade safety.
-
 Name:           silverfox-base
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
@@ -20,8 +7,6 @@ URL:            https://github.com/athenabriana/silverfox
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
-# Sub-packages (all required by default; users can rpm-ostree override
-# remove for granular opt-out).
 Requires:       silverfox-services          = %{version}-%{release}
 Requires:       silverfox-shell-ux          = %{version}-%{release}
 Requires:       silverfox-fox               = %{version}-%{release}
@@ -30,19 +15,8 @@ Requires:       silverfox-cli-tools         = %{version}-%{release}
 Requires:       silverfox-kubernetes        = %{version}-%{release}
 Requires:       silverfox-nix               = %{version}-%{release}
 
-# Conflicts with ublue-os-signing — both own /etc/containers/policy.json.
-# The Containerfile removes ublue-os-signing before rpm -Uvh so this never
-# triggers at install time; the Conflicts: declaration prevents accidental
-# re-install on a running system.
 Conflicts:      ublue-os-signing
 
-# Third-party deps (Fedora main):
-#   podman-docker  — docker → podman wrapper
-#   podman-compose — Python-based docker-compose drop-in
-# (mise migrated out of RPM entirely — now installed per-user via the
-# home-manager flake in silverfox-home's /etc/skel seed. The previous
-# vscode.repo was retired alongside the helix/code → zed editor swap;
-# zed flows via terra.repo, shipped by silverfox-cli-tools.)
 Requires:       podman-docker
 Requires:       podman-compose
 

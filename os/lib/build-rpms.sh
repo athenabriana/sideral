@@ -1,22 +1,4 @@
 #!/usr/bin/env bash
-# build-rpms.sh — build every silverfox-* binary RPM inline from os/modules/.
-#
-# Walks <modules-dir>/<module>/rpm/*.spec. Each spec has a sibling
-# <modules-dir>/<module>/src/ tree that becomes Source0 (tarballed as
-# <spec-basename>-<version>/<path-tree> for `%setup -q`). Modules with
-# multiple specs share the same src/ — each spec's %files filters down
-# to what it actually owns.
-#
-# Modules without an rpm/ subdir are skipped here; they only contribute
-# build-time concerns (packages.txt, *.sh) handled by the orchestrator.
-#
-# Usage:    os/lib/build-rpms.sh <modules-dir> <output-topdir> [version]
-#
-# Default version: $_SILVERFOX_VERSION env, else "0.0.0.dev". CI sets
-# _SILVERFOX_VERSION="$(date -u +%Y%m%d).${GITHUB_RUN_NUMBER}".
-#
-# Output:   <output-topdir>/RPMS/noarch/silverfox-*.rpm
-
 set -euo pipefail
 
 MOD_ROOT="${1:?usage: build-rpms.sh <modules-dir> <output-topdir> [version]}"
@@ -34,7 +16,7 @@ for moddir in "$MOD_ROOT"/*/; do
     rpmdir="$moddir/rpm"
     src="$moddir/src"
 
-    [ -d "$rpmdir" ] || continue   # build-time-only modules live under os/build/, not here
+    [ -d "$rpmdir" ] || continue
 
     shopt -s nullglob
     specs=("$rpmdir"/*.spec)
@@ -47,16 +29,12 @@ for moddir in "$MOD_ROOT"/*/; do
         expected_count=$((expected_count + 1))
 
         if [ -d "$src" ]; then
-            # Tarball src/ as <spec_name>-<version>/<path-tree> for %setup -q.
             stage="$TOPDIR/_stage/$spec_name-$VERSION"
             mkdir -p "$stage"
             cp -a "$src/." "$stage/"
             ( cd "$TOPDIR/_stage" && tar czf "$TOPDIR/SOURCES/$spec_name-$VERSION.tar.gz" "$spec_name-$VERSION" )
             rm -rf "$stage"
         else
-            # No src/ — synthesize an empty tarball so %setup -q has something
-            # to extract. Specs with no %files (pure Requires meta-RPMs)
-            # don't need anything in the source tree.
             stage="$TOPDIR/_stage/$spec_name-$VERSION"
             mkdir -p "$stage"
             ( cd "$TOPDIR/_stage" && tar czf "$TOPDIR/SOURCES/$spec_name-$VERSION.tar.gz" "$spec_name-$VERSION" )
@@ -75,7 +53,6 @@ done
 
 rm -rf "$TOPDIR/_stage"
 
-# Sanity: spec count matches built RPM count.
 produced="$(find "$TOPDIR/RPMS" -name 'silverfox-*.rpm' | wc -l)"
 if [ "$expected_count" != "$produced" ]; then
     echo "rpmbuild produced $produced RPMs, expected $expected_count" >&2

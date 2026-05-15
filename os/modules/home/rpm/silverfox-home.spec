@@ -1,10 +1,3 @@
-# silverfox-home — user-domain seed via /etc/skel + home-sync.
-#
-# Ships /etc/skel/Dotfiles/{home-manager/, stow/{shell,ghostty,flavours,zed}/}
-# and a profile.d script that bootstraps ~/Dotfiles/ from skel on first
-# login, runs stow on each package every login, syncs nix home-manager,
-# and ensures a default base16 theme is applied.
-
 Name:           silverfox-home
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
@@ -20,16 +13,16 @@ Requires:       stow
 Ships silverfox's image-default user dotfiles via /etc/skel and syncs them
 on every login:
 
-  - /etc/skel/Dotfiles/{shell,ghostty,flavours,zed}/ — stow packages com
-    as configurações padrão. O pacote shell agrupa .bashrc + .zshrc +
-    starship.toml + módulos POSIX em .config/shell/*.sh; ghostty é o
-    terminal; flavours tem base16 + template COSMIC; zed é o editor.
+  - /etc/skel/Dotfiles/{shell,ghostty,flavours,zed}/ — stow packages with
+    default configuration. The shell package bundles .bashrc + .zshrc +
+    starship.toml + POSIX modules in .config/shell/*.sh; ghostty is the
+    terminal; flavours provides base16 + COSMIC template; zed is the editor.
 
-  - /etc/profile.d/silverfox-home-sync.sh — no primeiro login copia a
-    árvore inteira de /etc/skel/Dotfiles para $HOME/Dotfiles; em todo
-    login roda stow, sincroniza nix home-manager em background, importa
-    o tema gerado pelo flavours via `cosmic-settings appearance import`.
-    Use `fox dotfiles-reset` para restaurar o estado original do sistema.
+  - /etc/profile.d/silverfox-home-sync.sh — on first login copies the
+    entire /etc/skel/Dotfiles tree to $HOME/Dotfiles; on every login
+    runs stow, syncs nix home-manager in background, imports the
+    generated theme via `cosmic-settings appearance import`.
+    Use `fox dotfiles-reset` to restore the original system state.
 
 %prep
 %setup -q
@@ -95,9 +88,9 @@ cp -a etc %{buildroot}/
 
 %changelog
 * Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-3
-- skel-merge.sh: replace "sempre copia arquivos novos no login" com
-  bootstrap único (só copia se ~/Dotfiles/ não existir) + stow sempre.
-  O reset manual fica com `fox home reset`.
+- skel-merge.sh: replace "always copies new files on login" with
+  single bootstrap (only copies if ~/Dotfiles/ does not exist) + stow always.
+  Manual reset via `fox home reset`.
 * Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
 - Sync flake.nix with downstream usage: add nixd/nil/opencode to
   home.packages (Nix LSPs + opencode CLI as baseline tooling); simplify
@@ -115,5 +108,5 @@ cp -a etc %{buildroot}/
 - Drop zed/ stow package. Zed manages its own settings.json in
   ~/.config/zed/ and the seed conflicted with its writes.
 * Wed May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
-- Simplifica: remove symlinks diretos do skel, skel-merge copia Dotfiles e
-  aplica stow automaticamente no login. Script migrado do módulo nix.
+- Simplify: remove direct symlinks from skel, skel-merge copies Dotfiles and
+  applies stow automatically on login. Script migrated from nix module.

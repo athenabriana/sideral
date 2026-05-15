@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-# nixbld-users.sh — create nixbld group and build users at image build
-# time. The Determinate nix-installer detects these pre-existing users
-# and skips the user-creation step on first boot.
-#
-# Matches the nix-installer's default: 32 build users, GID 30000 for the
-# group, UIDs 30001–30032 for nixbld1–nixbld32.
 set -euo pipefail
 
 NIXBLD_GID="${NIXBLD_GID:-30000}"

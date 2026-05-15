@@ -44,11 +44,11 @@ Ship nix + nh on the silverfox image so user-level packages (CLI tools, runtimes
 - **Why:** Users own their `flake.lock`. Image stays neutral.
 - **Trade accepted:** First `fox home init` downloads nixpkgs + nh packages (~2-5 min). Only happens once.
 
-### D-06 — Nix como fonte da verdade: ferramentas CLI e flatpaks
+### D-06 — Nix as source of truth: CLI tools and flatpaks
 
-- **Decision:** `silverfox-cli-tools` é reduzido a ferramentas de bootstrap (stow, zsh + fish-parity, starship, carapace-bin, ghostty, zed). Ferramentas dia-a-dia (atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake) migram para `home.packages` no flake.nix. Flatpaks gerenciados exclusivamente via `services.flatpak.packages` (nix-flatpak) — sem `/etc/flatpak-manifest`, sem serviço de primeiro-boot de flatpak.
-- **Why:** Single source of truth. `nh home switch` aplica pacotes CLI + flatpaks de forma declarativa e atômica. Remoção de ferramenta = remover do flake + `nh home switch`. Sem divergência entre o que o RPM instala e o que o usuário quer.
-- **Trade accepted:** Janela de bootstrap — entre o primeiro boot e `fox home init` completar, as ferramentas CLI não estão disponíveis (~5–10 min, uma vez). As ferramentas de bootstrap (zsh, stow, fox, zed) estão disponíveis imediatamente via RPM.
+- **Decision:** `silverfox-cli-tools` is reduced to bootstrap tools (stow, zsh + fish-parity, starship, carapace-bin, ghostty, zed). Day-to-day tools (atuin, fzf, bat, eza, ripgrep, zoxide, gh, git-lfs, gcc, make, cmake) migrate to `home.packages` in flake.nix. Flatpaks managed exclusively via `services.flatpak.packages` (nix-flatpak) — no `/etc/flatpak-manifest`, no first-boot flatpak service.
+- **Why:** Single source of truth. `nh home switch` applies CLI packages + flatpaks declaratively and atomically. Tool removal = remove from flake + `nh home switch`. No divergence between what RPM installs and what the user wants.
+- **Trade accepted:** Bootstrap window — between first boot and `fox home init` completing, CLI tools are not available (~5–10 min, once). Bootstrap tools (zsh, stow, fox, zed) are available immediately via RPM.
 
 ### D-07 — Direct flake.nix, no fox.toml generator
 
@@ -75,10 +75,10 @@ Ship nix + nh on the silverfox image so user-level packages (CLI tools, runtimes
 
 ### D-11 — NH_FLAKE set in shell init
 
-- **Decision:** `NH_FLAKE="$HOME/.config/nix"` é exportado em `~/.bashrc` e `~/.zshrc` (stow packages), guardado por `command -v nh`. Assim `nh home switch -c <user>` resolve o flake sem argumento extra.
-- **Why:** A forma mais limpa de configurar o caminho do flake. O NixOS module faz o mesmo via `programs.nh.flake`; em Fedora, o rc file é o equivalente. O `command -v` guard segue o padrão existente (starship, atuin, etc.).
-- **Where:** `stow/bash/.bashrc` e `stow/zsh/.zshrc` no módulo `home/`.
-- **Trade accepted:** Só é setado depois que `nh` está instalado (pós `fox home init`). Antes disso, `NH_FLAKE` não existe — mas também não faz falta porque `nh` não está disponível.
+- **Decision:** `NH_FLAKE="$HOME/.config/nix"` is exported in `~/.bashrc` and `~/.zshrc` (stow packages), guarded by `command -v nh`. This way `nh home switch -c <user>` resolves the flake without extra arguments.
+- **Why:** The cleanest way to configure the flake path. The NixOS module does the same via `programs.nh.flake`; on Fedora, the rc file is the equivalent. The `command -v` guard follows the existing pattern (starship, atuin, etc.).
+- **Where:** `stow/bash/.bashrc` and `stow/zsh/.zshrc` in the `home/` module.
+- **Trade accepted:** Only set after `nh` is installed (post `fox home init`). Before that, `NH_FLAKE` doesn't exist — but it's not needed since `nh` is not available.
 
 ---
 

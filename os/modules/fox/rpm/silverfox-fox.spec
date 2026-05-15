@@ -1,19 +1,3 @@
-# silverfox-fox — operator CLI (bash dispatcher around `just`).
-#
-# Ships:
-#   /usr/bin/fox                                  — bash dispatcher (3 lines)
-#   /usr/share/silverfox/silverfox.justfile       — verb + dotfiles recipes
-#
-# Artifacts are pre-built into /var/tmp/fox-prebuilt/ by the Containerfile;
-# bash + Justfiles COPY'd direct from the build context.
-# %install reads from there and lays everything down at the canonical paths.
-# The Containerfile cleans up /var/tmp/fox-prebuilt/ in the same RUN that
-# runs build-rpms.sh, so the prebuilt tree never ships in the image.
-#
-# Source0 is the synthesized empty/sentinel tarball that build-rpms.sh
-# produces from the (presence of an) src/ tree — %setup -q has something
-# to extract, but %install ignores it.
-
 Name:           silverfox-fox
 Version:        %{?_silverfox_version}%{!?_silverfox_version:0.0.0}
 Release:        1%{?dist}
@@ -73,8 +57,8 @@ install -D -m 0644 /var/tmp/fox-prebuilt/recipes/flake.nix               %{build
   Remove home.just (separate-module pattern abandoned).
   Update `sync` to call `"dotfiles link"` instead of old link-dotfiles.
 * Thu May 14 2026 GitHub Actions <noreply@github.com> - 0.0.0-2
-- Add `home::reset` recipe (home.just): destrói ~/Dotfiles/, recopia
-  de /etc/skel/Dotfiles/, reaplica stow. Acionado via `fox home reset`.
+- Add `home::reset` recipe (home.just): destroys ~/Dotfiles/, recopies
+  from /etc/skel/Dotfiles/, reapplies stow. Triggered via `fox home reset`.
 * Mon May 11 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
 - Initial. Silverfox-owned operator CLI replacing ujust + 60-custom.just.
   Bash dispatcher (~20 lines) at /usr/bin/fox routes into
