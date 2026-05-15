@@ -99,7 +99,6 @@ RUN --mount=type=bind,from=ctx-packages,source=/,target=/ctx \
 # asked for; the orphaned deps stay put.
 COPY modules/fox/src/bin                               /var/tmp/fox-prebuilt/bin
 COPY modules/fox/src/recipes                           /var/tmp/fox-prebuilt/recipes
-COPY modules/fox/src/libexec                           /var/tmp/fox-prebuilt/libexec
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \
