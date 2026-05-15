@@ -141,9 +141,7 @@ jobs:
     name: Build ISO & publish release
     runs-on: ubuntu-24.04
     needs: build
-    if: >
-      github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: false # disabled — ISO build not in use
     permissions:
       contents: write
       packages: read
