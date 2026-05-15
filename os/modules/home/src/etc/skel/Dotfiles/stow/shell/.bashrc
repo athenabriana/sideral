@@ -16,7 +16,7 @@ SILVERFOX_BASHRC_RAN=1
 # System-wide bashrc — locale, flatpak XDG_DATA_DIRS, completion stub, etc.
 [ -f /etc/bashrc ] && source /etc/bashrc
 
-# ── Shared POSIX modules (PATH, EDITOR, NH_FLAKE, aliases, mise shims) ─
+# ── Shared POSIX modules (PATH, EDITOR, NH_HOME_FLAKE, aliases, mise shims) ─
 _silverfox_modules="${XDG_CONFIG_HOME:-$HOME/.config}/shell"
 if [ -d "$_silverfox_modules" ]; then
     for _f in "$_silverfox_modules"/*.sh; do

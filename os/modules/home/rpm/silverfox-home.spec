@@ -1,6 +1,6 @@
 # silverfox-home — user-domain seed via /etc/skel + home-sync.
 #
-# Ships a stow source tree at /etc/skel/Dotfiles/{shell,ghostty,nix,flavours}/
+# Ships /etc/skel/Dotfiles/{home-manager/, stow/{shell,ghostty,flavours,zed}/}
 # and a profile.d script that bootstraps ~/Dotfiles/ from skel on first
 # login, runs stow on each package every login, syncs nix home-manager,
 # and ensures a default base16 theme is applied.
@@ -40,13 +40,13 @@ cp -a etc %{buildroot}/
 
 %files
 %dir /etc/skel/Dotfiles
-%dir /etc/skel/Dotfiles/nix
-/etc/skel/Dotfiles/nix/flake.nix
-%dir /etc/skel/Dotfiles/nix/modules
-/etc/skel/Dotfiles/nix/modules/home.nix
-/etc/skel/Dotfiles/nix/modules/mise.nix
-/etc/skel/Dotfiles/nix/modules/mise.toml
-/etc/skel/Dotfiles/nix/modules/flatpak.nix
+%dir /etc/skel/Dotfiles/home-manager
+/etc/skel/Dotfiles/home-manager/flake.nix
+%dir /etc/skel/Dotfiles/home-manager/modules
+/etc/skel/Dotfiles/home-manager/modules/home.nix
+/etc/skel/Dotfiles/home-manager/modules/mise.nix
+/etc/skel/Dotfiles/home-manager/modules/mise.toml
+/etc/skel/Dotfiles/home-manager/modules/flatpak.nix
 %dir /etc/skel/Dotfiles/stow
 %dir /etc/skel/Dotfiles/stow/shell
 /etc/skel/Dotfiles/stow/shell/.bashrc

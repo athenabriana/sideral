@@ -8,7 +8,7 @@
 # below; only zsh-specific code (compinit, tool inits, ZLE keybinds,
 # zsh plugins) lives in this file.
 
-# ── Shared POSIX modules (PATH, EDITOR, NH_FLAKE, aliases, mise shims) ─
+# ── Shared POSIX modules (PATH, EDITOR, NH_HOME_FLAKE, aliases, mise shims) ─
 _silverfox_modules="${XDG_CONFIG_HOME:-$HOME/.config}/shell"
 if [ -d "$_silverfox_modules" ]; then
     for _f in "$_silverfox_modules"/*.sh; do

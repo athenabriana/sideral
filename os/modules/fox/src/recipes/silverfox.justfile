@@ -47,10 +47,10 @@ dotfiles-sync:
     HOME_DOTFILES="$HOME/Dotfiles"
     [ -d "$SKEL" ] || { echo "/etc/skel/Dotfiles não encontrado" >&2; exit 1; }
     if [ ! -d "$HOME_DOTFILES" ]; then
-        echo "Copiando $SKEL → $HOME_DOTFILES…"
+        echo "~/Dotfiles ausente — restaurando de $SKEL…"
         cp -a "$SKEL" "$HOME_DOTFILES"
     fi
-    for f in "$HOME_DOTFILES/nix/flake.nix" "$HOME_DOTFILES/nix/home/default.nix"; do
+    for f in "$HOME_DOTFILES/home-manager/flake.nix"; do
         if [ -f "$f" ] && grep -q '__USER__' "$f" 2>/dev/null; then
             echo "Substituindo __USER__ → $USER em $(basename "$f")…"
             sed -i "s/__USER__/$USER/g" "$f"
@@ -114,10 +114,10 @@ doctor:
     fi
     echo "=== nh version ==="
     nh --version 2>&1 || echo "NOT INSTALLED (run 'fox sync')"
-    echo "=== NH_FLAKE ==="
-    echo "${NH_FLAKE:-<unset>}"
+    echo "=== NH_HOME_FLAKE ==="
+    echo "${NH_HOME_FLAKE:-<unset>}"
     echo "=== flake ==="
-    _flake_dir="${NH_FLAKE:-$HOME/Dotfiles/nix}"
+    _flake_dir="${NH_HOME_FLAKE:-$HOME/Dotfiles/home-manager}"
     if [ -e "$_flake_dir/flake.nix" ]; then
       echo "found: $_flake_dir/flake.nix"
       [ -f "$_flake_dir/flake.lock" ] && echo "lock: ok" || echo "lock: ausente (run 'nix flake update' para gerar)"
@@ -132,7 +132,7 @@ sync *args:
     just -f {{ justfile() }} dotfiles-sync
     if command -v nh >/dev/null 2>&1; then
         echo "nix/home-manager: aplicando configuração…"
-        _flake="${NH_FLAKE:-$HOME/Dotfiles/nix}"
+        _flake="${NH_HOME_FLAKE:-$HOME/Dotfiles/home-manager}"
         if [ -f "$_flake/flake.lock" ]; then
             nix flake update silverfox --flake "$_flake" 2>/dev/null || true
         fi

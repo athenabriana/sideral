@@ -1,7 +1,7 @@
 # 20-nix.sh — Nix env (POSIX).
 #
-# NH_FLAKE points `nh` (nix-helper) at the user's home flake.
+# NH_HOME_FLAKE points `nh home …` at the user's home-manager flake.
 
 if command -v nh >/dev/null 2>&1; then
-    export NH_FLAKE="$HOME/Dotfiles/nix"
+    export NH_HOME_FLAKE="$HOME/Dotfiles/home-manager"
 fi
