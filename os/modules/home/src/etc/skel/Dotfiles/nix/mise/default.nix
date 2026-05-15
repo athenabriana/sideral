@@ -13,7 +13,7 @@
 {
   home.packages = [ pkgs.mise ];
 
-  home.file.".config/mise/config.toml".source = ./config.toml;
+  home.file.".config/mise/config.toml".source = ./mise.toml;
 
   home.activation.syncMise =
     let
