@@ -20,10 +20,10 @@ Requires:       stow
 Ships silverfox's image-default user dotfiles via /etc/skel and syncs them
 on every login:
 
-  - /etc/skel/Dotfiles/{shell,ghostty,nix,flavours,starship,zed}/ — stow
-    packages com as configurações padrão (shell unifica .bashrc + .zshrc
-    com starship/atuin/zoxide/mise/fzf; ghostty; nix flake para nh;
-    flavours base16 com template comprehensivo para COSMIC).
+  - /etc/skel/Dotfiles/{shell,ghostty,flavours,zed}/ — stow packages com
+    as configurações padrão. O pacote shell agrupa .bashrc + .zshrc +
+    starship.toml + módulos POSIX em .config/shell/*.sh; ghostty é o
+    terminal; flavours tem base16 + template COSMIC; zed é o editor.
 
   - /etc/profile.d/silverfox-home-sync.sh — no primeiro login copia a
     árvore inteira de /etc/skel/Dotfiles para $HOME/Dotfiles; em todo
@@ -40,10 +40,24 @@ cp -a etc %{buildroot}/
 
 %files
 %dir /etc/skel/Dotfiles
-/etc/skel/Dotfiles/flake.nix
+%dir /etc/skel/Dotfiles/nix
+/etc/skel/Dotfiles/nix/flake.nix
+%dir /etc/skel/Dotfiles/nix/modules
+/etc/skel/Dotfiles/nix/modules/home.nix
+/etc/skel/Dotfiles/nix/modules/mise.nix
+/etc/skel/Dotfiles/nix/modules/flatpak.nix
 %dir /etc/skel/Dotfiles/shell
 /etc/skel/Dotfiles/shell/.bashrc
 /etc/skel/Dotfiles/shell/.zshrc
+%dir /etc/skel/Dotfiles/shell/.config
+%dir /etc/skel/Dotfiles/shell/.config/shell
+/etc/skel/Dotfiles/shell/.config/shell/00-path.sh
+/etc/skel/Dotfiles/shell/.config/shell/10-editor.sh
+/etc/skel/Dotfiles/shell/.config/shell/20-nix.sh
+/etc/skel/Dotfiles/shell/.config/shell/30-agent-detect.sh
+/etc/skel/Dotfiles/shell/.config/shell/40-aliases.sh
+/etc/skel/Dotfiles/shell/.config/shell/50-mise-shims.sh
+/etc/skel/Dotfiles/shell/.config/starship.toml
 %dir /etc/skel/Dotfiles/ghostty
 %dir /etc/skel/Dotfiles/ghostty/.config
 %dir /etc/skel/Dotfiles/ghostty/.config/ghostty
@@ -69,9 +83,6 @@ cp -a etc %{buildroot}/
 %dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-colors
 %dir /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-colors/templates
 /etc/skel/Dotfiles/flavours/.config/flavours/templates/cosmic-wallpaper-colors/templates/default.mustache
-%dir /etc/skel/Dotfiles/starship
-%dir /etc/skel/Dotfiles/starship/.config
-/etc/skel/Dotfiles/starship/.config/starship.toml
 %dir /etc/skel/Dotfiles/zed
 %dir /etc/skel/Dotfiles/zed/.config
 %dir /etc/skel/Dotfiles/zed/.config/zed

@@ -1,11 +1,12 @@
 # ~/.bashrc — silverfox bash interactive-shell wiring.
 #
-# Stow package from Dotfiles/bash/.bashrc — to customize, replace the
+# Stow package from Dotfiles/shell/.bashrc — to customize, replace the
 # symlink with a real file and edit. The skel merge (profile.d) copies
 # new defaults from /etc/skel on every login.
 #
-# Each `eval` is `command -v`-guarded so removing any single tool via
-# `rpm-ostree override remove` doesn't break the rest.
+# POSIX-shared config lives in ~/.config/shell/*.sh and is sourced
+# below; only bash-specific code (tool inits, readline keybinds) lives
+# in this file.
 # shellcheck source=/dev/null
 
 # Re-entry guard: harmless to source twice, but skip the work.
@@ -15,61 +16,25 @@ SILVERFOX_BASHRC_RAN=1
 # System-wide bashrc — locale, flatpak XDG_DATA_DIRS, completion stub, etc.
 [ -f /etc/bashrc ] && source /etc/bashrc
 
-# ── ~/.local/bin on PATH ────────────────────────────────────────────────
-# XDG per-user bin dir for `cargo install --root`, pipx, `pip install
-# --user`, and manually-dropped binaries. Idempotent via case-glob.
-case ":$PATH:" in
-    *":$HOME/.local/bin:"*) ;;
-    *) export PATH="$HOME/.local/bin:$PATH" ;;
-esac
-
-# ── Default editor ──────────────────────────────────────────────────────
-# Zed is the GUI editor for both EDITOR and VISUAL. `--wait` (a.k.a. `-w`)
-# blocks the spawning process until the buffer closes, which is what git
-# commit, sudoedit, mise edit, crontab -e, less's `v` key, etc. all need.
-if command -v zed >/dev/null 2>&1; then
-    export EDITOR='zed --wait'
-    export VISUAL='zed --wait'
+# ── Shared POSIX modules (PATH, EDITOR, NH_FLAKE, aliases, mise shims) ─
+_silverfox_modules="${XDG_CONFIG_HOME:-$HOME/.config}/shell"
+if [ -d "$_silverfox_modules" ]; then
+    for _f in "$_silverfox_modules"/*.sh; do
+        [ -r "$_f" ] && . "$_f"
+    done
+    unset _f
 fi
+unset _silverfox_modules
 
-# ── Nix flake path (nh) ────────────────────────────────────────────────
-if command -v nh >/dev/null 2>&1; then
-    export NH_FLAKE="$HOME/Dotfiles"
+# ── Tool inits (bash-specific eval/source) ──────────────────────────────
+command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init bash --disable-up-arrow)"
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init bash)"
+if command -v mise >/dev/null 2>&1 && [[ $- == *i* ]]; then
+    eval "$(mise activate bash)"
 fi
-
-# ── Tool inits ──────────────────────────────────────────────────────────
-if command -v starship >/dev/null 2>&1; then
-    eval "$(starship init bash)"
-fi
-
-if command -v atuin >/dev/null 2>&1; then
-    eval "$(atuin init bash --disable-up-arrow)"
-fi
-
-# zoxide — fuzzy directory jumps via `z <partial>` and `zi` (interactive
-# pick via fzf). `cd` keeps stock bash behavior; earlier `--cmd cd` setup
-# clashed with mise's chpwd wrapper.
-if command -v zoxide >/dev/null 2>&1; then
-    eval "$(zoxide init bash)"
-fi
-
-# mise — runtime version manager. Shims on PATH for non-interactive
-# shells (scripts, SSH exec); `mise activate` takes over for interactive.
-if command -v mise >/dev/null 2>&1; then
-    export PATH="$HOME/.local/share/mise/shims:$PATH"
-    if [[ $- == *i* ]]; then
-        eval "$(mise activate bash)"
-    fi
-fi
-
-if command -v fzf >/dev/null 2>&1; then
-    source <(fzf --bash)
-fi
-
-# carapace — static tab-completion backend for 839+ CLIs.
-if command -v carapace >/dev/null 2>&1; then
-    source <(carapace _carapace bash)
-fi
+command -v fzf >/dev/null 2>&1 && source <(fzf --bash)
+command -v carapace >/dev/null 2>&1 && source <(carapace _carapace bash)
 
 # ── Ctrl-P — VS-Code-style fzf quick-open ──────────────────────────────
 # Pick a file with fzf, open in $VISUAL/$EDITOR. Uses `rg --files` when
@@ -87,9 +52,7 @@ if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
                    | fzf --height 40% --reverse --prompt 'Open: ') || return
         fi
         editor="${VISUAL:-${EDITOR:-}}"
-        if [ -z "$editor" ]; then
-            if command -v zed >/dev/null 2>&1; then editor='zed --wait'; else editor=vi; fi
-        fi
+        [ -z "$editor" ] && editor='vi'
         eval "$editor \"\$file\""
     }
     bind -x '"\C-p": _silverfox_fzf_quick_open'
@@ -128,62 +91,3 @@ if [[ $- == *i* ]] && command -v fzf >/dev/null 2>&1; then
     }
     bind -x '"\C-g": _silverfox_fzf_git_checkout'
 fi
-
-# ── eza / bat aliases — only for human-driven interactive shells ───────
-# AI coding agents read command output as raw strings to feed back into
-# context. Aliasing `ls` to eza or `cat` to bat injects icons / ANSI
-# escapes / git decoration / line numbers that the agent has to parse
-# around (and can mistake for real file content).
-#
-# Cross-tool conventions checked (May 2026):
-#   AGENT, AI_AGENT      proposal (agentsmd #136) + Vercel detect-agent
-#   CLAUDECODE           Claude Code
-#   CURSOR_AGENT         Cursor agent CLI
-#   CURSOR_TRACE_ID      Cursor in-editor terminal
-#   GEMINI_CLI           Google Gemini CLI
-#   CODEX_SANDBOX        OpenAI Codex CLI ("seatbelt")
-#   AUGMENT_AGENT        Augment
-#   CLINE_ACTIVE         Cline
-#   OPENCODE_CLIENT      sst/opencode
-#   TRAE_AI_SHELL_ID     TRAE AI
-#   ANTIGRAVITY_AGENT    Antigravity
-#   REPL_ID              Replit
-#   COPILOT_MODEL        GitHub Copilot CLI
-#   SILVERFOX_NO_ALIASES   manual opt-out
-# Plain `\ls` / `\cat` (backslash-escaped) hit the GNU coreutils binary
-# regardless — useful in scripts that want deterministic POSIX output.
-_silverfox_agent_shell=""
-for _v in \
-    AGENT AI_AGENT \
-    CLAUDECODE \
-    CURSOR_AGENT CURSOR_TRACE_ID \
-    GEMINI_CLI \
-    CODEX_SANDBOX \
-    AUGMENT_AGENT \
-    CLINE_ACTIVE \
-    OPENCODE_CLIENT \
-    TRAE_AI_SHELL_ID \
-    ANTIGRAVITY_AGENT \
-    REPL_ID \
-    COPILOT_MODEL \
-    SILVERFOX_NO_ALIASES; do
-    if [ -n "${!_v:-}" ]; then
-        _silverfox_agent_shell=1
-        break
-    fi
-done
-unset _v
-
-if [ -z "$_silverfox_agent_shell" ]; then
-    if command -v eza >/dev/null 2>&1; then
-        alias ls='eza --icons --group-directories-first'
-        alias ll='eza --icons --group-directories-first --long --git --header'
-        alias la='eza --icons --group-directories-first --long --git --header --all'
-        alias tree='eza --icons --tree --level=5 --git-ignore'
-    fi
-    if command -v bat >/dev/null 2>&1; then
-        alias cat='bat --paging=never --style=plain'
-        # bare `bat` keeps the full pager + theme + line numbers
-    fi
-fi
-unset _silverfox_agent_shell

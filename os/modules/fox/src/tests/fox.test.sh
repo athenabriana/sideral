@@ -61,9 +61,9 @@ assert_contains "upgrade_flag" "FAKEJUST:--allow-downgrade" "$actual"
 actual=$(run os-status --json | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
 assert_contains "status_json" "FAKEJUST:--json" "$actual"
 
-# fox home-sync passes through as a single arg.
-actual=$(run home-sync | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
-assert_contains "home_sync_pass" "FAKEJUST:home-sync" "$actual"
+# fox sync passes through as a single arg.
+actual=$(run sync | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')
+assert_contains "sync_pass" "FAKEJUST:sync" "$actual"
 
 # Multiple args all pass through (e.g. home-diff extra-flag).
 actual=$(run home-diff --verbose | grep '^FAKEJUST:' | tail -n2 | tr '\n' ' ')

@@ -5,7 +5,9 @@
 #     that runs the Determinate nix-installer with ostree planner
 #   • multi-user.target.wants/ enablement symlink
 #   • /etc/sudoers.d/nix-sudo-env — adds nix profile bin to sudo secure_path
-#   • /etc/profile.d/silverfox-nix-init.sh — __USER__ substitution + first-login nh init
+#
+# __USER__ substitution and `nh home switch` on login are handled by
+# silverfox-home-sync.sh (shipped by silverfox-home).
 #
 # The nix-installer binary is pre-downloaded at build time by
 # nix-installer-download.sh (staged at /usr/libexec/nix-installer).
@@ -42,11 +44,6 @@ Ships:
     Adds /nix/var/nix/profiles/default/bin to sudo's secure_path so
     nix-installed commands (e.g. nh) are found when running with sudo.
 
-  /etc/profile.d/silverfox-nix-init.sh
-    Substitutes __USER__ placeholder no flake na primeira vez.
-    No primeiro login: instala nh via nix profile e roda
-    `nh home switch --impure`. Guarded por sentinel file por usuário.
-
 Pre-downloaded at build time: nix-installer binary at /usr/libexec/.
 Pre-created at build time: nixbld group (GID 30000) and users
 nixbld1-32 (UIDs 30001-30032).
@@ -62,7 +59,6 @@ cp -a etc %{buildroot}/
 /etc/systemd/system/silverfox-nix-bootstrap.service
 /etc/systemd/system/multi-user.target.wants/silverfox-nix-bootstrap.service
 /etc/sudoers.d/nix-sudo-env
-/etc/profile.d/silverfox-nix-init.sh
 
 %changelog
 * Wed May 13 2026 GitHub Actions <noreply@github.com> - 0.0.0-1
