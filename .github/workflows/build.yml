@@ -67,7 +67,7 @@ jobs:
       matrix:
         include:
           - variant: base
-            base_image: ghcr.io/ublue-os/base:44
+            base_image: ghcr.io/ublue-os/base-main:44
             image_name: silverfox
           - variant: nvidia
             base_image: ghcr.io/ublue-os/base-nvidia:44
